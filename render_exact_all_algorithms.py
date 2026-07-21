@@ -69,12 +69,20 @@ def main():
   print("=== GCP TPU Benchmark Suite for Satellite SAR Image Formation ===")
   print(f"Loading SICD reference: {args.sicd_path}")
   sicd = sicd_parser.parse_sicd_nitf(args.sicd_path)
-  ref_full = quality_evaluator.clean_array(sicd.image_array)
 
   print(f"Loading CPHD dataset: {args.cphd_path}")
   cphd = cphd_parser.load_cphd(args.cphd_path)
 
   pvp = cphd.pvp_array
+  max_pulses = 5000
+  if len(pvp) > max_pulses:
+      print(f"Limiting pulses from {len(pvp)} to {max_pulses} for CPU execution.")
+      start_idx = (len(pvp) - max_pulses) // 2
+      end_idx = start_idx + max_pulses
+      pvp = pvp[start_idx:end_idx]
+      signal_memmap_sub = cphd.signal_memmap[start_idx:end_idx, :]
+  else:
+      signal_memmap_sub = cphd.signal_memmap
   tx_pos = np.column_stack((pvp["TxPos_X"], pvp["TxPos_Y"], pvp["TxPos_Z"]))
   rcv_pos = np.column_stack((pvp["RcvPos_X"], pvp["RcvPos_Y"], pvp["RcvPos_Z"]))
   tx_pos = np.where(np.isnan(tx_pos), rcv_pos, tx_pos)
@@ -102,8 +110,7 @@ def main():
       float(sicd_parser.find_elem(uc, "Z").text),
   ])
 
-  signal_data = np.array(cphd.signal_memmap)
-  signal_data = np.where(np.isnan(signal_data) | np.isinf(signal_data), 0.0 + 0.0j, signal_data)
+  signal_data = np.array(signal_memmap_sub)
   root = sicd.xml_tree.getroot()
   scp_node = sicd_parser.find_elem(root, "SCPPixel")
   default_center_r = int(float(sicd_parser.find_elem(scp_node, "Row").text))
@@ -112,10 +119,11 @@ def main():
   center_r = args.center_r if args.center_r is not None else default_center_r
   center_c = args.center_c if args.center_c is not None else default_center_c
   print(f"Using crop center: Row={center_r}, Col={center_c}")
-  ref_crop = ref_full[
+  ref_crop_raw = sicd.image_array[
       center_r - grid_shape[0] // 2 : center_r + grid_shape[0] // 2,
       center_c - grid_shape[1] // 2 : center_c + grid_shape[1] // 2,
   ]
+  ref_crop = quality_evaluator.clean_array(ref_crop_raw)
 
   # Construct 3D ECEF grid for Backprojection
   row_idx = np.arange(grid_shape[0]) - grid_shape[0] // 2

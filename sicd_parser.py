@@ -5,6 +5,29 @@ import xml.etree.ElementTree as ET
 import numpy as np
 
 
+class LazyComplexMemmap:
+  """Lazy wrapper for large SICD complex image data to avoid loading 15k x 15k into RAM."""
+  def __init__(self, raw_iq):
+    self.raw_iq = raw_iq
+    self.shape = raw_iq.shape[:2]
+    self.ndim = 2
+    self.dtype = np.complex64
+
+  def __getitem__(self, key):
+    sub_raw = self.raw_iq[key]
+    real_p = np.nan_to_num(sub_raw[..., 0].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+    imag_p = np.nan_to_num(sub_raw[..., 1].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+    return real_p + 1j * imag_p
+
+  def __array__(self, dtype=None, copy=None):
+    real_p = np.nan_to_num(self.raw_iq[..., 0].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+    imag_p = np.nan_to_num(self.raw_iq[..., 1].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+    arr = real_p + 1j * imag_p
+    if dtype:
+      return arr.astype(dtype, copy=copy if copy is not None else True)
+    return arr
+
+
 class SICDData:
   """Container for parsed SICD image segment and metadata."""
 
@@ -80,9 +103,7 @@ def parse_sicd_nitf(file_path: str) -> SICDData:
         offset=img_data_offset,
         shape=(rows, cols, 2),
     )
-    real_p = np.nan_to_num(raw_iq[..., 0].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
-    imag_p = np.nan_to_num(raw_iq[..., 1].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
-    image_array = real_p + 1j * imag_p
+    image_array = LazyComplexMemmap(raw_iq)
   except Exception:
     image_array = np.zeros((rows, cols), dtype=np.complex64)
 

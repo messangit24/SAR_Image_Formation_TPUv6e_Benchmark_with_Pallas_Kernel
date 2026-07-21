@@ -8,6 +8,91 @@ import xml.etree.ElementTree as ET
 import numpy as np
 
 
+def find_elem(root: ET.Element, tag_name: str) -> ET.Element:
+  """Finds an element by tag name, ignoring XML namespaces."""
+  for elem in root.iter():
+    if elem.tag == tag_name or elem.tag.endswith('}' + tag_name):
+      return elem
+  return None
+
+
+def build_pvp_dtype(xml_root) -> np.dtype:
+  """Dynamically builds numpy dtype for PVP array based on CPHD XML definition."""
+  pvp_node = find_elem(xml_root, "PVP")
+  if pvp_node is None:
+    raise ValueError("CPHD XML missing <PVP> definition block.")
+
+  names = []
+  formats = []
+  offsets = []
+
+  def find_val(root, tag_name, default=0):
+    for elem in root.iter():
+      if elem.tag == tag_name or elem.tag.endswith("}" + tag_name):
+        return elem.text
+    return default
+
+  for child in pvp_node:
+    name = child.tag.split("}")[-1]
+    offset_elem = find_elem(child, "Offset")
+    size_elem = find_elem(child, "Size")
+    format_elem = find_elem(child, "Format")
+
+    if offset_elem is None or size_elem is None:
+      continue
+
+    offset = int(offset_elem.text)
+    size = int(size_elem.text)
+
+    # Map F8 -> float64, I8 -> int64
+    # If size is 3, map to _X, _Y, _Z for known vector fields
+    if name in ["TxPos", "RcvPos", "SRPPos", "TxVel", "RcvVel"] and size == 3:
+      for axis_idx, axis in enumerate(["X", "Y", "Z"]):
+        names.append(f"{name}_{axis}")
+        formats.append(">f8")
+        offsets.append((offset + axis_idx) * 8)
+    elif size == 1:
+      names.append(name)
+      fmt_text = format_elem.text if format_elem is not None else "F8"
+      if "I" in fmt_text:
+        formats.append(">i8")
+      else:
+        formats.append(">f8")
+      offsets.append(offset * 8)
+
+  num_bytes_pvp = int(find_val(xml_root, "NumBytesPVP", 0))
+
+  return np.dtype({
+      "names": names,
+      "formats": formats,
+      "offsets": offsets,
+      "itemsize": num_bytes_pvp,
+  })
+
+
+class LazyComplexMemmap:
+  """Lazy wrapper for large CPHD complex signal data to avoid loading 2.6GB into RAM."""
+  def __init__(self, raw_iq):
+    self.raw_iq = raw_iq
+    self.shape = raw_iq.shape[:2]
+    self.ndim = 2
+    self.dtype = np.complex64
+
+  def __getitem__(self, key):
+    sub_raw = self.raw_iq[key]
+    real_p = np.nan_to_num(sub_raw[..., 0].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+    imag_p = np.nan_to_num(sub_raw[..., 1].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+    return real_p + 1j * imag_p
+
+  def __array__(self, dtype=None, copy=None):
+    real_p = np.nan_to_num(self.raw_iq[..., 0].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+    imag_p = np.nan_to_num(self.raw_iq[..., 1].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+    arr = real_p + 1j * imag_p
+    if dtype:
+      return arr.astype(dtype, copy=copy if copy is not None else True)
+    return arr
+
+
 class CPHDData:
   """Container for parsed CPHD phase history signal array and PVP metadata."""
 
@@ -90,52 +175,7 @@ def load_cphd(file_path: str) -> CPHDData:
   pvp_block_offset = int(header_info.get("PVP_BLOCK_BYTE_OFFSET", header_info.get("PVP_DATA_OFFSET", xml_start + xml_size)))
   signal_block_offset = int(header_info.get("SIGNAL_BLOCK_BYTE_OFFSET", header_info.get("SIGNAL_DATA_OFFSET", pvp_block_offset + 100000)))
 
-  num_bytes_pvp = int(find_val(xml_root, "NumBytesPVP", 0))
-  if num_bytes_pvp == 240:
-    pvp_dtype = np.dtype({
-        "names": [
-            "TxTime",
-            "TxPos_X", "TxPos_Y", "TxPos_Z",
-            "RcvPos_X", "RcvPos_Y", "RcvPos_Z",
-            "SRPPos_X", "SRPPos_Y", "SRPPos_Z",
-            "SC0", "SCSS", "TDTropoSRP"
-        ],
-        "formats": [
-            ">f8",
-            ">f8", ">f8", ">f8",
-            ">f8", ">f8", ">f8",
-            ">f8", ">f8", ">f8",
-            ">f8", ">f8", ">f8"
-        ],
-        "offsets": [
-            0,             # TxTime (offset 0)
-            16, 24, 32,    # TxPos (offset 2)
-            40, 48, 56,    # RcvPos (offset 5)
-            112, 120, 128,  # SRPPos (offset 14)
-            208,           # SC0 (offset 26)
-            216,           # SCSS (offset 27)
-            224            # TDTropoSRP (offset 28)
-        ],
-        "itemsize": 240
-    })
-  else:
-    pvp_dtype = np.dtype([
-        ("TxPos_X", ">f8"),
-        ("TxPos_Y", ">f8"),
-        ("TxPos_Z", ">f8"),
-        ("RcvPos_X", ">f8"),
-        ("RcvPos_Y", ">f8"),
-        ("RcvPos_Z", ">f8"),
-        ("SRPPos_X", ">f8"),
-        ("SRPPos_Y", ">f8"),
-        ("SRPPos_Z", ">f8"),
-        ("SC0", ">f8"),
-        ("SCSS", ">f8"),
-        ("TxTime", ">f8"),
-        ("TOA1", ">f8"),
-        ("TOA2", ">f8"),
-        ("TDTropoSRP", ">f8"),
-    ])
+  pvp_dtype = build_pvp_dtype(xml_root)
 
   try:
     pvp_array = np.memmap(
@@ -157,9 +197,7 @@ def load_cphd(file_path: str) -> CPHDData:
         offset=signal_block_offset,
         shape=(num_vectors, num_samples, 2),
     )
-    real_part = np.nan_to_num(raw_iq[..., 0].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
-    imag_part = np.nan_to_num(raw_iq[..., 1].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
-    signal_memmap = real_part + 1j * imag_part
+    signal_memmap = LazyComplexMemmap(raw_iq)
   except Exception as e:
     print(f"Error loading signal memmap: {e}")
     signal_memmap = np.zeros((num_vectors, num_samples), dtype=np.complex64)
