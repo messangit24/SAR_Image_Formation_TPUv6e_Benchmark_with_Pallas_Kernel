@@ -45,7 +45,7 @@ BPA used 19,722 pulses (chunked), PFA/CSA used 5,000 pulses. Crop centered at (4
 | :--- | :--- | :--- | :--- | :--- |
 | **Ground Truth (SICD)** | Reference | 1.0000 | - | Reference Crop |
 | **BPA (Crop)** | ~195,376 ms | 0.3353 | **SUCCESS** | Shift (0, -1). 8x upsampling + Taylor window. |
-| **BPA (Whole Scene)** | ~301,628 ms | 0.3357 | **SUCCESS** | Downsampled D=16, Shift (-1, 0). |
+| **BPA (Whole Scene)** | ~301,628 ms | 0.3972 | **SUCCESS** | Downsampled D=16, Sub-pixel Shift (-1.45, -0.5). |
 | **Polar Format (PFA)** | ~675 ms | -0.0036 | **FAIL** | Limited to 5k pulses. Defocused. |
 | **Chirp Scaling (CSA)** | ~11,811 ms | -0.0103 | **FAIL** | Limited to 5k pulses. Dummy model. |
 
@@ -56,7 +56,7 @@ BPA used 14,479 pulses (chunked), PFA/CSA used 5,000 pulses. Crop centered at (4
 | :--- | :--- | :--- | :--- | :--- |
 | **Ground Truth (SICD)** | Reference | 1.0000 | - | Reference Crop |
 | **BPA (Crop)** | ~255,269 ms | 0.4259 | **SUCCESS** | Shift (0, 4). 8x upsampling + Taylor window. |
-| **BPA (Whole Scene)** | ~344,311 ms | 0.4958 | **SUCCESS** | Downsampled D=16, Shift (-1, -1). |
+| **BPA (Whole Scene)** | ~344,311 ms | 0.5588 | **SUCCESS** | Downsampled D=16, Sub-pixel Shift (-0.6, -1.5). |
 | **Polar Format (PFA)** | ~590 ms | -0.0052 | **FAIL** | Limited to 5k pulses. Defocused. |
 | **Chirp Scaling (CSA)** | ~14,659 ms | 0.0025 | **FAIL** | Limited to 5k pulses. Dummy model. |
 
@@ -73,11 +73,11 @@ To align our benchmark BPA with production-grade processors (like Umbra's), we i
 2.  **8x Range Upsampling**: We increased the zero-padding multiplier on the range axis from 2x to 8x in `tpu_bpa.py`. This interpolates the range profile to 8x resolution before linear interpolation in the backprojection kernel, minimizing sub-pixel range registration errors (critical for 30cm resolution).
 *   Together, these changes raised the magnitude correlation from **31.56% to 33.53%** on the full aperture.
 
-### 4.3 Whole-Scene Downsampled Reconstruction (New)
-At the user's request to see the entire scene (not just a 512x512 crop), we created `render_whole_image_downsampled.py`. Reconstructing the full 92.6 Megapixel image at 30cm resolution on CPU would take ~12.8 hours. Instead, we reconstructed the entire 3km x 4.2km scene on a downsampled grid (16x downsampling factor, `611 x 673` pixels, ~5m pixel spacing).
-*   **Latency**: Completed in **301,628 ms (5.0 minutes)** on CPU using all 19,722 pulses.
-*   **Correlation**: Achieved **33.57% correlation** with the downsampled SICD reference.
-*   **Visual Verification**: The output (`whole_image_comparison_ds.png`) shows a perfect structural match of the entire Bingham Mine pit, roads, and facilities.
+### 4.3 Whole-Scene Downsampled Reconstruction & Sub-Pixel Alignment (New)
+At the user's request to see the entire scene (not just a 512x512 crop), we reconstructed the entire 3km x 4.2km area on a downsampled grid (16x downsampling factor, ~5m pixel spacing).
+1.  **Dataset 1 (2024-01-12)**: Completed in **301,628 ms** on CPU. By applying a **sub-pixel shift search** in downsampled space, we aligned the image to `(-1.45, -0.5)` pixels, raising the correlation from 33.57% to **39.72%**.
+2.  **Dataset 2 (2023-09-25)**: Completed in **344,311 ms** on CPU. By applying a **sub-pixel shift search**, we aligned the image to `(-0.6, -1.5)` pixels, raising the correlation from 49.58% to **55.88%**.
+*   These results demonstrate that a significant portion of the decorrelation in downsampled images is caused by grid alignment offsets, which can be resolved through sub-pixel interpolation.
 
 ### 4.4 CPHD Dynamic PVP Layout Parser
 We discovered that different Umbra CPHD datasets use different Per-Vector Parameter (PVP) byte layouts, even when they share the same parameter size (240 bytes). We refactored `cphd_parser.py` to dynamically parse the PVP field offsets and formats from the CPHD XML header. This resolved the geometry mismatch and allowed BPA to focus the Bingham dataset.
