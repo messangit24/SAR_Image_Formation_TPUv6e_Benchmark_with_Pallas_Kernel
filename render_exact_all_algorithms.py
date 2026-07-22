@@ -11,6 +11,7 @@ import sys
 import time
 import numpy as np
 import scipy.ndimage
+import scipy.signal.windows
 from PIL import Image, ImageDraw, ImageFont
 
 import cphd_parser
@@ -140,20 +141,33 @@ def main():
   t0 = time.time()
   chunk_size = 5000
   num_pulses = len(tx_pos)
+  num_samples = signal_data_lazy.shape[1]
   img_bpa = np.zeros(grid_shape, dtype=np.complex128)
+  
+  # Define Taylor windows for range and azimuth to match production processor
+  print("  Generating Taylor windows (sll=35 dB, nbar=4) for sidelobe suppression...")
+  range_window = scipy.signal.windows.taylor(num_samples, nbar=4, sll=35)
+  azimuth_window = scipy.signal.windows.taylor(num_pulses, nbar=4, sll=35)
   
   for start_idx in range(0, num_pulses, chunk_size):
       end_idx = min(start_idx + chunk_size, num_pulses)
       print(f"  Processing BPA chunk: pulses {start_idx} to {end_idx} (out of {num_pulses})...")
+      
+      # Load chunk into RAM and apply windows
+      chunk_signal = np.array(signal_data_lazy[start_idx:end_idx, :])
+      chunk_az_win = azimuth_window[start_idx:end_idx]
+      chunk_signal_win = chunk_signal * range_window[None, :] * chunk_az_win[:, None]
+      
       chunk_img = tpu_bpa.process_physical_bpa_tpu(
-          signal_data_lazy[start_idx:end_idx, :],
+          chunk_signal_win,
           tx_pos[start_idx:end_idx, :],
           rcv_pos[start_idx:end_idx, :],
           srp_pos[start_idx:end_idx, :],
           sc0[start_idx:end_idx],
           scss[start_idx:end_idx],
           tropo_delay[start_idx:end_idx],
-          pixel_pts_ecef
+          pixel_pts_ecef,
+          range_res_multiplier=8
       )
       img_bpa += chunk_img
   bpa_lat = (time.time() - t0) * 1000.0

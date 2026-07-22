@@ -12,7 +12,10 @@ import numpy as np
 jax.config.update("jax_enable_x64", True)
 
 
-@jax.jit
+from functools import partial
+
+
+@partial(jax.jit, static_argnames=("multiplier",))
 def jax_physical_bpa_kernel(
     sig_jax: jnp.ndarray,
     tx_pos: jnp.ndarray,
@@ -22,15 +25,16 @@ def jax_physical_bpa_kernel(
     scss: jnp.ndarray,
     tropo_delay: jnp.ndarray,
     pixel_pts_ecef: jnp.ndarray,
+    multiplier: int = 8,
 ) -> jnp.ndarray:
   """Exact 3D ECEF Backprojection Kernel JIT-compiled for Cloud TPU (VPU/MXU)."""
   num_vectors, num_samples = sig_jax.shape
   c = 299792458.0
-  pad_samples = num_samples * 2
+  pad_samples = num_samples * multiplier
 
   mean_scss = jnp.mean(scss)
   dt_sample = 1.0 / (num_samples * mean_scss)
-  range_grid_res = c * dt_sample / 4.0
+  range_grid_res = c * dt_sample / (2.0 * multiplier)
 
   grid_shape = (pixel_pts_ecef.shape[0], pixel_pts_ecef.shape[1])
   bpa_init = jnp.zeros(grid_shape, dtype=jnp.complex128)
@@ -81,6 +85,7 @@ def process_physical_bpa_tpu(
     scss: np.ndarray,
     tropo_delay: np.ndarray,
     pixel_pts_ecef: np.ndarray,
+    range_res_multiplier: int = 8,
 ) -> np.ndarray:
   """Executes exact physical ECEF-coordinate BPA processor on TPU / GPU / CPU using JAX."""
   sig_jax = jnp.array(signal_data, dtype=jnp.complex128)
@@ -93,6 +98,7 @@ def process_physical_bpa_tpu(
   pts_jax = jnp.array(pixel_pts_ecef, dtype=jnp.float64)
 
   res_jax = jax_physical_bpa_kernel(
-      sig_jax, tx_jax, rcv_jax, srp_jax, sc0_jax, scss_jax, tropo_jax, pts_jax
+      sig_jax, tx_jax, rcv_jax, srp_jax, sc0_jax, scss_jax, tropo_jax, pts_jax,
+      multiplier=range_res_multiplier
   )
   return np.array(res_jax)
