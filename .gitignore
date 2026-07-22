@@ -2,6 +2,7 @@
 data/*
 out/*
 !out/algorithms_compare.png
+!out/compare_gt_pfa_bpa.png
 .venv/*
 
 # python
