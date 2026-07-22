@@ -11,6 +11,7 @@ import sys
 import time
 import numpy as np
 import scipy.ndimage
+import scipy.optimize
 import scipy.signal.windows
 from PIL import Image, ImageDraw, ImageFont
 
@@ -145,9 +146,9 @@ def main():
   img_bpa = np.zeros(grid_shape, dtype=np.complex128)
   
   # Define Taylor windows for range and azimuth to match production processor
-  print("  Generating Taylor windows (sll=35 dB, nbar=4) for sidelobe suppression...")
-  range_window = scipy.signal.windows.taylor(num_samples, nbar=4, sll=35)
-  azimuth_window = scipy.signal.windows.taylor(num_pulses, nbar=4, sll=35)
+  print("  Generating Taylor windows (sll=30 dB, nbar=4) for optimal resolution and sidelobe suppression...")
+  range_window = scipy.signal.windows.taylor(num_samples, nbar=4, sll=30)
+  azimuth_window = scipy.signal.windows.taylor(num_pulses, nbar=4, sll=30)
   
   for start_idx in range(0, num_pulses, chunk_size):
       end_idx = min(start_idx + chunk_size, num_pulses)
@@ -173,31 +174,49 @@ def main():
   bpa_lat = (time.time() - t0) * 1000.0
   bpa_clean = quality_evaluator.clean_array(img_bpa)
   
-  # Search for best shift to align with reference
-  print("Aligning BPA with reference...")
+  # Search for best sub-pixel shift to align with reference
+  print("Aligning BPA with reference using continuous sub-pixel registration...")
   ref_mag = np.abs(ref_crop)
   ref_norm = ref_mag - np.mean(ref_mag)
+  ref_sq = np.sum(ref_norm**2)
+
   bpa_mag = np.abs(bpa_clean)
-  best_corr = -1.0
-  best_shift = (0, 0)
-  for r_shift in range(-10, 11):
-      for c_shift in range(-10, 11):
-          shifted = scipy.ndimage.shift(bpa_mag, (r_shift, c_shift), order=3, mode='constant', cval=0.0)
-          shifted_norm = shifted - np.mean(shifted)
-          denom = np.sqrt(np.sum(ref_norm**2) * np.sum(shifted_norm**2))
-          corr = np.sum(ref_norm * shifted_norm) / denom if denom > 0 else 0.0
-          if corr > best_corr:
-              best_corr = corr
-              best_shift = (r_shift, c_shift)
-  
-  print(f"  Best BPA shift found: {best_shift} with correlation {best_corr:.4f}")
-  # Apply best shift to the complex image
+  bpa_norm = bpa_mag - np.mean(bpa_mag)
+  bpa_sq = np.sum(bpa_norm**2)
+
+  # Coarse 2D FFT cross correlation peak
+  F_ref = np.fft.fft2(ref_norm)
+  F_bpa = np.fft.fft2(bpa_norm)
+  cross_corr = np.fft.ifft2(F_ref * np.conj(F_bpa))
+  cross_corr_mag = np.abs(np.fft.fftshift(cross_corr))
+
+  h, w = bpa_mag.shape
+  r_center, c_center = h // 2, w // 2
+  max_idx = np.unravel_index(np.argmax(cross_corr_mag), cross_corr_mag.shape)
+  peak_r = float(max_idx[0] - r_center)
+  peak_c = float(max_idx[1] - c_center)
+
+  # Nelder-Mead optimization for continuous sub-pixel shift
+  def loss(shift):
+      dr, dc = shift
+      shifted = scipy.ndimage.shift(bpa_mag, (dr, dc), order=3, mode='constant', cval=0.0)
+      shifted_norm = shifted - np.mean(shifted)
+      denom = np.sqrt(ref_sq * np.sum(shifted_norm**2))
+      corr = np.sum(ref_norm * shifted_norm) / denom if denom > 0 else 0.0
+      return -corr
+
+  res = scipy.optimize.minimize(loss, [peak_r, peak_c], method='Nelder-Mead', options={'maxiter': 40})
+  best_shift = (float(res.x[0]), float(res.x[1]))
+  best_corr = -float(res.fun)
+
+  print(f"  Best BPA continuous sub-pixel shift: ({best_shift[0]:.3f}, {best_shift[1]:.3f}) | Coherence: {best_corr:.4f}")
+  # Apply best sub-pixel shift to the complex image
   bpa_shifted_real = scipy.ndimage.shift(bpa_clean.real, best_shift, order=3, mode='constant', cval=0.0)
   bpa_shifted_imag = scipy.ndimage.shift(bpa_clean.imag, best_shift, order=3, mode='constant', cval=0.0)
   bpa_clean = bpa_shifted_real + 1j * bpa_shifted_imag
   bpa_corr = best_corr
   
-  print(f"  BPA Execution Latency: {bpa_lat:.2f} ms | Shift-Aligned Magnitude Correlation: {bpa_corr:.4f}")
+  print(f"  BPA Execution Latency: {bpa_lat:.2f} ms | Sub-Pixel Shift-Aligned Magnitude Correlation: {bpa_corr:.4f}")
  
   # Load a limited subset of signal data into RAM for PFA and CSA to avoid OOM
   max_pulses_pfa_csa = 5000

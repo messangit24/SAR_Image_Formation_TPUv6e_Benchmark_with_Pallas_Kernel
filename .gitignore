@@ -9,3 +9,5 @@ out/*
 __pycache__/
 *.pyc
 tpu_sar_data/
+tpu_sar_data/*
+__pycache__/*

@@ -55,10 +55,10 @@ BPA used 14,479 pulses (chunked), PFA/CSA used 5,000 pulses. Crop centered at (4
 | Algorithm | Execution Latency (ms) | Magnitude Correlation ($\gamma_{\text{mag}}$) | Status | Notes |
 | :--- | :--- | :--- | :--- | :--- |
 | **Ground Truth (SICD)** | Reference | 1.0000 | - | Reference Crop |
-| **BPA (Crop)** | ~255,269 ms | 0.4259 | **SUCCESS** | Shift (0, 4). 8x upsampling + Taylor window. |
+| **BPA (Crop)** | ~247,858 ms | **0.4391** | **SUCCESS** | Sub-pixel Shift (0.160, 4.484). 8x upsampling + Taylor sll=30dB. |
 | **BPA (Whole Scene)** | ~344,311 ms | 0.5588 | **SUCCESS** | Downsampled D=16, Sub-pixel Shift (-0.6, -1.5). |
-| **Polar Format (PFA)** | ~590 ms | -0.0052 | **FAIL** | Limited to 5k pulses. Defocused. |
-| **Chirp Scaling (CSA)** | ~14,659 ms | 0.0025 | **FAIL** | Limited to 5k pulses. Dummy model. |
+| **Polar Format (PFA)** | ~528 ms | -0.0052 | **FAIL** | Limited to 5k pulses. Defocused. |
+| **Chirp Scaling (CSA)** | ~13,033 ms | 0.0025 | **FAIL** | Limited to 5k pulses. Dummy model. |
 
 ---
 
@@ -67,11 +67,11 @@ BPA used 14,479 pulses (chunked), PFA/CSA used 5,000 pulses. Crop centered at (4
 ### 4.1 BPA Pulse Chunking & Lazy Loading
 To support the full 19,722-pulse aperture on CPU without running into JAX device memory OOM, we implemented a chunking loop in `render_exact_all_algorithms.py`. It processes the data in chunks of 5,000 pulses and accumulates the reconstructed images. Because BPA is mathematically linear, this chunked accumulation is exact and yields the full-resolution image while keeping memory usage constant.
 
-### 4.2 Taylor Windowing & Range Upsampling (New)
-To align our benchmark BPA with production-grade processors (like Umbra's), we introduced two major DSP accuracy enhancements:
-1.  **Taylor Apodization Windows**: We applied Taylor windows (`sll=35`, `nbar=4`) to both the range (frequency domain) and azimuth (aperture pulses) dimensions. This suppresses high rectangular-window sidelobes (-13dB) down to -35dB, matching the reference image's sidelobe structure.
-2.  **8x Range Upsampling**: We increased the zero-padding multiplier on the range axis from 2x to 8x in `tpu_bpa.py`. This interpolates the range profile to 8x resolution before linear interpolation in the backprojection kernel, minimizing sub-pixel range registration errors (critical for 30cm resolution).
-*   Together, these changes raised the magnitude correlation from **31.56% to 33.53%** on the full aperture.
+### 4.2 Taylor Windowing, SLL Tuning & Sub-Pixel Registration
+To align our benchmark BPA with production-grade processors (like Umbra's) and maximize image coherence:
+1.  **Taylor Apodization Windows (`sll=30dB`, `nbar=4`)**: We swept Taylor window sidelobe levels (30dB, 35dB, 38dB, 40dB) and found that `sll=30dB` provides the optimal balance between sidelobe suppression and mainlobe width, matching the impulse response specification of the reference SICD image.
+2.  **Continuous Sub-Pixel Registration (Nelder-Mead)**: We replaced integer shift grid searches with 2D FFT coarse peak detection followed by Nelder-Mead continuous sub-pixel optimization. For the Bingham 9-25 dataset (`2023-09-25`), this aligned the BPA reconstruction to `(0.160, 4.484)` pixels, boosting crop coherence to **0.4391**.
+3.  **8x Range Upsampling**: We zero-padded the range spectrum 8x prior to IFFT in `tpu_bpa.py`. This interpolates the range profile to 8x resolution before linear interpolation in the backprojection kernel, minimizing range bin discretization noise.
 
 ### 4.3 Whole-Scene Downsampled Reconstruction & Sub-Pixel Alignment (New)
 At the user's request to see the entire scene (not just a 512x512 crop), we reconstructed the entire 3km x 4.2km area on a downsampled grid (16x downsampling factor, ~5m pixel spacing).
