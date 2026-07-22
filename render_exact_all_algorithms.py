@@ -74,15 +74,7 @@ def main():
   cphd = cphd_parser.load_cphd(args.cphd_path)
 
   pvp = cphd.pvp_array
-  max_pulses = 5000
-  if len(pvp) > max_pulses:
-      print(f"Limiting pulses from {len(pvp)} to {max_pulses} for CPU execution.")
-      start_idx = (len(pvp) - max_pulses) // 2
-      end_idx = start_idx + max_pulses
-      pvp = pvp[start_idx:end_idx]
-      signal_memmap_sub = cphd.signal_memmap[start_idx:end_idx, :]
-  else:
-      signal_memmap_sub = cphd.signal_memmap
+  signal_memmap_sub = cphd.signal_memmap
   tx_pos = np.column_stack((pvp["TxPos_X"], pvp["TxPos_Y"], pvp["TxPos_Z"]))
   rcv_pos = np.column_stack((pvp["RcvPos_X"], pvp["RcvPos_Y"], pvp["RcvPos_Z"]))
   tx_pos = np.where(np.isnan(tx_pos), rcv_pos, tx_pos)
@@ -110,7 +102,7 @@ def main():
       float(sicd_parser.find_elem(uc, "Z").text),
   ])
 
-  signal_data = np.array(signal_memmap_sub)
+  signal_data_lazy = signal_memmap_sub
   root = sicd.xml_tree.getroot()
   scp_node = sicd_parser.find_elem(root, "SCPPixel")
   default_center_r = int(float(sicd_parser.find_elem(scp_node, "Row").text))
@@ -146,9 +138,24 @@ def main():
   # 1. Backprojection (BPA) Execution
   print("\nExecuting Time-Domain Backprojection (BPA)...")
   t0 = time.time()
-  img_bpa = tpu_bpa.process_physical_bpa_tpu(
-      signal_data, tx_pos, rcv_pos, srp_pos, sc0, scss, tropo_delay, pixel_pts_ecef
-  )
+  chunk_size = 5000
+  num_pulses = len(tx_pos)
+  img_bpa = np.zeros(grid_shape, dtype=np.complex128)
+  
+  for start_idx in range(0, num_pulses, chunk_size):
+      end_idx = min(start_idx + chunk_size, num_pulses)
+      print(f"  Processing BPA chunk: pulses {start_idx} to {end_idx} (out of {num_pulses})...")
+      chunk_img = tpu_bpa.process_physical_bpa_tpu(
+          signal_data_lazy[start_idx:end_idx, :],
+          tx_pos[start_idx:end_idx, :],
+          rcv_pos[start_idx:end_idx, :],
+          srp_pos[start_idx:end_idx, :],
+          sc0[start_idx:end_idx],
+          scss[start_idx:end_idx],
+          tropo_delay[start_idx:end_idx],
+          pixel_pts_ecef
+      )
+      img_bpa += chunk_img
   bpa_lat = (time.time() - t0) * 1000.0
   bpa_clean = quality_evaluator.clean_array(img_bpa)
   
@@ -178,11 +185,34 @@ def main():
   
   print(f"  BPA Execution Latency: {bpa_lat:.2f} ms | Shift-Aligned Magnitude Correlation: {bpa_corr:.4f}")
  
+  # Load a limited subset of signal data into RAM for PFA and CSA to avoid OOM
+  max_pulses_pfa_csa = 5000
+  if len(tx_pos) > max_pulses_pfa_csa:
+      print(f"\nLimiting pulses to {max_pulses_pfa_csa} for PFA and CSA to avoid OOM...")
+      start_idx = (len(tx_pos) - max_pulses_pfa_csa) // 2
+      end_idx = start_idx + max_pulses_pfa_csa
+      
+      signal_data_pfa_csa = np.array(signal_data_lazy[start_idx:end_idx, :])
+      tx_pos_pfa_csa = tx_pos[start_idx:end_idx, :]
+      rcv_pos_pfa_csa = rcv_pos[start_idx:end_idx, :]
+      srp_pos_pfa_csa = srp_pos[start_idx:end_idx, :]
+      sc0_pfa_csa = sc0[start_idx:end_idx]
+      scss_pfa_csa = scss[start_idx:end_idx]
+  else:
+      signal_data_pfa_csa = np.array(signal_data_lazy)
+      tx_pos_pfa_csa = tx_pos
+      rcv_pos_pfa_csa = rcv_pos
+      srp_pos_pfa_csa = srp_pos
+      sc0_pfa_csa = sc0
+      scss_pfa_csa = scss
+
   # 2. Polar Format (PFA) Execution
   print("\nExecuting Polar Format Algorithm (PFA)...")
   t0 = time.time()
   img_pfa = physical_pfa.process_physical_pfa(
-      signal_data, sc0, scss, tx_pos, rcv_pos, srp_pos, output_shape=grid_shape
+      signal_data_pfa_csa, sc0_pfa_csa, scss_pfa_csa, 
+      tx_pos_pfa_csa, rcv_pos_pfa_csa, srp_pos_pfa_csa, 
+      output_shape=grid_shape
   )
   pfa_lat = (time.time() - t0) * 1000.0
   pfa_clean = quality_evaluator.clean_array(img_pfa)
@@ -192,7 +222,10 @@ def main():
   # 3. Chirp Scaling (CSA) Execution
   print("\nExecuting Chirp Scaling Algorithm (CSA)...")
   t0 = time.time()
-  img_csa = physical_csa.process_physical_csa(signal_data, sc0, scss, output_shape=grid_shape)
+  img_csa = physical_csa.process_physical_csa(
+      signal_data_pfa_csa, sc0_pfa_csa, scss_pfa_csa, 
+      output_shape=grid_shape
+  )
   csa_lat = (time.time() - t0) * 1000.0
   csa_clean = quality_evaluator.clean_array(img_csa)
   csa_corr = quality_evaluator.compute_complex_coherence(ref_crop, csa_clean)
