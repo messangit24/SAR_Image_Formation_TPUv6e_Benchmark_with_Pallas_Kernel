@@ -1,3 +1,8 @@
+# large data + generated products (multi-GB; fetch/regenerate via the pipeline)
 data/*
-.venv/*
 out/*
+.venv/*
+
+# python
+__pycache__/
+*.pyc

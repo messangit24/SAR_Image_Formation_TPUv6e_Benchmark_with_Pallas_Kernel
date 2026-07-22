@@ -52,20 +52,30 @@ def detect_orientation(mine_mag, sicd_mag, sicd_px, my_px):
     return best[1], best[0]
 
 
-def complex_coherence_peak(A, B, upsample=4):
-    """Peak of the normalised complex cross-correlation (sub-pixel via zero-pad).
-    Removes residual sub-pixel shift and any linear phase ramp between the grids."""
+def complex_coherence_peak(A, B, upsample=2, search=1):
+    """
+    Robust complex coherence of two roughly-aligned chips, invariant to both a
+    residual (integer) misregistration AND a linear phase ramp / carrier offset:
+
+        gamma = max_{shift, fringe} | sum A(x) conj(B(x-shift)) exp(-j 2pi f.x) | / norm
+
+    The inner max over fringe f is the interferogram-spectrum peak (removes a
+    carrier-convention difference between two correct processors -- e.g. a
+    different azimuth-carrier / KCtr); the outer max over a small integer shift
+    mops up residual misregistration.  For A == B (up to shift+carrier) it is 1.
+    """
     A = A - A.mean(); B = B - B.mean()
     n = A.shape[0]
-    xps = np.fft.fftshift(np.fft.fft2(A) * np.conj(np.fft.fft2(B)))
-    if upsample > 1:
-        pad = np.zeros((n * upsample, n * upsample), complex)
-        lo = (n * upsample - n) // 2
-        pad[lo:lo + n, lo:lo + n] = xps
-        xps = pad
-    cc = np.fft.ifft2(np.fft.ifftshift(xps))
-    denom = np.sqrt((np.abs(A) ** 2).sum() * (np.abs(B) ** 2).sum()) + 1e-30
-    return np.abs(cc).max() * (upsample ** 2) / denom
+    na = (np.abs(A) ** 2).sum()
+    best = 0.0
+    for dy in range(-search, search + 1):
+        for dx in range(-search, search + 1):
+            Bs = np.roll(B, (dy, dx), axis=(0, 1))
+            F = np.fft.fft2(A * np.conj(Bs), s=(n * upsample, n * upsample))
+            g = np.abs(F).max() / (np.sqrt(na * (np.abs(Bs) ** 2).sum()) + 1e-30)
+            if g > best:
+                best = g
+    return best
 
 
 def main():
@@ -145,6 +155,16 @@ def main():
     print(f"\nwindows: {g.size}")
     print(f"COHERENCE (all)            : median={np.median(g):.3f}  p90={np.percentile(g,90):.3f}  max={g.max():.3f}")
     print(f"COHERENCE (high-signal)    : median={np.median(gb):.3f}  p90={np.percentile(gb,90):.3f}")
+
+    # is the gradient just SNR?  coherence vs window-brightness deciles
+    ok = np.isfinite(gmap) & (bmap > 0)
+    bv = bmap[ok]; gv = gmap[ok]
+    edges = np.percentile(bv, np.arange(0, 101, 20))
+    print("  coherence vs brightness quintile (dark -> bright):")
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        sel = (bv >= lo) & (bv <= hi)
+        print(f"    {np.median(gv[sel]):.3f}", end="")
+    print(f"   (Spearman-ish corr {np.corrcoef(np.argsort(np.argsort(bv)), gv)[0,1]:.2f})")
 
     import matplotlib
     matplotlib.use("Agg"); import matplotlib.pyplot as plt

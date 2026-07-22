@@ -98,6 +98,47 @@ def _cubic_interp_1d(samples: np.ndarray, frac_idx: np.ndarray) -> np.ndarray:
     return out
 
 
+# ---- 8-tap windowed-sinc (Lanczos-4) --------------------------------------
+# A longer, closer-to-ideal bandlimited interpolant than the 4-tap cubic.
+# Kernel: sinc(d) * sinc(d/A) for |d| < A, with A = 4 (taps at offsets -3..+4).
+_LANCZOS_A = 4
+
+
+def _sinc_interp_1d(samples: np.ndarray, frac_idx: np.ndarray) -> np.ndarray:
+    n = samples.shape[0]
+    i0 = np.floor(frac_idx).astype(np.int64)
+    f = (frac_idx - i0).astype(np.float64)
+    A = _LANCZOS_A
+    out = np.zeros(frac_idx.shape, samples.dtype)
+    wsum = np.zeros(frac_idx.shape, np.float64)
+    for off in range(-A + 1, A + 1):
+        d = f - off
+        w = np.sinc(d) * np.sinc(d / A)          # Lanczos window
+        idx = i0 + off
+        ok = (idx >= 0) & (idx < n)
+        out += w * np.where(ok, samples[np.clip(idx, 0, n - 1)], 0)
+        wsum += np.where(ok, w, 0)
+    return out / np.where(wsum != 0, wsum, 1)     # normalise (preserve DC at edges)
+
+
+def _sinc_interp_axis0(samples: np.ndarray, frac_idx: np.ndarray) -> np.ndarray:
+    n = samples.shape[0]
+    i0 = np.floor(frac_idx).astype(np.int64)
+    f = (frac_idx - i0).astype(np.float64)
+    A = _LANCZOS_A
+    out = np.zeros(frac_idx.shape, samples.dtype)
+    wsum = np.zeros(frac_idx.shape, np.float64)
+    for off in range(-A + 1, A + 1):
+        d = f - off
+        w = np.sinc(d) * np.sinc(d / A)
+        idx = i0 + off
+        ok = (idx >= 0) & (idx < n)
+        vals = np.take_along_axis(samples, np.clip(idx, 0, n - 1), axis=0)
+        out += w * np.where(ok, vals, 0)
+        wsum += np.where(ok, w, 0)
+    return out / np.where(wsum != 0, wsum, 1)
+
+
 def form_image(
     signal: np.ndarray,      # (num_pulses, num_samples) complex, FX-domain
     apc: np.ndarray,         # (num_pulses, 3) effective phase-centre ECEF
@@ -111,8 +152,12 @@ def form_image(
     nky: int | None = None,  # k-space resampling grid size along azimuth (default = num_pulses)
     oversample: tuple = (1.3, 1.4),  # (range, azimuth) image oversample via k-space zero-pad
     taylor: tuple | None = None,  # (nbar, sll_dB) optional aperture weighting
+    frame: tuple | None = None,  # optional (r_hat, c_hat) ECEF axes to form on (e.g. a SICD grid)
+    interp: str = "cubic",       # 'cubic' (4-tap) or 'sinc' (8-tap Lanczos-4)
     verbose: bool = True,
 ) -> PFAResult:
+    interp1d = _sinc_interp_1d if interp == "sinc" else _cubic_interp_1d
+    interp_ax0 = _sinc_interp_axis0 if interp == "sinc" else _cubic_interp_axis0
     sig = np.ascontiguousarray(signal).astype(np.complex64)
     npulse, nsamp = sig.shape
     srp = np.broadcast_to(np.asarray(srp, float), (npulse, 3)) if np.ndim(srp) == 1 else np.asarray(srp, float)
@@ -125,14 +170,24 @@ def form_image(
     # range-frequency band and wrecks resolution.  In the aperture plane the
     # radial (range) component is ~constant -> a clean polar annulus and full
     # bandwidth, matching the plane the SICD is formed in.
+    #
+    # `frame` lets a caller pin the range/cross axes to an external grid (e.g. a
+    # SICD's Grid.Row/Col unit vectors) so the output coincides with that grid --
+    # useful for a resample-free, gradient-free comparison.
     look = apc - srp
     look = look / np.linalg.norm(look, axis=1, keepdims=True)      # u_hat[m]
     mean_look = look.mean(axis=0)
-    r_hat = mean_look / np.linalg.norm(mean_look)                  # range axis (LOS)
-    sweep = look[-1] - look[0]                                     # aperture rotation dir
-    c_in = sweep - r_hat * (sweep @ r_hat)                        # make it perp to r_hat
-    c_hat = c_in / np.linalg.norm(c_in)                          # cross-range axis
-    n_hat = np.cross(r_hat, c_hat)                                # aperture-plane normal
+    if frame is not None:
+        r_hat = np.asarray(frame[0], float); r_hat = r_hat / np.linalg.norm(r_hat)
+        c_hat = np.asarray(frame[1], float); c_hat = c_hat / np.linalg.norm(c_hat)
+        if mean_look @ r_hat < 0:          # keep range component a=u.r_hat > 0
+            r_hat = -r_hat
+    else:
+        r_hat = mean_look / np.linalg.norm(mean_look)             # range axis (LOS)
+        sweep = look[-1] - look[0]                               # aperture rotation dir
+        c_in = sweep - r_hat * (sweep @ r_hat)                   # make it perp to r_hat
+        c_hat = c_in / np.linalg.norm(c_in)                     # cross-range axis
+    n_hat = np.cross(r_hat, c_hat)                               # aperture-plane normal
 
     # in-plane projection of each pulse look vector
     a = np.einsum("ij,j->i", look, r_hat)   # range component (~cos graze), >0
@@ -160,9 +215,9 @@ def form_image(
     frac = (kr_needed - kr0[:, None]) / dkr[:, None]
     stage1 = np.empty((npulse, nkx), np.complex64)
     for m in range(npulse):                                    # per-pulse (cheap, uniform grid)
-        stage1[m] = _cubic_interp_1d(sig[m], frac[m])
+        stage1[m] = interp1d(sig[m], frac[m])
     if verbose:
-        print(f"  [stage1] range interp (cubic) -> {stage1.shape}  Kx=[{kx_min:.2f},{kx_max:.2f}] rad/m")
+        print(f"  [stage1] range interp ({interp}) -> {stage1.shape}  Kx=[{kx_min:.2f},{kx_max:.2f}] rad/m")
 
     # ------------------------------------------------------------------------
     # Stage 2: for each Kx column j the cross-range wavenumber is Ky = Kx_j*t[m].
@@ -190,9 +245,9 @@ def form_image(
         q = ky[:, None] / kx[None, c0:c1]                     # (nky, chunk) target t values
         frac_m = np.interp(q.ravel(), t_ord, pulse_index,
                            left=-1.0, right=npulse).reshape(q.shape)
-        stage2[:, c0:c1] = _cubic_interp_axis0(s1_ord[:, c0:c1], frac_m)
+        stage2[:, c0:c1] = interp_ax0(s1_ord[:, c0:c1], frac_m)
     if verbose:
-        print(f"  [stage2] azimuth interp (cubic) -> {stage2.shape}  Ky=[{ky_min:.3f},{ky_max:.3f}] rad/m")
+        print(f"  [stage2] azimuth interp ({interp}) -> {stage2.shape}  Ky=[{ky_min:.3f},{ky_max:.3f}] rad/m")
 
     # optional aperture weighting (sidelobe control) on the uniform k grid
     if taylor is not None:

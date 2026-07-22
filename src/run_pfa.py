@@ -50,6 +50,8 @@ def main():
     ap.add_argument("--pulse-step", type=int, default=1)
     ap.add_argument("--sample-step", type=int, default=1)
     ap.add_argument("--out", default="out/pfa")
+    ap.add_argument("--interp", choices=["cubic", "sinc"], default="cubic",
+                    help="k-space interpolation kernel (sinc=8-tap Lanczos-4)")
     ap.add_argument("--taylor-nbar", type=int, default=0, help="Taylor nbar (0=off)")
     ap.add_argument("--taylor-sll", type=float, default=-35.0)
     ap.add_argument("--save-complex", action="store_true")
@@ -75,7 +77,7 @@ def main():
     print("running PFA...")
     res = form_image(
         signal=sig, apc=g["apc"], srp=g["srp"], sc0=g["sc0"], scss=scss,
-        uiax=m.uiax, uiay=m.uiay, sgn=m.sgn, taylor=taylor,
+        uiax=m.uiax, uiay=m.uiay, sgn=m.sgn, taylor=taylor, interp=args.interp,
     )
 
     mag = np.abs(res.image)
