@@ -1,6 +1,7 @@
 # large data + generated products (multi-GB; fetch/regenerate via the pipeline)
 data/*
 out/*
+!out/algorithms_compare.png
 .venv/*
 
 # python
