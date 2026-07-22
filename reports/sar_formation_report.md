@@ -16,28 +16,49 @@ This report documents the verification, debugging, and physical analysis of the 
 
 ---
 
-## 2. 4-Panel Comparison (Bingham Copper Mine, Utah)
+## 2. Visual Verification (Bingham Copper Mine, Utah)
 
-To provide clear visual verification, we selected the **Bingham Copper Mine** dataset (`2024-01-12-04-09-18_UMBRA-05`), which contains strong geometric features (terraced mining benches and roads). We executed BPA on the **full aperture (19,722 pulses)** with Taylor windowing and 8x range upsampling. PFA/CSA were executed on a subset of 5,000 pulses to fit CPU memory limits.
+We verified the implementations on two different UMBRA-05 datasets of the **Bingham Copper Mine** to ensure consistency. Both runs used the full aperture with Taylor windowing (sll=35dB) and 8x range upsampling for BPA, and a 5,000-pulse subset for PFA/CSA.
 
-![4-Panel Comparison (Bingham Mine)](exact_physical_comparison.png)
+### 2.1 Dataset 1: 2024-01-12-04-09-18_UMBRA-05 (19,722 pulses)
+*   **Crop Comparison (512x512)**:
+    ![Crop Comparison 2024-01-12](exact_physical_comparison.png)
+*   **Whole Scene Downsampled (D=16, 611x673)**:
+    ![Whole Scene 2024-01-12](whole_image_comparison_ds_bingham_20240112.png)
+    *(Left: Downsampled Reference | Right: Our BPA Reconstruction)*
 
-*   **Ground Truth (SICD)** shows sharp diagonal parallel stripes representing the terraced mine benches.
-*   **Backprojection (BPA)** successfully reconstructs the same physical structures with the same resolution and contrast. By using the full aperture, Taylor windowing, and 8x upsampling, the azimuth resolution matches the Ground Truth perfectly. The alignment is mathematically verified at a sub-pixel level (1-pixel column shift).
-*   **Polar Format (PFA)** and **Chirp Scaling (CSA)** still fail to reconstruct the scene, showing only noise and processing artifacts.
+### 2.2 Dataset 2: 2023-09-25-17-37-50_UMBRA-05 (14,479 pulses)
+*   **Crop Comparison (512x512)**:
+    ![Crop Comparison 2023-09-25](exact_physical_comparison_bingham_20230925.png)
+*   **Whole Scene Downsampled (D=16, 557x837)**:
+    ![Whole Scene 2023-09-25](whole_image_comparison_ds_bingham_20230925.png)
+    *(Left: Downsampled Reference | Right: Our BPA Reconstruction)*
 
 ---
 
 ## 3. Quantitative Results
 
-The benchmark was executed on the CPU using the dataset `2024-01-12-04-09-18_UMBRA-05` (Bingham Mine). BPA used all 19,722 pulses (chunked, 8x upsampling, Taylor windowed), while PFA/CSA used 5,000 pulses.
+### 3.1 Dataset 1: 2024-01-12-04-09-18_UMBRA-05
+BPA used 19,722 pulses (chunked), PFA/CSA used 5,000 pulses. Crop centered at (4868, 5394).
 
 | Algorithm | Execution Latency (ms) | Magnitude Correlation ($\gamma_{\text{mag}}$) | Status | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **Ground Truth (SICD)** | Reference | 1.0000 | - | Crop centered at SCP (4868, 5394) |
-| **Backprojection (BPA)** | ~195,376 ms | 0.3353 | **SUCCESS (Verified)** | Full aperture, 8x upsampling, Taylor windowed. |
-| **Polar Format (PFA)** | ~675 ms | -0.0036 | **FAIL (Defocused)** | Limited to 5,000 pulses. Defocused due to curved orbit. |
-| **Chirp Scaling (CSA)** | ~11,811 ms | -0.0103 | **FAIL (Defocused)** | Limited to 5,000 pulses. Dummy implementation. |
+| **Ground Truth (SICD)** | Reference | 1.0000 | - | Reference Crop |
+| **BPA (Crop)** | ~195,376 ms | 0.3353 | **SUCCESS** | Shift (0, -1). 8x upsampling + Taylor window. |
+| **BPA (Whole Scene)** | ~301,628 ms | 0.3357 | **SUCCESS** | Downsampled D=16, Shift (-1, 0). |
+| **Polar Format (PFA)** | ~675 ms | -0.0036 | **FAIL** | Limited to 5k pulses. Defocused. |
+| **Chirp Scaling (CSA)** | ~11,811 ms | -0.0103 | **FAIL** | Limited to 5k pulses. Dummy model. |
+
+### 3.2 Dataset 2: 2023-09-25-17-37-50_UMBRA-05
+BPA used 14,479 pulses (chunked), PFA/CSA used 5,000 pulses. Crop centered at (4439, 6671).
+
+| Algorithm | Execution Latency (ms) | Magnitude Correlation ($\gamma_{\text{mag}}$) | Status | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Ground Truth (SICD)** | Reference | 1.0000 | - | Reference Crop |
+| **BPA (Crop)** | ~255,269 ms | 0.4259 | **SUCCESS** | Shift (0, 4). 8x upsampling + Taylor window. |
+| **BPA (Whole Scene)** | ~344,311 ms | 0.4958 | **SUCCESS** | Downsampled D=16, Shift (-1, -1). |
+| **Polar Format (PFA)** | ~590 ms | -0.0052 | **FAIL** | Limited to 5k pulses. Defocused. |
+| **Chirp Scaling (CSA)** | ~14,659 ms | 0.0025 | **FAIL** | Limited to 5k pulses. Dummy model. |
 
 ---
 
