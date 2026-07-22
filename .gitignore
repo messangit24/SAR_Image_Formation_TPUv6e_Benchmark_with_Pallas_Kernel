@@ -8,3 +8,4 @@ out/*
 # python
 __pycache__/
 *.pyc
+tpu_sar_data/
