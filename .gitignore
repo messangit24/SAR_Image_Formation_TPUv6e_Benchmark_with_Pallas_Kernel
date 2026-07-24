@@ -1,6 +1,6 @@
 # large data + generated products (multi-GB; fetch/regenerate via the pipeline)
 data/*
-out/*
+out/*.np*
 !out/algorithms_compare.png
 !out/compare_gt_pfa_bpa.png
 .venv/*

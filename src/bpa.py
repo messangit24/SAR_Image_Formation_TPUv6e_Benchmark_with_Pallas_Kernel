@@ -59,7 +59,7 @@ def backproject(
     scss: np.ndarray,        # (npulse,) freq step
     pix_ecef: np.ndarray,    # (Naz, Nrg, 3) ECEF pixel positions to image
     r_hat, c_hat, dx_range, dy_cross,
-    sgn: int = -1,
+    sgn: int = 1,
     fc: float | None = None,
     pulse_step: int = 1,
     upsample: int = 4,       # range-profile oversampling (finer delay interp)
