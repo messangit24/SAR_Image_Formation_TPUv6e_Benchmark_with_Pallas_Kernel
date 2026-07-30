@@ -4,7 +4,8 @@ out/*.np*
 !out/algorithms_compare.png
 !out/compare_gt_pfa_bpa.png
 .venv/*
-
+opir/data/
+opir/venv/
 # python
 __pycache__/
 *.pyc
