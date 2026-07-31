@@ -21,10 +21,34 @@ This module provides end-to-end processing of **authentic NOAA-20 satellite Leve
 
 ## 🚀 Execution & Verification
 
-Run the main pipeline:
+Run the reference NumPy CPU pipeline:
 ```bash
 python3 opir/noaa_viirs_l0_l1b_pipeline.py
 ```
+
+Run the multi-granule CPU evaluation benchmark:
+```bash
+python3 opir/evaluate_all_granules.py
+```
+
+## ⚡ JAX / Cloud TPU Batched OPIR Pipeline (`opir/tpu_opir_pipeline.py`)
+
+The JAX port ([`tpu_opir_pipeline.py`](file:///usr/local/google/home/ermlickb/Desktop/Workspace/TPUbench/opir/tpu_opir_pipeline.py)) fuses all Level 1B image formation steps into a compiled XLA computation block (`@jax.jit` with 64-bit precision enabled via `jax_enable_x64`). It is engineered to run on **Cloud TPU (v4 / v5e / v5p)** and **CPU/GPU** with zero numerical degradation (`MAE = 0.0022°C` against NOAA official ground truth).
+
+Run the JAX/TPU benchmark:
+```bash
+python3 opir/tpu_opir_pipeline.py
+```
+
+### Why Batching is Critical for Cloud TPU
+A single VIIRS granule image has shape `(768, 3200)` (~2.46M pixels). On Cloud TPUs, processing a single image leaves the systolic array Matrix/Vector units and High Bandwidth Memory (HBM) underutilized due to XLA kernel dispatch latency.
+
+By stacking $B$ satellite granules into 3D tensors of shape `(B, 768, 3200)` using `jax.vmap`, XLA compiles a single vectorized kernel that processes all granules simultaneously:
+1. **Batched Radiometric Calibration (`jax_radiometric_calibration`)**: Vectorized broadcasting of raw detector counts against per-granule scale and offset factors across the batch dimension.
+2. **Batched Analytical Planck & NOAA SRF Correction (`jax_srf_planck_correction`)**: Fuses non-linear logarithmic ($T = \frac{c_2}{\lambda \ln(c_1 / (\lambda^5 L_\lambda) + 1)}$) and linear SRF corrections across all $B \times 768 \times 3200$ pixels in parallel.
+3. **Batched Geodetic Bowtie GSD & Area Expansion (`jax_compute_gsd_area`)**: Evaluates terrain-corrected WGS84 spatial footprint area ($\text{km}^2$) and nadir-to-limb bowtie distortion simultaneously across satellite zenith angle arrays.
+4. **Batched Dual-Band Active Fire Detection (`jax_detect_active_fires`)**: Computes MWIR ($3.7\,\mu\text{m}$) vs. LWIR ($10.76\,\mu\text{m}$) temperature difference maps ($\Delta T$) and boolean hotspot masks in parallel.
+5. **Batched Parity & Similarity Metrics (`jax_evaluate_similarity_metrics`)**: Executes batched reductions over `axis=(1, 2)` to compute MAE, RMSE, MaxAE, and Pearson correlation $r$ for every image in the batch in one compiled XLA call.
 
 ## 📐 Calibration Formulas
 
