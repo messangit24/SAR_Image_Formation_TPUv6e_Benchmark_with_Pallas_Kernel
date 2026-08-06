@@ -9,7 +9,11 @@ Decommutates the three visible bands used for natural color -
 a per-channel percentile stretch is all a quicklook true-color needs.
 """
 import argparse
+import os
+import sys
 import numpy as np
+
+sys.path.insert(0, os.path.dirname(__file__))
 from modis_l0_decom import decommutate_ev_reflective
 
 

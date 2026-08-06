@@ -11,9 +11,12 @@ two-point radiometry.  Nothing here comes from a NASA binary — MOD01 is used o
 prove the unpack, not to produce the answer.
 """
 import argparse
+import os
+import sys
 import numpy as np
 from pyhdf.SD import SD, SDC
 
+sys.path.insert(0, os.path.dirname(__file__))
 from modis_l0_decom import decommutate_1km_night
 from modis_l1b_recon import calibrate, stats, make_figure
 

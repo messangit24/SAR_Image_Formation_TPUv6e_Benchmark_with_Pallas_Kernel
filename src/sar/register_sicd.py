@@ -39,7 +39,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--complex', default='out/full_complex.npy')
     ap.add_argument('--geom', default='out/full_geom.npz')
-    ap.add_argument('--sicd', default='data/SICD.nitf')
+    ap.add_argument('--sicd', default='data/sar/SICD.nitf')
     ap.add_argument('--out', default='out/register_sicd.png')
     args = ap.parse_args()
     COMMON = 1.5  # metres/pixel working grid

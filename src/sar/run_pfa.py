@@ -12,10 +12,13 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import os
+import sys
 import time
 
 import numpy as np
 
+sys.path.insert(0, os.path.dirname(__file__))
 from cphd_reader import CPHDReader
 from pfa import form_image
 
@@ -46,7 +49,7 @@ def db_quicklook(mag: np.ndarray, path: str, title: str, flipud=False, fliplr=Fa
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cphd", default="data/umbra05_bingham.cphd")
+    ap.add_argument("--cphd", default="data/sar/umbra05_bingham.cphd")
     ap.add_argument("--pulse-step", type=int, default=1)
     ap.add_argument("--sample-step", type=int, default=1)
     ap.add_argument("--out", default="out/pfa")

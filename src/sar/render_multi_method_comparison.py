@@ -2,9 +2,10 @@ import os, sys, time
 import numpy as np
 import matplotlib.pyplot as plt
 
-workspace_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+workspace_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, workspace_dir)
 sys.path.insert(0, os.path.join(workspace_dir, "src"))
+sys.path.insert(0, os.path.join(workspace_dir, "src", "sar"))
 
 import quality_evaluator
 from cphd_reader import CPHDReader
@@ -20,8 +21,8 @@ from sarpy.io.complex.sicd import SICDReader
 from viz import sar_stretch
 
 def main():
-    sicd_path = os.path.join(workspace_dir, "tpu_sar_data/bingham_20230925/2023-09-25-17-37-50_UMBRA-05_SICD.nitf")
-    cphd_path = os.path.join(workspace_dir, "tpu_sar_data/bingham_20230925/2023-09-25-17-37-50_UMBRA-05_CPHD.cphd")
+    sicd_path = os.path.join(workspace_dir, "data/sar/bingham_20230925/2023-09-25-17-37-50_UMBRA-05_SICD.nitf")
+    cphd_path = os.path.join(workspace_dir, "data/sar/bingham_20230925/2023-09-25-17-37-50_UMBRA-05_CPHD.cphd")
 
     grid = read_sicd_grid(sicd_path)
     cphd_reader = CPHDReader(cphd_path)

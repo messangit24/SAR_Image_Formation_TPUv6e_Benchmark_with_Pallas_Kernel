@@ -15,8 +15,12 @@ the reflective NIR (it emits, it doesn't reflect); sun-glint and bright surfaces
 *bright* in both MWIR and NIR. That NIR test is the operational plume-vs-glint filter.
 """
 import argparse
+import os
+import sys
 import numpy as np
 from pyhdf.SD import SD, SDC
+
+sys.path.insert(0, os.path.dirname(__file__))
 from modis_l0_decom import decommutate_1km_night, decommutate_ev_reflective
 from modis_l1b_recon import calibrate, BAND_LAMBDA, inv_planck
 

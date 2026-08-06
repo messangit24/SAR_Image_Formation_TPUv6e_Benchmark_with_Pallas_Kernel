@@ -1,18 +1,20 @@
-"""Drive CSA-family (range-Doppler + keystone RCMC): read CPHD -> image + quicklook."""
+"""Drive omega-k / RMA: read CPHD -> Stolt migration -> complex image + quicklook."""
 from __future__ import annotations
-import argparse, time
+import argparse, os, sys, time
 import numpy as np
+
+sys.path.insert(0, os.path.dirname(__file__))
 from cphd_reader import CPHDReader
-import csa as alg
+import rma
 from viz import sar_stretch
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cphd", default="data/umbra05_bingham.cphd")
+    ap.add_argument("--cphd", default="data/sar/umbra05_bingham.cphd")
     ap.add_argument("--pulse-step", type=int, default=1)
     ap.add_argument("--sample-step", type=int, default=1)
-    ap.add_argument("--out", default="out/csa")
+    ap.add_argument("--out", default="out/rma")
     ap.add_argument("--save-complex", action="store_true")
     args = ap.parse_args()
 
@@ -23,8 +25,8 @@ def main():
     sig = r.read_signal(pulse_step=args.pulse_step, sample_step=args.sample_step)
     g = r.geometry(pulse_step=args.pulse_step)
     scss = g["scss"] * args.sample_step
-    print(f"signal {sig.shape}; running CSA ...")
-    res = alg.form_image(sig, g["apc"], g["srp"], g["sc0"], scss, sgn=m.sgn)
+    print(f"signal {sig.shape}; running RMA ...")
+    res = rma.form_image(sig, g["apc"], g["srp"], g["sc0"], scss, sgn=m.sgn)
     print(f"done in {time.time()-t0:.0f}s  pixel {res.dx_range:.3f}x{res.dy_cross:.3f} m")
 
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt

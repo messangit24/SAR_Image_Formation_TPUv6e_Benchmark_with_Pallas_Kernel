@@ -32,15 +32,15 @@ accepting the LANCE license.
 
 ```
 MOD00F (raw CCSDS packets)
-   │  src/modis_l0_decom.py   — our MOD_PR01 unpack (bit-exact vs MOD01)
+   │  src/modis/modis_l0_decom.py   — our MOD_PR01 unpack (bit-exact vs MOD01)
    ▼
 detector counts  (EV 10×1354, + onboard BB 10×50, SV 10×50 per scan)
-   │  src/modis_l1b_recon.py  — onboard-blackbody two-point radiometry
+   │  src/modis/modis_l1b_recon.py  — onboard-blackbody two-point radiometry
    ▼
 radiance  ──────────────  compare  ──────────────►  MOD021KM (NASA L1B)
 ```
 
-### 1. Decommutation (L0 → counts) — `src/modis_l0_decom.py`
+### 1. Decommutation (L0 → counts) — `src/modis/modis_l0_decom.py`
 
 The hard part. MODIS packs 12‑bit samples in a non‑obvious interleave that is **not**
 publicly documented in prose — but the open‑source SDST/OCSSW `l1agen_modis` C code
@@ -154,13 +154,13 @@ brightness temperature → hot-source detection with false-alarm rejection.
 # env with pyhdf (HDF4) — MODIS L1A/L1B are HDF-EOS2
 micromamba create -p .mamba/modis -c conda-forge python=3.11 pyhdf numpy scipy matplotlib h5py
 
-# fetch the granule trio (needs an Earthdata token in ~/.edl_token + LANCE license)
-bash data/modis/fetch.sh          # + the two MOD00F .000/.001 L0 segments
+# fetch the granule dataset (needs an Earthdata token in ~/.edl_token or EARTHDATA_TOKEN)
+./download_modis_data.sh ./data/modis   # or: bash data/modis/fetch.sh
 
 # validate the unpack, then run L0 -> L1B
-PYTHONPATH=src micromamba run -p .mamba/modis python src/modis_l0_decom.py \
+PYTHONPATH=src/modis micromamba run -p .mamba/modis python src/modis/modis_l0_decom.py \
     --l0 data/modis/MOD00F.*.001.NRT --l1a data/modis/MOD01.*.hdf --band 31
-PYTHONPATH=src micromamba run -p .mamba/modis python src/run_l0_to_l1b.py \
+PYTHONPATH=src/modis micromamba run -p .mamba/modis python src/modis/run_l0_to_l1b.py \
     --l0 data/modis/MOD00F.*.001.NRT --l1b data/modis/MOD021KM.*.hdf \
     --l1a data/modis/MOD01.*.hdf --geo data/modis/MOD03.*.hdf --band 31
 ```

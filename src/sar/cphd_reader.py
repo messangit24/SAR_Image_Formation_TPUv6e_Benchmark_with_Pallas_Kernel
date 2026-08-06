@@ -224,7 +224,7 @@ class CPHDReader:
 
 if __name__ == "__main__":
     import sys
-    r = CPHDReader(sys.argv[1] if len(sys.argv) > 1 else "data/umbra05_bingham.cphd")
+    r = CPHDReader(sys.argv[1] if len(sys.argv) > 1 else "data/sar/umbra05_bingham.cphd")
     m = r.meta
     print(f"CPHD {m.version}  domain={m.domain_type} SGN={m.sgn}")
     print(f"  vectors={m.num_vectors} samples={m.num_samples} fmt={m.signal_format}")

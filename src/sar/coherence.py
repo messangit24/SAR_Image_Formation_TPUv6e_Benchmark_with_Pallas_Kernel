@@ -82,7 +82,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--complex", default="out/full_complex.npy")
     ap.add_argument("--geom", default="out/full_geom.npz")
-    ap.add_argument("--sicd", default="data/SICD.nitf")
+    ap.add_argument("--sicd", default="data/sar/SICD.nitf")
     ap.add_argument("--out", default="out/coherence.png")
     ap.add_argument("--win", type=int, default=128)
     args = ap.parse_args()

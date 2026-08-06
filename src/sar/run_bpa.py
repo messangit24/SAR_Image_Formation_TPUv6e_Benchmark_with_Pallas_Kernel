@@ -1,7 +1,9 @@
 """Form a BPA image on the SICD grid over a chip and save complex + geom + quicklook."""
 from __future__ import annotations
-import argparse, time
+import argparse, os, sys, time
 import numpy as np
+
+sys.path.insert(0, os.path.dirname(__file__))
 from cphd_reader import CPHDReader
 from sicd_grid import read_sicd_grid
 from bpa import backproject
@@ -10,8 +12,8 @@ from viz import sar_stretch
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cphd", default="data/umbra05_bingham.cphd")
-    ap.add_argument("--sicd", default="data/SICD.nitf")
+    ap.add_argument("--cphd", default="data/sar/umbra05_bingham.cphd")
+    ap.add_argument("--sicd", default="data/sar/SICD.nitf")
     ap.add_argument("--chip", type=int, default=2048)
     ap.add_argument("--center", default="scp", help="'scp' or 'row,col'")
     ap.add_argument("--pulse-step", type=int, default=1)

@@ -8,7 +8,7 @@ Primary test dataset: **Bingham 2023-09-25 Umbra CPHD collect** (`14,479` pulses
 
 ## 🏆 Master Algorithm Benchmark Matrix
 
-| Metric / Parameter | JAX Cloud TPU FFBP (`src/tpu_ffbp.py`) | JAX Cloud TPU BPA (`src/tpu_bpa.py`) | NumPy Reference BPA (`src/bpa.py`) | JAX Cloud TPU PFA (`src/tpu_pfa.py`) | NumPy Reference PFA (`src/pfa.py`) | Range Migration $\omega$-$k$ (`src/rma.py`) | Chirp Scaling (`src/csa.py`) | Ground Truth SICD |
+| Metric / Parameter | JAX Cloud TPU FFBP (`src/sar/tpu_ffbp.py`) | JAX Cloud TPU BPA (`src/sar/tpu_bpa.py`) | NumPy Reference BPA (`src/sar/bpa.py`) | JAX Cloud TPU PFA (`src/sar/tpu_pfa.py`) | NumPy Reference PFA (`src/sar/pfa.py`) | Range Migration $\omega$-$k$ (`src/sar/rma.py`) | Chirp Scaling (`src/sar/csa.py`) | Ground Truth SICD |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Median Complex Coherence ($\gamma_{\text{median}}$)** | **0.9710** | **0.9733** | **0.9733** | **0.7700** | **0.7700** | 0.7400 | 0.1900 | 1.0000 |
 | **High-Signal Target Coherence** | **0.9745** | **0.9768** | **0.9768** | **0.8700** | **0.8700** | 0.8400 | 0.9700 (Center) | 1.0000 |
@@ -27,9 +27,9 @@ Primary test dataset: **Bingham 2023-09-25 Umbra CPHD collect** (`14,479` pulses
 
 | Algorithm Variant | File | Mathematical Complexity | Compute FLOPs (Full 46.5 MP Scene, 14.4k Pulses) | TPU v7 Full Scene Latency | Output Throughput (46.5 MP Grid) | Coherence vs SICD ($\gamma$) | Key Advantage / Tradeoff |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Fast Factorized BPA (FFBP)** | [`src/tpu_ffbp.py`](file:///usr/local/google/home/ermlickb/Desktop/Workspace/TPUbench/src/tpu_ffbp.py) | $\mathcal{O}(N^2 \log N_{\text{pulses}})$ | $\approx 1.8 \times 10^{10}$ FLOPs | **0.65 s** | **71.7 MP/s** | **0.9710** | **Fastest & High Coherence** (tree sub-aperture factorization) |
-| **Polar Format (PFA)** | [`src/tpu_pfa.py`](file:///usr/local/google/home/ermlickb/Desktop/Workspace/TPUbench/src/tpu_pfa.py) | $\mathcal{O}(N^2 \log N)$ | $\approx 2.4 \times 10^9$ FLOPs | **1.85 s** | **25.2 MP/s** | 0.77 (0.98 Peak) | Fast 2D FFT; polar interpolation overhead |
-| **Standard Exact BPA** | [`src/tpu_bpa.py`](file:///usr/local/google/home/ermlickb/Desktop/Workspace/TPUbench/src/tpu_bpa.py) | $\mathcal{O}(N^2 \cdot N_{\text{pulses}})$ | $\approx 6.7 \times 10^{11}$ FLOPs | **1,240 s** (18.6s per 512x512 chip) | 0.038 MP/s (14.1 KP/s) | **0.9768 (97.68%)** | **Gold Standard Parity** (Exact per-pixel 3D ECF geometry) |
+| **Fast Factorized BPA (FFBP)** | [`src/sar/tpu_ffbp.py`](file:///usr/local/google/home/ermlickb/Desktop/Workspace/TPUbench/src/sar/tpu_ffbp.py) | $\mathcal{O}(N^2 \log N_{\text{pulses}})$ | $\approx 1.8 \times 10^{10}$ FLOPs | **0.65 s** | **71.7 MP/s** | **0.9710** | **Fastest & High Coherence** (tree sub-aperture factorization) |
+| **Polar Format (PFA)** | [`src/sar/tpu_pfa.py`](file:///usr/local/google/home/ermlickb/Desktop/Workspace/TPUbench/src/sar/tpu_pfa.py) | $\mathcal{O}(N^2 \log N)$ | $\approx 2.4 \times 10^9$ FLOPs | **1.85 s** | **25.2 MP/s** | 0.77 (0.98 Peak) | Fast 2D FFT; polar interpolation overhead |
+| **Standard Exact BPA** | [`src/sar/tpu_bpa.py`](file:///usr/local/google/home/ermlickb/Desktop/Workspace/TPUbench/src/sar/tpu_bpa.py) | $\mathcal{O}(N^2 \cdot N_{\text{pulses}})$ | $\approx 6.7 \times 10^{11}$ FLOPs | **1,240 s** (18.6s per 512x512 chip) | 0.038 MP/s (14.1 KP/s) | **0.9768 (97.68%)** | **Gold Standard Parity** (Exact per-pixel 3D ECF geometry) |
 
 ---
 

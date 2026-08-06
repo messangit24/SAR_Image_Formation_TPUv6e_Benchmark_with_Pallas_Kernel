@@ -3,7 +3,7 @@
 
 set -e
 
-DATA_DIR="${1:-./tpu_sar_data}"
+DATA_DIR="${1:-./data/sar}"
 mkdir -p "$DATA_DIR"
 
 echo "=== Downloading Umbra Open Data Catalog Sample Dataset ==="
