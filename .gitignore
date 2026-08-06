@@ -3,7 +3,13 @@ data/*
 out/*.np*
 !out/algorithms_compare.png
 !out/compare_gt_pfa_bpa.png
+!out/modis_l0_to_l1b.png
+!out/modis_l0_truecolor.png
+!out/modis_opir_mwir.png
 .venv/*
+.mamba/
+opir/data/
+opir/venv/
 
 # python
 __pycache__/
