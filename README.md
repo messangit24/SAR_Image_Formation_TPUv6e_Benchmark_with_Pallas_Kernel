@@ -102,10 +102,10 @@ pip install --upgrade "jax[tpu]" -f https://storage.googleapis.com/jax-releases/
 ./download_umbra_data.sh ./data/sar
 
 # Run Backprojection
-python3 src/sar/run_bpa.py --cphd data/sar/bingham_20230925/2023-09-25-17-37-50_UMBRA-05_CPHD.cphd --sicd data/sar/bingham_20230925/2023-09-25-17-37-50_UMBRA-05_SICD.nitf --chip 512 --out out/bpa_chip
+python3 src/sar/run_bpa.py --cphd data/sar/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd --sicd data/sar/2023-01-18-07-20-11_UMBRA-05_SICD.nitf --chip 512 --out out/bpa_chip
 
 # Run PFA
-python3 src/sar/run_pfa.py --cphd data/sar/bingham_20230925/2023-09-25-17-37-50_UMBRA-05_CPHD.cphd --sicd data/sar/bingham_20230925/2023-09-25-17-37-50_UMBRA-05_SICD.nitf --out out/pfa_full --save-complex
+python3 src/sar/run_pfa.py --cphd data/sar/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd --sicd data/sar/2023-01-18-07-20-11_UMBRA-05_SICD.nitf --out out/pfa_full --save-complex
 
 # Download MODIS Terra Granule Dataset (Requires NASA Earthdata token in ~/.edl_token or EARTHDATA_TOKEN)
 ./download_modis_data.sh ./data/modis

@@ -18,12 +18,13 @@ def main():
     ap.add_argument("--center", default="scp", help="'scp' or 'row,col'")
     ap.add_argument("--pulse-step", type=int, default=1)
     ap.add_argument("--upsample", type=int, default=4)
-    ap.add_argument("--sgn", type=int, default=1)
+    ap.add_argument("--sgn", type=int, default=None, help="Fourier sign convention (default: from CPHD metadata)")
     ap.add_argument("--out", default="out/bpa")
     args = ap.parse_args()
 
     t0 = time.time()
     r = CPHDReader(args.cphd); m = r.meta
+    sgn = args.sgn if args.sgn is not None else m.sgn
     grid = read_sicd_grid(args.sicd)
     if args.center == "scp":
         cr, cc = grid.scp_row, grid.scp_col
@@ -38,10 +39,10 @@ def main():
     print(f"reading signal + geometry ...")
     sig = r.read_signal(pulse_step=args.pulse_step)
     g = r.geometry(pulse_step=args.pulse_step)
-    print(f"backprojecting {N}x{N} px over {sig.shape[0]} pulses (upsample {args.upsample})...")
+    print(f"backprojecting {N}x{N} px over {sig.shape[0]} pulses (upsample {args.upsample}, sgn={sgn})...")
     res = backproject(sig, g["apc"], g["srp"], g["sc0"], g["scss"], pix,
                       grid.uRow, grid.uCol, grid.ss_row, grid.ss_col,
-                      sgn=args.sgn, upsample=args.upsample, progress=True)
+                      sgn=sgn, upsample=args.upsample, progress=True)
     print(f"done in {time.time()-t0:.0f}s")
 
     # image is [row=range, col=azimuth]; store geom so coherence.py auto-orients.

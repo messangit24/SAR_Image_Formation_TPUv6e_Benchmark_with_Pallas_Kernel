@@ -23,17 +23,22 @@ from cphd_reader import CPHDReader
 from pfa import form_image
 
 
+from sicd_grid import read_sicd_grid
+
+
 def db_quicklook(mag: np.ndarray, path: str, title: str, flipud=False, fliplr=False):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    img = mag.copy()
+    # Downsample if image is very large to keep quicklook memory-efficient and fast
+    step = max(1, max(mag.shape) // 2048)
+    img = mag[::step, ::step].astype(np.float32)
     if flipud:
         img = img[::-1]
     if fliplr:
         img = img[:, ::-1]
-    db = 20 * np.log10(img + 1e-6)
+    db = 20.0 * np.log10(img + 1e-6)
     lo, hi = np.percentile(db, [5, 99.7])
     fig, ax = plt.subplots(figsize=(11, 8))
     ax.imshow(db, cmap="gray", vmin=lo, vmax=hi, aspect="equal", origin="upper")
@@ -50,6 +55,7 @@ def db_quicklook(mag: np.ndarray, path: str, title: str, flipud=False, fliplr=Fa
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cphd", default="data/sar/umbra05_bingham.cphd")
+    ap.add_argument("--sicd", default=None, help="Optional SICD path to align imaging frame (uRow, uCol)")
     ap.add_argument("--pulse-step", type=int, default=1)
     ap.add_argument("--sample-step", type=int, default=1)
     ap.add_argument("--out", default="out/pfa")
@@ -76,11 +82,16 @@ def main():
     scss = g["scss"] * args.sample_step
     print(f"  signal {sig.shape} ({sig.nbytes/1e6:.0f} MB)  read in {time.time()-t0:.1f}s")
 
+    frame = None
+    if args.sicd:
+        grid = read_sicd_grid(args.sicd)
+        frame = (grid.uRow, grid.uCol)
+
     taylor = (args.taylor_nbar, args.taylor_sll) if args.taylor_nbar > 0 else None
     print("running PFA...")
     res = form_image(
         signal=sig, apc=g["apc"], srp=g["srp"], sc0=g["sc0"], scss=scss,
-        uiax=m.uiax, uiay=m.uiay, sgn=m.sgn, taylor=taylor, interp=args.interp,
+        uiax=m.uiax, uiay=m.uiay, sgn=m.sgn, taylor=taylor, frame=frame, interp=args.interp,
     )
 
     mag = np.abs(res.image)

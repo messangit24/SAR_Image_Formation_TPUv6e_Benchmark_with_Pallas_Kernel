@@ -217,6 +217,18 @@ class CPHDReader:
         srp = self.read_pvp("SRPPos", pulse_step)
         sc0 = self.read_pvp("SC0", pulse_step)
         scss = self.read_pvp("SCSS", pulse_step)
+        if np.isnan(tx).any():
+            valid = ~np.isnan(tx[:, 0])
+            if valid.any():
+                idxs = np.arange(len(tx))
+                deg = min(3, int(valid.sum()) - 1)
+                tx_clean = tx.copy()
+                for dim in range(3):
+                    p = np.poly1d(np.polyfit(idxs[valid], tx[valid, dim], deg=deg))
+                    tx_clean[~valid, dim] = p(idxs[~valid])
+                tx = tx_clean
+            else:
+                tx = rcv.copy()
         apc = 0.5 * (tx + rcv)          # effective monostatic phase centre
         return dict(apc=apc, srp=srp, sc0=sc0, scss=scss,
                     txpos=tx, rcvpos=rcv)
