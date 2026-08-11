@@ -25,6 +25,17 @@ def test_coherence_phase_invariance():
     assert np.isclose(gamma, 1.0, atol=1e-5), f"Expected phase-invariant coherence 1.0, got {gamma}"
 
 
+def test_coherence_spatial_shift_invariance():
+    """Verify that small spatial shifts are compensated by peak coherence search."""
+    rng = np.random.default_rng(42)
+    chip_a = rng.standard_normal((64, 64)) + 1j * rng.standard_normal((64, 64))
+    # Apply spatial shift of 1 pixel in both dimensions
+    chip_b = np.roll(chip_a, shift=(1, 1), axis=(0, 1))
+
+    gamma = complex_coherence_peak(chip_a, chip_b, upsample=2, search=1)
+    assert np.isclose(gamma, 1.0, atol=1e-5), f"Expected shift-invariant coherence ~1.0, got {gamma}"
+
+
 def test_coherence_uncorrelated_signals():
     """Verify that two independent random signals produce near-zero coherence."""
     rng = np.random.default_rng(42)

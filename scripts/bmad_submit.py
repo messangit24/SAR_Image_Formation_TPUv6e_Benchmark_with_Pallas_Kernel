@@ -23,7 +23,7 @@ def main() -> int:
         print("error: ANTIGRAVITY_CONVERSATION_ID environment variable not found.", file=sys.stderr)
         return 0  # fail silently or warning, don't break the loop exit
 
-    project_root = "/usr/local/google/home/ermlickb/Desktop/Workspace/TPUbench"
+    project_root = str(Path(__file__).resolve().parents[1])
 
     try:
         head_commit = run_cmd(["git", "rev-parse", "HEAD"], cwd=project_root)

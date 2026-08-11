@@ -873,6 +873,10 @@ Do NOT flag as Critical: style preferences, hypothetical edge cases, missing nic
 operational suggestions (e.g. "move CI variables to Settings"), or theoretical race conditions on \
 ephemeral CI containers.
 
+Repository Context:
+- Infrastructure: This repository is hosted internally on Google GitHub Enterprise (FoG / depot.code.corp.goog). All GitHub Actions runners are internal corporate runners and use `runs-on: self-hosted`. Do NOT flag `runs-on: self-hosted` as a security risk or issue.
+- Scope: This repository (TPUbench) focuses on SAR and MODIS satellite image processing and GCP Terraform infrastructure. Do NOT suggest or require frontend/web or Postgres database tests.
+
 Important Changes are for real code quality concerns that should be addressed but do not block shipping. \
 Suggestions are for everything else.
 

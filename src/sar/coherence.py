@@ -16,11 +16,7 @@ Everything is derived from metadata / the data itself, so it runs on any collect
 from __future__ import annotations
 
 import argparse
-
 import numpy as np
-from sarpy.io.complex.sicd import SICDReader
-from scipy.ndimage import zoom
-from skimage.feature import match_template
 
 ORIENTS = {
     "identity": lambda x: x, "flipud": lambda x: x[::-1], "fliplr": lambda x: x[:, ::-1],
@@ -32,6 +28,9 @@ ORIENTS = {
 def detect_orientation(mine_mag, sicd_mag, sicd_px, my_px):
     """Find which dihedral orientation maps the SICD into my [azimuth, range] frame
     (metadata-free): resample+orient a decimated SICD and template-match."""
+    from scipy.ndimage import zoom
+    from skimage.feature import match_template
+
     D = 8
     a = np.log1p(mine_mag[::D, ::D] / (mine_mag.mean() + 1e-9)).astype(np.float32)
     best = (-1, None)
@@ -89,6 +88,9 @@ def main():
     geom = np.load(args.geom)
     my_px = (float(geom["dy_cross"]), float(geom["dx_range"]))   # (azimuth, range)
     mine = np.asarray(np.load(args.complex, mmap_mode="r"))
+
+    from sarpy.io.complex.sicd import SICDReader
+    from scipy.ndimage import zoom
 
     sr = SICDReader(args.sicd); s = sr.sicd_meta
     sic = sr[:, :]                                               # complex [range, az]

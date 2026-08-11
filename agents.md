@@ -50,7 +50,7 @@ Follow this guide so all code development, benchmarking, infrastructure, and tas
    - If tests or coherence targets fail, state the numbers clearly without hedging or overselling unverified results.
 
 7. **Complete, Track, and Submit.**
-   A feature or bug fix is complete only when:
+   A feature or bug fix is prepared for submission when:
    - Changes are pushed to a remote feature branch: `git push origin <branch-name>`.
    - A **GitHub Issue & Pull Request** are opened via `ggh`:
      ```bash
@@ -60,7 +60,18 @@ Follow this guide so all code development, benchmarking, infrastructure, and tas
    - A corresponding **Buganizer Task** is created under component `2011243` and added to Hotlist `8806410` (TaskFlow Workspace **6001488**):
      - Title: `[TO2] <Feature/Bug Title>`
      - Description: Includes links to the GitHub PR/Issue, list of modified files, and test/benchmark verification output.
-     - Status: Updated to `FIXED` upon successful PR verification.
+
+8. **Mandatory CI/CD & PR Checks Gate (Before Merging to Main).**
+   - **Never merge with failing or pending checks**: Before merging any PR into `main`, the agent/developer MUST inspect and wait for all CI/CD checks to pass:
+     ```bash
+     ggh pr checks <PR_NUMBER> --repo personal/goldthread
+     ```
+   - **Required Passing Checks**:
+     - `ci/Lint & Unit Tests`: Linting (`ruff check src tests scripts`), full unit tests (`pytest -q`), and PR reviewer tests.
+     - `ci/Terraform Validation`: Terraform formatting (`terraform fmt -check`) and validation (`terraform validate`).
+     - `gemini-pr-review/review`: Automated AI code review pass (must complete with zero unaddressed Critical Issues).
+     - Automated Security Scanners (Wiz, Semgrep): Must pass cleanly.
+   - **Resolve CI/Review Findings**: If the AI reviewer surfaces Critical Issues or a CI test fails, resolve the finding on the branch, push the fix, re-verify with `ggh pr checks`, and only merge once all checks are green (`✓`). Update the Buganizer task to `FIXED` upon successful merge.
 
 ---
 
