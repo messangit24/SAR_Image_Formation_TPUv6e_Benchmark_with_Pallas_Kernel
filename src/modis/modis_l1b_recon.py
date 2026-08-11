@@ -38,8 +38,8 @@ Run:
       --band 31 --out out/modis_l1b_recon.png
 """
 import argparse
+
 import numpy as np
-from pyhdf.SD import SD, SDC
 
 # Planck spectral radiance in W/m^2/sr/um for wavelength in um, T in K.
 C1 = 1.191042953e8   # W um^4 / (m^2 sr)  (2 h c^2, wavelength form)
@@ -61,6 +61,7 @@ def inv_planck(lam, L):
 
 def read_band(l1a_path, l1b_path, band):
     """Return raw counts (EV/SV/BB) from L1A and NASA reference radiance from L1B."""
+    from pyhdf.SD import SD, SDC
     nb = band - 20                       # night-group index (bands 20..36 in order)
     L1A = SD(l1a_path, SDC.READ)
     L1B = SD(l1b_path, SDC.READ)
@@ -207,6 +208,7 @@ def make_figure(args, EV, Lref, valid, c, resid, rms_b, pct_b, R2_b):
 
     lat = lon = None
     if args.geo:
+        from pyhdf.SD import SD, SDC
         g = SD(args.geo, SDC.READ)
         lat = g.select("Latitude").get()
         lon = g.select("Longitude").get()

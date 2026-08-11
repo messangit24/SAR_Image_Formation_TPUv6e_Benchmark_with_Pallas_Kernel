@@ -173,6 +173,7 @@ def decommutate_ev_reflective(path, band, nscans):
 
 if __name__ == "__main__":
     import argparse
+
     from pyhdf.SD import SD, SDC
     ap = argparse.ArgumentParser(description="Decommutate MODIS L0 and validate vs MOD01")
     ap.add_argument("--l0", required=True, help="MOD00F .001 packet file")

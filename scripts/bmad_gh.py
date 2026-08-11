@@ -112,9 +112,11 @@ def main() -> int:
     branch = branch_name(story)
     body = issue_body(story, args.story)
 
-    gh = ["gh", "issue", "create", "--title", story["title"], "--body", body, "--label", args.label]
-    if args.repo:
-        gh += ["--repo", args.repo]
+    import shutil
+    gh_bin = shutil.which("ggh") or shutil.which("gh") or "ggh"
+    target_repo = args.repo or "personal/goldthread"
+
+    gh = [gh_bin, "issue", "create", "--repo", target_repo, "--title", f"[TO2] {story['title']}", "--body", body]
 
     if args.dry_run:
         # Shell-safe preview (real run uses argv, no shell — this is just to read).
@@ -127,15 +129,15 @@ def main() -> int:
     try:
         out = subprocess.run(gh, capture_output=True, text=True, check=True)
     except FileNotFoundError:
-        print("error: `gh` CLI not found — install it or use --dry-run.", file=sys.stderr)
+        print(f"error: `{gh_bin}` CLI not found — install it or use --dry-run.", file=sys.stderr)
         return 1
     except subprocess.CalledProcessError as e:  # not authed / no repo / label missing
-        print(f"error: gh issue create failed:\n{e.stderr}", file=sys.stderr)
-        print("hint: run `gh auth login`, or `gh label create bmad-story`, or use --dry-run.",
+        print(f"error: {gh_bin} issue create failed:\n{e.stderr}", file=sys.stderr)
+        print("hint: run `ggh auth login`, or use --dry-run.",
               file=sys.stderr)
         return 1
 
-    url = out.stdout.strip().splitlines()[-1]
+    url = [line.strip() for line in out.stdout.strip().splitlines() if "http" in line][-1]
     number = int(url.rstrip("/").rsplit("/", 1)[-1])
     args.story.write_text(stamp_issue(md, number, url))
     print(f"created issue #{number}: {url}")

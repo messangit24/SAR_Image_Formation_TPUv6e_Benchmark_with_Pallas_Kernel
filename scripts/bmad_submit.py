@@ -12,6 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 def run_cmd(cmd: list[str], cwd: str = ".") -> str:
     res = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd, check=True)
     return res.stdout.strip()
@@ -23,7 +24,7 @@ def main() -> int:
         return 0  # fail silently or warning, don't break the loop exit
 
     project_root = "/usr/local/google/home/ermlickb/Desktop/Workspace/TPUbench"
-    
+
     try:
         head_commit = run_cmd(["git", "rev-parse", "HEAD"], cwd=project_root)
         branch_name = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=project_root)

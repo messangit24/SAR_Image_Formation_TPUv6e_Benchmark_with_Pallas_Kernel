@@ -7,12 +7,15 @@ accumulation to achieve O(N^2 log M) complexity.
 from __future__ import annotations
 
 import os
+
 os.environ["JAX_ENABLE_X64"] = "True"
 
 import jax
+
 jax.config.update("jax_enable_x64", True)
 
 from functools import partial
+
 import jax.numpy as jnp
 import numpy as np
 

@@ -21,8 +21,6 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
 from cphd_reader import CPHDReader
 from pfa import form_image
-
-
 from sicd_grid import read_sicd_grid
 
 

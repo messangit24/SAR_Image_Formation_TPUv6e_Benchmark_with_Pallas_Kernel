@@ -16,11 +16,11 @@ Everything is derived from metadata / the data itself, so it runs on any collect
 from __future__ import annotations
 
 import argparse
+
 import numpy as np
+from sarpy.io.complex.sicd import SICDReader
 from scipy.ndimage import zoom
 from skimage.feature import match_template
-from sarpy.io.complex.sicd import SICDReader
-
 
 ORIENTS = {
     "identity": lambda x: x, "flipud": lambda x: x[::-1], "fliplr": lambda x: x[:, ::-1],
@@ -73,8 +73,7 @@ def complex_coherence_peak(A, B, upsample=2, search=1):
             Bs = np.roll(B, (dy, dx), axis=(0, 1))
             F = np.fft.fft2(A * np.conj(Bs), s=(n * upsample, n * upsample))
             g = np.abs(F).max() / (np.sqrt(na * (np.abs(Bs) ** 2).sum()) + 1e-30)
-            if g > best:
-                best = g
+            best = max(best, g)
     return best
 
 
