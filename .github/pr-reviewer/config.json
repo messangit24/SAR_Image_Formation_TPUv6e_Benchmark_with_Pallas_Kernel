@@ -1,0 +1,21 @@
+{
+  "provider": "gemini",
+  "model": "gemini-3.5-flash",
+  "workstreams": [
+    {
+      "name": "sar_jax_algorithms",
+      "pattern": "^src/sar/.*\\.py$",
+      "criteria_file": ".github/pr-reviewer/skills/sar-jax-review.md"
+    },
+    {
+      "name": "terraform_infrastructure",
+      "pattern": "^terraform/.*\\.tf$",
+      "criteria_file": ".github/pr-reviewer/skills/terraform-infra-review.md"
+    },
+    {
+      "name": "general_backend_python",
+      "pattern": "^src/.*\\.py$",
+      "criteria_file": ".github/pr-reviewer/skills/backend-code-review.md"
+    }
+  ]
+}

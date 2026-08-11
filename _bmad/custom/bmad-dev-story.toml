@@ -1,0 +1,2 @@
+[workflow]
+on_complete = "python3 scripts/bmad_submit.py"

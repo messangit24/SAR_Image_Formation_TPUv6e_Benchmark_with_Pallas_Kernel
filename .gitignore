@@ -16,6 +16,19 @@ opir/venv/
 # python
 __pycache__/
 *.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
 tpu_sar_data/
-tpu_sar_data/*
-__pycache__/*
+
+# terraform
+.terraform/
+*.tfstate*
+
+# BMAD
+.agents/
+_bmad-output/
+_bmad/config.user.toml
+_bmad/custom/config.user.toml
+.bmad-loop/runs/
+.bmad-loop/cache/

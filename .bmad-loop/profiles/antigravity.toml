@@ -1,0 +1,14 @@
+name = "antigravity"
+binary = "/google/bin/releases/jetski-devs/tools/cli"
+prompt_template = "{prompt}"
+launch_args = ["-i"]
+bypass_args = ["--dangerously-skip-permissions"]
+model_flag = "--model"
+usage_parser = "none"
+skill_tree = ".agents/skills"
+seed_files = [".agents/hooks.json"]
+
+[hooks]
+dialect = "antigravity-hooks-json"
+config_path = ".agents/hooks.json"
+events = { Stop = "Stop" }

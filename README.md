@@ -113,3 +113,108 @@ python3 src/sar/run_pfa.py --cphd data/sar/2023-01-18-07-20-11_UMBRA-05_CPHD.cph
 # Run MODIS L0 -> L1B Pipeline
 python3 src/modis/run_l0_to_l1b.py --l0 data/modis/MOD00F.A2026213.0710.061.P.001.NRT --l1b data/modis/MOD021KM.A2026213.0710.061.2026213082055.NRT.hdf --geo data/modis/MOD03.A2026213.0710.061.2026213081852.NRT.hdf --out out/modis_l0_to_l1b.png
 ```
+
+---
+
+## 🛠️ Development & Workflow Guide (AGO TO2)
+
+This repository is maintained under **Apollo-Gov Task Order 2 (AGO-TO2)** and synchronizes across Google-internal tools, TaskFlow, and GitHub Enterprise.
+
+### 🔗 Project Context & Links
+
+* **GitHub Repository**: [`personal/goldthread`](https://depot.code.corp.goog/personal/goldthread)
+* **TaskFlow Workspace**: [GoldThread Workspace (6001488)](https://taskflow.corp.google.com/workspaces/6001488/goals)
+* **Active Hotlist**: [`b/hotlists/8806410`](https://b.corp.google.com/hotlists/8806410) (`TPUbench Tasks`)
+* **TaskFlow Backlog**: [`taskflow/workspaces/6001488/backlogs`](https://taskflow.corp.google.com/workspaces/6001488/backlogs)
+* **Default Component**: [`2011243`](https://b.corp.google.com/components/2011243) (`tasks`)
+* **Parent Task Order**: [AGO-TO2 (`b/519644843`)](https://b.corp.google.com/issues/519644843) under [Parent `b/444192593`](https://b.corp.google.com/issues/444192593)
+
+---
+
+### 💻 GitHub CLI (`ggh`) Setup & Commands
+
+All GitHub CLI interactions against `depot.code.corp.goog` use Google's **`ggh`** wrapper (see [`go/gh-cli`](https://goto.google.com/gh-cli)).
+
+```bash
+# 1. One-time Cloudtop / Workstation setup (configures SSH, commit signing, and ggh)
+bash /google/src/head/depot/google3/devtools/github/onprem/init/init.sh
+
+# 2. Check login status
+ggh auth status
+
+# 3. Create a new GitHub issue
+ggh issue create --repo personal/goldthread --title "[TO2] <Feature Title>" --body "<Description>"
+
+# 4. List open issues
+ggh issue list --repo personal/goldthread
+
+# 5. Open a Pull Request
+ggh pr create --repo personal/goldthread --base main --head <branch-name> --title "[TO2] <PR Title>" --body "<Summary & Test Results>"
+```
+
+---
+
+### 🤖 BMAD (Story-Driven Development) Workflow
+
+We use **BMAD** (Build More, Architect Dreams) for structured feature planning and execution (see [`docs/bmad.md`](docs/bmad.md) and [`AGENTS.md`](agents.md)).
+
+```mermaid
+flowchart LR
+    A["Orientation<br/>(bmad-help)"] --> B["Planning & PRD<br/>(bmad-create-prd)"]
+    B --> C["Architecture<br/>(bmad-architecture)"]
+    C --> D["Story Specs<br/>(bmad-create-story)"]
+    D --> E["Link to GitHub<br/>(scripts/bmad_gh.py)"]
+    E --> F["Implementation<br/>(bmad-dev-story)"]
+    F --> G["Submit PR + TaskFlow<br/>(scripts/bmad_submit.py)"]
+```
+
+#### Core BMAD Commands:
+
+```bash
+# 1. Orientation & Next Recommended Step
+bmad-help
+
+# 2. Plan Non-Trivial Features (PRD & Architecture)
+bmad-create-prd
+bmad-architecture
+bmad-create-epics-and-stories
+
+# 3. Create a Story Specification
+bmad-create-story
+
+# 4. Bridge BMAD Story to GitHub Issue (creates issue & stamps back to story file)
+python scripts/bmad_gh.py docs/bmad/stories/<story-file>.md
+
+# 5. Implement & Run Verification Gates
+bmad-dev-story
+
+# 6. Post-Completion Automated Submission (Pushes branch, opens PR, updates TaskFlow)
+python scripts/bmad_submit.py
+```
+
+---
+
+### 🛡️ Definition of Done Verification Gates
+
+Before submitting any Pull Request or marking a story complete, run:
+
+```bash
+# 1. Linting & Formatting Check
+ruff check src tests scripts
+
+# 2. Unit & Integration Test Suites
+pytest -q
+
+# 3. PR Reviewer Test Suite
+python .github/pr-reviewer/test_review.py
+
+# 4. Terraform Validation (if modifying infrastructure)
+cd terraform && terraform fmt -check && terraform validate && cd ..
+```
+
+---
+
+### 🤖 Automated AI Code Reviewer
+
+Every Pull Request is automatically reviewed by the generic AI Code Reviewer configured in [`.github/workflows/gemini-pr-review.yml`](.github/workflows/gemini-pr-review.yml).
+* **On-Demand Re-Review**: Post a comment on any PR containing `@gemini-cli /review` to trigger a new advisory review pass.
