@@ -13,6 +13,7 @@ Follow this guide so all code development, benchmarking, infrastructure, and tas
 - **Active Hotlist**: [`b/hotlists/8806410`](https://b.corp.google.com/hotlists/8806410) (`TPUbench Tasks`)
 - **Default Component**: [`2011243`](https://b.corp.google.com/components/2011243) (`tasks`)
 - **GitHub CLI**: Use `ggh` for all GitHub Enterprise (`depot.code.corp.goog`) CLI operations (e.g. `ggh issue create`, `ggh pr create`).
+- **Python Environment**: Managed exclusively via **`uv`** with declarative configuration in [`pyproject.toml`](pyproject.toml) and reproducible lockfile [`uv.lock`](uv.lock).
 
 ---
 
@@ -32,9 +33,10 @@ Follow this guide so all code development, benchmarking, infrastructure, and tas
    - Terraform: Follow modular GCP Infrastructure-as-Code standards under [terraform/](terraform/).
 
 4. **Verify — The Definition of Done.**
-   Run and report output for all applicable verification gates:
-   - **Code Quality**: `ruff check src tests scripts` → clean.
-   - **Unit & Integration Tests**: `pytest -q` → all green.
+   Run and report output for all applicable verification gates using `uv run`:
+   - **Code Quality**: `uv run ruff check src tests scripts` → clean.
+   - **Unit & Integration Tests**: `uv run pytest -q` → all green.
+   - **PR Reviewer Test Suite**: `uv run python .github/pr-reviewer/test_review.py` → all green.
    - **Numerical & Coherence Parity**:
      - Fast Factorized Back-Projection (FFBP) & BPA: Complex coherence against reference SICD ground truth must exceed **>97.0%** ($>0.97$).
      - Polar Format Algorithm (PFA): Relative norm error vs CPU reference $< 0.05\%$.
@@ -67,7 +69,7 @@ Follow this guide so all code development, benchmarking, infrastructure, and tas
      ggh pr checks <PR_NUMBER> --repo personal/goldthread
      ```
    - **Required Passing Checks**:
-     - `ci/Lint & Unit Tests`: Linting (`ruff check src tests scripts`), full unit tests (`pytest -q`), and PR reviewer tests.
+     - `ci/Lint & Unit Tests`: Linting (`uv run ruff check src tests scripts`), full unit tests (`uv run pytest -q`), and PR reviewer tests (`uv run python .github/pr-reviewer/test_review.py`).
      - `ci/Terraform Validation`: Terraform formatting (`terraform fmt -check`) and validation (`terraform validate`).
      - `gemini-pr-review/review`: Automated AI code review pass (must complete with zero unaddressed Critical Issues).
      - Automated Security Scanners (Wiz, Semgrep): Must pass cleanly.
@@ -76,6 +78,19 @@ Follow this guide so all code development, benchmarking, infrastructure, and tas
 ---
 
 ## 💻 Code Style & Conventions
+
+### Python & Environment Management (`uv`)
+- **Exclusively use `uv`**: We use `uv` instead of standard `pip`/`venv` for all package management, virtual environment creation, dependency synchronization, and script execution.
+- **Environment Setup & Sync**:
+  - `uv sync`: Automatically creates/updates `.venv` with dependencies and dev tools defined in [`pyproject.toml`](pyproject.toml) and locked in [`uv.lock`](uv.lock).
+  - `source .venv/bin/activate`: Activate the virtual environment (optional if prefixing with `uv run`).
+  - `uv add <package>` / `uv add --dev <package>`: Add new project or development dependencies.
+  - `uv pip install --upgrade "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html`: Install TPU acceleration on Cloud TPU VMs.
+- **Execution with `uv run`**:
+  - Run linters: `uv run ruff check src tests scripts`
+  - Run test suite: `uv run pytest -q`
+  - Run reviewer test suite: `uv run python .github/pr-reviewer/test_review.py`
+  - Run SAR / MODIS pipelines: `uv run python src/sar/run_pfa.py ...`
 
 ### Python & JAX (`src/sar/`, `src/modis/`)
 - **Module Docstrings**: Every module begins with a clear docstring explaining the physical algorithm, inputs/outputs, and CLI usage.

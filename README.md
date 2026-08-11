@@ -90,28 +90,28 @@ Evaluated on the **Bingham 2023-09-25 dataset** (`14,479` pulses × `12,799` sam
 ## 🚀 Quickstart
 
 ```bash
-# Create virtual environment and install dependencies
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+# Create virtual environment and sync dependencies with uv
+uv venv
+source .venv/bin/activate
+uv sync
 
 # Enable Cloud TPU acceleration on GCP TPU VMs
-pip install --upgrade "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+uv pip install --upgrade "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 
 # Download Umbra Open SAR Dataset
 ./download_umbra_data.sh ./data/sar
 
 # Run Backprojection
-python3 src/sar/run_bpa.py --cphd data/sar/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd --sicd data/sar/2023-01-18-07-20-11_UMBRA-05_SICD.nitf --chip 512 --out out/bpa_chip
+uv run python src/sar/run_bpa.py --cphd data/sar/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd --sicd data/sar/2023-01-18-07-20-11_UMBRA-05_SICD.nitf --chip 512 --out out/bpa_chip
 
 # Run PFA
-python3 src/sar/run_pfa.py --cphd data/sar/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd --sicd data/sar/2023-01-18-07-20-11_UMBRA-05_SICD.nitf --out out/pfa_full --save-complex
+uv run python src/sar/run_pfa.py --cphd data/sar/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd --sicd data/sar/2023-01-18-07-20-11_UMBRA-05_SICD.nitf --out out/pfa_full --save-complex
 
 # Download MODIS Terra Granule Dataset (Requires NASA Earthdata token in ~/.edl_token or EARTHDATA_TOKEN)
 ./download_modis_data.sh ./data/modis
 
 # Run MODIS L0 -> L1B Pipeline
-python3 src/modis/run_l0_to_l1b.py --l0 data/modis/MOD00F.A2026213.0710.061.P.001.NRT --l1b data/modis/MOD021KM.A2026213.0710.061.2026213082055.NRT.hdf --geo data/modis/MOD03.A2026213.0710.061.2026213081852.NRT.hdf --out out/modis_l0_to_l1b.png
+uv run python src/modis/run_l0_to_l1b.py --l0 data/modis/MOD00F.A2026213.0710.061.P.001.NRT --l1b data/modis/MOD021KM.A2026213.0710.061.2026213082055.NRT.hdf --geo data/modis/MOD03.A2026213.0710.061.2026213081852.NRT.hdf --out out/modis_l0_to_l1b.png
 ```
 
 ---
@@ -183,13 +183,13 @@ bmad-create-epics-and-stories
 bmad-create-story
 
 # 4. Bridge BMAD Story to GitHub Issue (creates issue & stamps back to story file)
-python scripts/bmad_gh.py docs/bmad/stories/<story-file>.md
+uv run python scripts/bmad_gh.py docs/bmad/stories/<story-file>.md
 
 # 5. Implement & Run Verification Gates
 bmad-dev-story
 
 # 6. Post-Completion Automated Submission (Pushes branch, opens PR, updates TaskFlow)
-python scripts/bmad_submit.py
+uv run python scripts/bmad_submit.py
 ```
 
 ---
@@ -200,13 +200,13 @@ Before submitting any Pull Request or marking a story complete, run:
 
 ```bash
 # 1. Linting & Formatting Check
-ruff check src tests scripts
+uv run ruff check src tests scripts
 
 # 2. Unit & Integration Test Suites
-pytest -q
+uv run pytest -q
 
 # 3. PR Reviewer Test Suite
-python .github/pr-reviewer/test_review.py
+uv run python .github/pr-reviewer/test_review.py
 
 # 4. Terraform Validation (if modifying infrastructure)
 cd terraform && terraform fmt -check && terraform validate && cd ..

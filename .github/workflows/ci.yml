@@ -18,21 +18,26 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          uv sync --frozen
 
       - name: Run Ruff Linter
         run: |
-          ruff check src tests scripts
+          uv run ruff check src tests scripts
 
       - name: Run Test Suite
         run: |
-          pytest -q
+          uv run pytest -q
 
       - name: Run PR Reviewer Unit Tests
         run: |
-          python .github/pr-reviewer/test_review.py
+          uv run python .github/pr-reviewer/test_review.py
 
   terraform:
     name: Terraform Validation

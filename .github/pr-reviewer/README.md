@@ -23,8 +23,7 @@ A fully generic, configuration-driven GitHub Pull Request (PR) code reviewer pow
 .github/
 └── pr-reviewer/
     ├── review.py               # Fully generic, multi-provider reviewer script
-    ├── test_review.py          # Comprehensive unit test suite (86+ checks)
-    ├── requirements.txt        # Python library requirements
+    ├── test_review.py          # Comprehensive unit test suite (94+ checks)
     ├── config.json             # Mapping file regex patterns to skill md files
     └── skills/
         └── frontend-review.md  # Front-end review criteria (React/Vite)
@@ -98,11 +97,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Install dependencies
         run: |
-          pip install -r .github/pr-reviewer/requirements.txt
+          uv pip install --system ".[reviewer]"
 
       - name: Run AI Reviewer
         run: |
@@ -122,9 +126,6 @@ Go to your GitHub repository's **Settings > Secrets and variables > Actions** an
 The reviewer contains a unit test suite. To run tests locally:
 
 ```bash
-# Navigate to the reviewer folder
-cd .github/pr-reviewer
-
-# Run the unittest runner
-python3 test_review.py
+# Run unit test suite using uv
+uv run python .github/pr-reviewer/test_review.py
 ```

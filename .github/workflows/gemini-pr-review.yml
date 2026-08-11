@@ -33,9 +33,14 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - name: Install dependencies
         run: |
-          pip install -r .github/pr-reviewer/requirements.txt
+          uv pip install --system ".[reviewer]"
 
       - name: Run AI Reviewer
         run: |

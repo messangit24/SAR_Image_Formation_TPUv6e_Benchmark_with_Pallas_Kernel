@@ -1,3 +1,53 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tpubench"
+version = "0.1.0"
+description = "High-performance TPU-accelerated SAR & MODIS processing pipelines"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Apollo-Gov Team" }
+]
+dependencies = [
+    "jax>=0.4.20",
+    "jaxlib>=0.4.20",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "Pillow>=10.0.1",
+    "sarpy>=2.0.0",
+    "scikit-image>=0.21.0",
+]
+
+[project.optional-dependencies]
+modis-viz = [
+    "matplotlib>=3.7.0",
+    "pyhdf>=0.11.0",
+]
+reviewer = [
+    "anthropic[vertex]==0.84.0",
+    "google-cloud-aiplatform>=1.38.0",
+    "google-genai>=0.1.1",
+    "requests==2.33.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[[tool.uv.index]]
+name = "default"
+url = "https://pypi.org/simple"
+default = true
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"
@@ -5,3 +55,7 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "W"]
 ignore = ["E402", "E501", "E701", "E702", "E741", "F841"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
