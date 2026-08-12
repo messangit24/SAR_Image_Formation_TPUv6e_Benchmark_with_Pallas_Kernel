@@ -11,14 +11,11 @@ Current active development tasks and planned stories for **AGO-TO2**.
   - Measure kernel memory footprint and Roofline arithmetic intensity.
   - Target: Sub-0.5s full-scene reconstruction.
 
-- [ ] **[TO2-INFRA-01] Automated GKE Cluster Turnup & Worker Helm Chart**:
-  - Create Kubernetes deployment / Job manifests for SAR and MODIS benchmark workers.
-  - Automate node pool scale-up on Job dispatch and scale-down to zero upon completion.
-
 ---
 
 ## ✅ Completed Tasks
 
+- [x] **[TO2-INFRA-01] Automated GKE Benchmark Worker Manifests & Scale-to-Zero Orchestration** (`Dockerfile`, `k8s/`, `src/infra/job_dispatcher.py`, `tests/test_infra_k8s_manifests.py`)
 - [x] **[TO2-MODIS-04] Distributed Multi-Granule Ingestion Pipeline** (`src/modis/distributed_batch.py`, `tests/test_modis_distributed.py`)
 - [x] **[TO2-MODIS-03] MODIS L1B Calibration Validation against MOD021KM Reference** (`src/modis/l1b_validator.py`, `tests/test_modis_l1b_validation.py`)
 - [x] **[TO2-MODIS-02] MWIR Thermal Anomaly Detection & Multi-Granule Pipeline** ([`personal/goldthread#13`](https://depot.code.corp.goog/personal/goldthread/issues/13), PR [`#14`](https://depot.code.corp.goog/personal/goldthread/pull/14), [`b/545221139`](https://b.corp.google.com/issues/545221139))

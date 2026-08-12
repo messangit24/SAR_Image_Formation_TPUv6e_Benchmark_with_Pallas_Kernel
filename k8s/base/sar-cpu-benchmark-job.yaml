@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sar-cpu-benchmark
+  namespace: tpubench
+  labels:
+    app.kubernetes.io/name: sar-cpu-benchmark
+    app.kubernetes.io/component: benchmark-worker
+    app.kubernetes.io/part-of: goldthread
+    tpubench.io/workload-type: sar-cpu
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sar-cpu-benchmark
+        tpubench.io/workload-type: sar-cpu
+      annotations:
+        gke-gcsfuse/volumes: "true"
+    spec:
+      serviceAccountName: tpubench-benchmark-sa
+      restartPolicy: Never
+      nodeSelector:
+        tpubench.io/workload-type: cpu-benchmark
+      containers:
+        - name: worker
+          image: us-docker.pkg.dev/PROJECT_ID/tpubench/worker:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "src.sar.tpu_ffbp"]
+          args:
+            - "--cphd"
+            - "/data/sar/Bingham.cphd"
+            - "--device"
+            - "cpu"
+          resources:
+            requests:
+              cpu: "64"
+              memory: "256Gi"
+            limits:
+              cpu: "80"
+              memory: "320Gi"
+          volumeMounts:
+            - name: gcs-data
+              mountPath: /data
+              readOnly: true
+            - name: output-dir
+              mountPath: /workspace/out
+      volumes:
+        - name: gcs-data
+          csi:
+            driver: gcsfuse.csi.storage.gke.io
+            volumeAttributes:
+              bucketName: BUCKET_NAME
+              mountOptions: "implicit-dirs"
+        - name: output-dir
+          emptyDir: {}

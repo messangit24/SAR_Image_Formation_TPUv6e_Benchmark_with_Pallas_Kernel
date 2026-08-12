@@ -1,0 +1,117 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "tpubench-worker.fullname" . }}-job
+  labels:
+    {{- include "tpubench-worker.labels" . | nindent 4 }}
+spec:
+  backoffLimit: {{ .Values.job.backoffLimit }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        {{- include "tpubench-worker.labels" . | nindent 8 }}
+      annotations:
+        {{- if .Values.gcs.enabled }}
+        gke-gcsfuse/volumes: "true"
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      restartPolicy: Never
+      {{- if eq .Values.workloadType "sar-tpu" }}
+      nodeSelector:
+        cloud.google.com/gke-tpu-accelerator: {{ .Values.resources.tpu.accelerator }}
+        cloud.google.com/gke-tpu-topology: {{ .Values.resources.tpu.topology }}
+      tolerations:
+        - key: "google.com/tpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      {{- else }}
+      nodeSelector:
+        tpubench.io/workload-type: cpu-benchmark
+      {{- end }}
+      containers:
+        - name: worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.command }}
+          command:
+            {{- toYaml .Values.command | nindent 12 }}
+          {{- if .Values.args }}
+          args:
+            {{- toYaml .Values.args | nindent 12 }}
+          {{- end }}
+          {{- else if eq .Values.workloadType "sar-cpu" }}
+          command: ["python", "-m", "src.sar.tpu_ffbp"]
+          {{- if .Values.args }}
+          args:
+            {{- toYaml .Values.args | nindent 12 }}
+          {{- else }}
+          args: ["--cphd", "{{ .Values.gcs.mountPath }}/sar/Bingham.cphd", "--device", "cpu"]
+          {{- end }}
+          {{- else if eq .Values.workloadType "sar-tpu" }}
+          command: ["python", "-m", "src.sar.tpu_ffbp"]
+          {{- if .Values.args }}
+          args:
+            {{- toYaml .Values.args | nindent 12 }}
+          {{- else }}
+          args: ["--cphd", "{{ .Values.gcs.mountPath }}/sar/Bingham.cphd", "--device", "tpu"]
+          {{- end }}
+          {{- else if eq .Values.workloadType "modis-batch" }}
+          command: ["python", "-m", "src.modis.distributed_batch"]
+          {{- if .Values.args }}
+          args:
+            {{- toYaml .Values.args | nindent 12 }}
+          {{- else }}
+          args: ["--synthetic-granules", "8", "--workers", "16"]
+          {{- end }}
+          {{- end }}
+          {{- if eq .Values.workloadType "sar-tpu" }}
+          env:
+            - name: JAX_ENABLE_X64
+              value: "True"
+          resources:
+            requests:
+              google.com/tpu: "{{ .Values.resources.tpu.chips }}"
+              cpu: {{ .Values.resources.tpu.requests.cpu }}
+              memory: {{ .Values.resources.tpu.requests.memory }}
+            limits:
+              google.com/tpu: "{{ .Values.resources.tpu.chips }}"
+              cpu: {{ .Values.resources.tpu.limits.cpu }}
+              memory: {{ .Values.resources.tpu.limits.memory }}
+          {{- else if eq .Values.workloadType "modis-batch" }}
+          resources:
+            requests:
+              cpu: {{ default .Values.resources.cpu.requests.cpu (and .Values.resources.modis .Values.resources.modis.requests.cpu) }}
+              memory: {{ default .Values.resources.cpu.requests.memory (and .Values.resources.modis .Values.resources.modis.requests.memory) }}
+            limits:
+              cpu: {{ default .Values.resources.cpu.limits.cpu (and .Values.resources.modis .Values.resources.modis.limits.cpu) }}
+              memory: {{ default .Values.resources.cpu.limits.memory (and .Values.resources.modis .Values.resources.modis.limits.memory) }}
+          {{- else }}
+          resources:
+            requests:
+              cpu: {{ .Values.resources.cpu.requests.cpu }}
+              memory: {{ .Values.resources.cpu.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.cpu.limits.cpu }}
+              memory: {{ .Values.resources.cpu.limits.memory }}
+          {{- end }}
+          volumeMounts:
+            {{- if .Values.gcs.enabled }}
+            - name: gcs-data
+              mountPath: {{ .Values.gcs.mountPath }}
+              readOnly: true
+            {{- end }}
+            - name: output-dir
+              mountPath: /workspace/out
+      volumes:
+        {{- if .Values.gcs.enabled }}
+        - name: gcs-data
+          csi:
+            driver: gcsfuse.csi.storage.gke.io
+            volumeAttributes:
+              bucketName: {{ .Values.gcs.bucketName }}
+              mountOptions: "implicit-dirs"
+        {{- end }}
+        - name: output-dir
+          emptyDir: {}

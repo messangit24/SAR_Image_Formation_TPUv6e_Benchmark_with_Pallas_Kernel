@@ -54,7 +54,8 @@ gantt
 
 
 
-### ⚪ Milestone 4: Production Benchmarks & High-Throughput Ingestion (Upcoming)
+### ⚪ Milestone 4: Production Benchmarks & High-Throughput Ingestion (In Progress)
+- [x] End-to-end containerized pipeline & GKE benchmark worker orchestration (`k8s/`, `Dockerfile`, `src/infra/`).
 - [ ] Distributed multi-slice TPU v4/v5e scaling benchmarks.
-- [ ] End-to-end containerized pipeline deployment to GKE.
 - [ ] Roofline analysis across larger scene dimensions (16k $\times$ 16k pixels).
+
