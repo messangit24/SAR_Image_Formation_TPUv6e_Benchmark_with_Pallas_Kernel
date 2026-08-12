@@ -12,7 +12,8 @@ Follow this guide so all code development, benchmarking, infrastructure, and tas
 - **Primary TaskFlow Workspace**: [GoldThread Workspace 6001488](https://taskflow.corp.google.com/workspaces/6001488/goals)
 - **Active Hotlist**: [`b/hotlists/8806410`](https://b.corp.google.com/hotlists/8806410) (`TPUbench Tasks`)
 - **Default Component**: [`2011243`](https://b.corp.google.com/components/2011243) (`tasks`)
-- **GitHub CLI**: Use `ggh` for all GitHub Enterprise (`depot.code.corp.goog`) CLI operations (e.g. `ggh issue create`, `ggh pr create`).
+- **GitHub CLI**: `ggh` or `gh` is needed for all GitHub operations (`depot.code.corp.goog`). Start with `ggh` first since enterprise authentication is handled automatically (e.g. `ggh issue create`, `ggh pr create`, `ggh pr checks`).
+
 - **Python Environment**: Managed exclusively via **`uv`** with declarative configuration in [`pyproject.toml`](pyproject.toml) and reproducible lockfile [`uv.lock`](uv.lock).
 
 ---
@@ -92,11 +93,13 @@ When working on multiple concurrent features or spawning parallel agent sessions
 
 
 8. **Mandatory CI/CD, Security Scanner & PR Review Checks Gate (Before Merging to Main).**
-   - **Exclusively use `ggh`**: All GitHub CLI operations (PR creation, checks, review inspection, issue creation) MUST use `ggh` (e.g. `ggh pr checks`, `ggh api`). Never use standard `gh` which lacks Google enterprise authentication.
+   - **GitHub CLI (`ggh` / `gh`)**: `ggh` or `gh` will be needed for CLI operations (PR creation, checks, review inspection, issue creation). Start with `ggh` first since enterprise authentication is handled automatically in this environment (e.g. `ggh pr checks`, `ggh api`), or use `gh` if configured with a valid token.
    - **Inspect all PR Checks**:
      ```bash
      ggh pr checks <PR_NUMBER> --repo personal/goldthread
+     # (or: gh pr checks <PR_NUMBER> --repo personal/goldthread)
      ```
+
    - **Fetch & Review All Comments & Feedback**:
      Agents MUST actively query and address both **Reviewer feedback** (AI code reviewer / human reviews) AND **Security Scanner feedback** (Wiz bot, Semgrep):
      ```bash
