@@ -18,9 +18,12 @@ Follow this guide so all code development, benchmarking, infrastructure, and tas
 
 ---
 
-## 🌳 Parallel Workspaces & Git Worktrees
+## 🌳 Parallel Workspaces & Git Worktrees Policy
 
-When working on multiple concurrent features or spawning parallel agent sessions:
+> [!IMPORTANT]
+> **Strict Worktree Rule**: No work is to be done outside of a git worktree unless it is a quick/trivial change being immediately committed directly to `main` (such as direct documentation updates or single-commit meta edits). All feature development, refactoring, and multi-step tasks MUST be conducted inside dedicated worktrees to prevent dirty states and cross-contamination across concurrent agent sessions or branch switches.
+
+When starting any feature or spawning agent sessions:
 1. **Create Worktree (Always Branch off `origin/main`)**:
    > [!IMPORTANT]
    > **CRITICAL**: Always branch off `origin/main` (or `main`) unless explicitly directed otherwise, so new worktrees do not inadvertently inherit unmerged commits from other in-flight feature branches:
@@ -36,11 +39,17 @@ When working on multiple concurrent features or spawning parallel agent sessions
    ```
 3. **Verify Inside Worktree**:
    Run `uv run pytest -q` inside the worktree to ensure the linked `.venv` and tests run cleanly.
-4. **Cleanup After Merge**:
+4. **Cleanup & Sync After Merge**:
    Once the PR is merged into `main`:
-   ```bash
-   git worktree remove ../TPUbench-<feature-name>
-   ```
+   - **Kill/remove the worktree and clean up the feature branch**:
+     ```bash
+     git worktree remove ../TPUbench-<feature-name>
+     git branch -d feat/<feature-name>  # or -D if already merged remotely
+     ```
+   - **Pull `main` in the primary workspace**: Ensure the root repository workspace is updated with the merged changes so local files remain fresh:
+     ```bash
+     git checkout main && git pull origin main
+     ```
 
 ---
 
@@ -120,6 +129,7 @@ When working on multiple concurrent features or spawning parallel agent sessions
      - `gemini-pr-review/review`: Automated AI code review pass (must complete with zero unaddressed Critical Issues).
      - **Wiz Bot & Security Scanners (`wiz-coe-pilots[bot]`, Semgrep)**: Agents MUST inspect and fix all security and IaC findings posted by Wiz bot (e.g., non-root `USER` instructions in Dockerfiles, unpinned base images, overly permissive security contexts, exposed credentials/secrets).
    - **Resolve Findings on the Branch**: Fix the issues on the feature branch, re-run test suites locally, commit, push updates, re-verify with `ggh pr checks`, and confirm all checks are green (`✓`) before merging into `main`. Update the Buganizer task to `FIXED` upon successful merge.
+    - **Post-Merge Worktree Teardown & Local Sync**: Immediately after merging, kill/remove the feature worktree (`git worktree remove ../TPUbench-<feature-name>`), delete the feature branch (`git branch -d feat/<feature-name>`), and pull `main` in the primary workspace (`git checkout main && git pull origin main`) to keep local files synchronized and up to date.
 
 
 ---
