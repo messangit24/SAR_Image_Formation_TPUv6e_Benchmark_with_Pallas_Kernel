@@ -17,6 +17,29 @@ Follow this guide so all code development, benchmarking, infrastructure, and tas
 
 ---
 
+## 🌳 Parallel Workspaces & Git Worktrees
+
+When working on multiple concurrent features or spawning parallel agent sessions:
+1. **Create Worktree**:
+   ```bash
+   git worktree add ../TPUbench-<feature-name> -b feat/<feature-name>
+   ```
+2. **Symlink Virtual Environment & Data (Zero-Copy)**:
+   Never reinstall `.venv` or re-download datasets. Symlink them directly from the main repository:
+   ```bash
+   ln -s "$(git rev-parse --show-toplevel)/.venv" ../TPUbench-<feature-name>/.venv
+   ln -s "$(git rev-parse --show-toplevel)/data" ../TPUbench-<feature-name>/data
+   ```
+3. **Verify Inside Worktree**:
+   Run `uv run pytest -q` inside the worktree to ensure the linked `.venv` and tests run cleanly.
+4. **Cleanup After Merge**:
+   Once the PR is merged into `main`:
+   ```bash
+   git worktree remove ../TPUbench-<feature-name>
+   ```
+
+---
+
 ## 🔄 The Loop for Every Feature & Task
 
 1. **Understand before editing.**
