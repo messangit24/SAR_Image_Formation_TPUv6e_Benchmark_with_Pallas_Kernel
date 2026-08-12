@@ -19,8 +19,10 @@ Current active development tasks and planned stories for **AGO-TO2**.
 
 ## ✅ Completed Tasks
 
+- [x] **[TO2-MODIS-04] Distributed Multi-Granule Ingestion Pipeline** (`src/modis/distributed_batch.py`, `tests/test_modis_distributed.py`)
 - [x] **[TO2-MODIS-03] MODIS L1B Calibration Validation against MOD021KM Reference** (`src/modis/l1b_validator.py`, `tests/test_modis_l1b_validation.py`)
 - [x] **[TO2-MODIS-02] MWIR Thermal Anomaly Detection & Multi-Granule Pipeline** ([`personal/goldthread#13`](https://depot.code.corp.goog/personal/goldthread/issues/13), PR [`#14`](https://depot.code.corp.goog/personal/goldthread/pull/14), [`b/545221139`](https://b.corp.google.com/issues/545221139))
+
 
 
 - [x] **[TO2] Adopt uv for Python package and virtualenv management** ([`personal/goldthread#11`](https://depot.code.corp.goog/personal/goldthread/issues/11), PR [`#12`](https://depot.code.corp.goog/personal/goldthread/pull/12), [`b/545157875`](https://b.corp.google.com/issues/545157875))

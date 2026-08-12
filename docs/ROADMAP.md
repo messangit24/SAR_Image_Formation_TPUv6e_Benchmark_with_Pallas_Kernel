@@ -46,11 +46,12 @@ gantt
 - [x] GKE Cloud TPU node pools (`terraform/tpu_cluster.tf`).
 - [x] Manual zero-node downscaling to avoid idle cloud costs.
 
-### 🟡 Milestone 3: MODIS Thermal & Multi-Spectral Pipeline (In Progress)
+### 🟡 Milestone 3: MODIS Thermal & Multi-Spectral Pipeline (Completed)
 - [x] Bit-exact L0 packet decommutation (`src/modis/modis_l0_decom.py`).
 - [x] Complete L1B radiometric calibration validation against `MOD021KM` reference products (`src/modis/l1b_validator.py`).
 - [x] MWIR Thermal Anomaly Detection & Multi-Granule Ingestion Pipeline (`src/modis/mwir_detector.py`, `src/modis/multi_granule_pipeline.py`).
-- [ ] Ray/JAX distributed batch processing for MODIS historical granules.
+- [x] Distributed multi-process & Ray batch processing for MODIS historical granules (`src/modis/distributed_batch.py`).
+
 
 
 ### ⚪ Milestone 4: Production Benchmarks & High-Throughput Ingestion (Upcoming)

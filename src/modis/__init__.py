@@ -1,4 +1,11 @@
 """MODIS L0-L1B processing and MWIR thermal anomaly detection modules."""
+from .distributed_batch import (
+    BatchProcessingSummary,
+    DistributedBatchConfig,
+    generate_synthetic_granule_batch,
+    link_orbit_clusters,
+    process_granules_distributed,
+)
 from .l1b_validator import (
     GranuleValidationReport,
     ValidationMetrics,
@@ -47,5 +54,11 @@ __all__ = [
     "export_report_json",
     "generate_markdown_summary",
     "generate_synthetic_l1a_l1b",
+    "BatchProcessingSummary",
+    "DistributedBatchConfig",
+    "generate_synthetic_granule_batch",
+    "link_orbit_clusters",
+    "process_granules_distributed",
 ]
+
 
