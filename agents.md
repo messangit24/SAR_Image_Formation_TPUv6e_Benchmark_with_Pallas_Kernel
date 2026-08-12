@@ -49,6 +49,7 @@ When working on multiple concurrent features or spawning parallel agent sessions
 2. **Plan non-trivial work.**
    - For multi-file or algorithmic modifications, write a concise plan under `docs/<feature>-plan.md` detailing current state, target files, mathematical/algorithmic approach, verification strategy, and potential pitfalls.
    - For major features, align with the TO2 delivery plan and milestone requirements.
+   - **BMad Story Specification**: Create or update the dedicated story specification under `docs/bmad/stories/story-<module>-<id>-<title>.md` with clear Acceptance Criteria (AC1..ACn).
 
 3. **Implement in the codebase's idiom.**
    - Python / JAX: Follow high-performance vectorization principles; avoid Python loops on hot array paths.
@@ -66,8 +67,10 @@ When working on multiple concurrent features or spawning parallel agent sessions
    - **Terraform Validation**: `terraform fmt -check` and `terraform validate` inside [terraform/](terraform/).
    - **Live Benchmark Paths**: When modifying image formation or data ingestion pipelines, benchmark execution time and memory scaling on real data granules (`data/sar/`, `data/modis/`).
 
-5. **Update docs + performance benchmarks.**
+5. **Update docs + performance benchmarks + BMad stories.**
    - Update [docs/PERFORMANCE_BENCHMARKS.md](docs/PERFORMANCE_BENCHMARKS.md), [README.md](README.md), and [README_MODIS.md](README_MODIS.md) whenever algorithms, latency figures, or CLI parameters change.
+   - Update `docs/TODO.md` and `docs/ROADMAP.md` milestone progress.
+   - **Update BMad Story File**: Update `docs/bmad/stories/story-<id>.md` to record completion status, check off all Acceptance Criteria, and document exact verification metrics.
    - Record durable architectural decisions and benchmark findings in project docs.
 
 6. **Report honestly.**
@@ -77,6 +80,7 @@ When working on multiple concurrent features or spawning parallel agent sessions
 7. **Complete, Track, and Submit.**
    A feature or bug fix is prepared for submission when:
    - Changes are pushed to a remote feature branch: `git push origin <branch-name>`.
+   - The BMad story doc (`docs/bmad/stories/story-<id>.md`) is included in the PR diff.
    - A **GitHub Issue & Pull Request** are opened via `ggh`:
      ```bash
      ggh issue create --repo personal/goldthread --title "[TO2] <Title>" --body "<Description>"
@@ -85,6 +89,7 @@ When working on multiple concurrent features or spawning parallel agent sessions
    - A corresponding **Buganizer Task** is created under component `2011243` and added to Hotlist `8806410` (TaskFlow Workspace **6001488**):
      - Title: `[TO2] <Feature/Bug Title>`
      - Description: Includes links to the GitHub PR/Issue, list of modified files, and test/benchmark verification output.
+
 
 8. **Mandatory CI/CD & PR Checks Gate (Before Merging to Main).**
    - **Never merge with failing or pending checks**: Before merging any PR into `main`, the agent/developer MUST inspect and wait for all CI/CD checks to pass:
