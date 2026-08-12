@@ -91,17 +91,29 @@ When working on multiple concurrent features or spawning parallel agent sessions
      - Description: Includes links to the GitHub PR/Issue, list of modified files, and test/benchmark verification output.
 
 
-8. **Mandatory CI/CD & PR Checks Gate (Before Merging to Main).**
-   - **Never merge with failing or pending checks**: Before merging any PR into `main`, the agent/developer MUST inspect and wait for all CI/CD checks to pass:
+8. **Mandatory CI/CD, Security Scanner & PR Review Checks Gate (Before Merging to Main).**
+   - **Exclusively use `ggh`**: All GitHub CLI operations (PR creation, checks, review inspection, issue creation) MUST use `ggh` (e.g. `ggh pr checks`, `ggh api`). Never use standard `gh` which lacks Google enterprise authentication.
+   - **Inspect all PR Checks**:
      ```bash
      ggh pr checks <PR_NUMBER> --repo personal/goldthread
      ```
-   - **Required Passing Checks**:
+   - **Fetch & Review All Comments & Feedback**:
+     Agents MUST actively query and address both **Reviewer feedback** (AI code reviewer / human reviews) AND **Security Scanner feedback** (Wiz bot, Semgrep):
+     ```bash
+     # Fetch review comments and AI reviews
+     ggh api repos/personal/goldthread/issues/<PR_NUMBER>/comments
+     # Fetch inline review comments (e.g. Wiz bot, line-specific comments)
+     ggh api repos/personal/goldthread/pulls/<PR_NUMBER>/comments
+     # Fetch PR review submissions and bot status
+     ggh api repos/personal/goldthread/pulls/<PR_NUMBER>/reviews
+     ```
+   - **Required Passing Gates & Feedback Resolution**:
      - `ci/Lint & Unit Tests`: Linting (`uv run ruff check src tests scripts`), full unit tests (`uv run pytest -q`), and PR reviewer tests (`uv run python .github/pr-reviewer/test_review.py`).
      - `ci/Terraform Validation`: Terraform formatting (`terraform fmt -check`) and validation (`terraform validate`).
      - `gemini-pr-review/review`: Automated AI code review pass (must complete with zero unaddressed Critical Issues).
-     - Automated Security Scanners (Wiz, Semgrep): Must pass cleanly.
-   - **Resolve CI/Review Findings**: If the AI reviewer surfaces Critical Issues or a CI test fails, resolve the finding on the branch, push the fix, re-verify with `ggh pr checks`, and only merge once all checks are green (`✓`). Update the Buganizer task to `FIXED` upon successful merge.
+     - **Wiz Bot & Security Scanners (`wiz-coe-pilots[bot]`, Semgrep)**: Agents MUST inspect and fix all security and IaC findings posted by Wiz bot (e.g., non-root `USER` instructions in Dockerfiles, unpinned base images, overly permissive security contexts, exposed credentials/secrets).
+   - **Resolve Findings on the Branch**: Fix the issues on the feature branch, re-run test suites locally, commit, push updates, re-verify with `ggh pr checks`, and confirm all checks are green (`✓`) before merging into `main`. Update the Buganizer task to `FIXED` upon successful merge.
+
 
 ---
 
