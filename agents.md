@@ -21,9 +21,12 @@ Follow this guide so all code development, benchmarking, infrastructure, and tas
 ## 🌳 Parallel Workspaces & Git Worktrees
 
 When working on multiple concurrent features or spawning parallel agent sessions:
-1. **Create Worktree**:
+1. **Create Worktree (Always Branch off `origin/main`)**:
+   > [!IMPORTANT]
+   > **CRITICAL**: Always branch off `origin/main` (or `main`) unless explicitly directed otherwise, so new worktrees do not inadvertently inherit unmerged commits from other in-flight feature branches:
    ```bash
-   git worktree add ../TPUbench-<feature-name> -b feat/<feature-name>
+   git fetch origin main
+   git worktree add ../TPUbench-<feature-name> -b feat/<feature-name> origin/main
    ```
 2. **Symlink Virtual Environment & Data (Zero-Copy)**:
    Never reinstall `.venv` or re-download datasets. Symlink them directly from the main repository:
@@ -40,6 +43,7 @@ When working on multiple concurrent features or spawning parallel agent sessions
    ```
 
 ---
+
 
 ## 🔄 The Loop for Every Feature & Task
 
