@@ -48,8 +48,10 @@ gantt
 
 ### 🟡 Milestone 3: MODIS Thermal & Multi-Spectral Pipeline (In Progress)
 - [x] Bit-exact L0 packet decommutation (`src/modis/modis_l0_decom.py`).
-- [ ] Complete L1B radiometric calibration validation against `MOD021KM` reference products.
+- [x] Complete L1B radiometric calibration validation against `MOD021KM` reference products (`src/modis/l1b_validator.py`).
+- [x] MWIR Thermal Anomaly Detection & Multi-Granule Ingestion Pipeline (`src/modis/mwir_detector.py`, `src/modis/multi_granule_pipeline.py`).
 - [ ] Ray/JAX distributed batch processing for MODIS historical granules.
+
 
 ### ⚪ Milestone 4: Production Benchmarks & High-Throughput Ingestion (Upcoming)
 - [ ] Distributed multi-slice TPU v4/v5e scaling benchmarks.

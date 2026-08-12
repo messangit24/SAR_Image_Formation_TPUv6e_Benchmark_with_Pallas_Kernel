@@ -6,12 +6,6 @@ Current active development tasks and planned stories for **AGO-TO2**.
 
 ## 🚀 Active & Up Next
 
-- [x] **[TO2-MODIS-02] MWIR Thermal Anomaly Detection & Multi-Granule Pipeline**:
-  - Modular MWIR detection engine with contextual & absolute triggers (`src/modis/mwir_detector.py`).
-  - Solar glint discrimination filter using NIR Band 2 (858 nm) reflectance.
-  - Dozier dual-channel sub-pixel temperature/area non-linear solver and Fire Radiative Power (FRP).
-  - 8-connected spatial clustering and multi-granule GeoJSON/JSON catalog export (`src/modis/multi_granule_pipeline.py`).
-
 - [ ] **[TO2-SAR-01] Benchmark JAX FFBP on Cloud TPU v5e Slices**:
   - Run `src/sar/tpu_ffbp.py` across 1x1, 2x2, and 4x4 TPU topologies.
   - Measure kernel memory footprint and Roofline arithmetic intensity.
@@ -24,6 +18,10 @@ Current active development tasks and planned stories for **AGO-TO2**.
 ---
 
 ## ✅ Completed Tasks
+
+- [x] **[TO2-MODIS-03] MODIS L1B Calibration Validation against MOD021KM Reference** (`src/modis/l1b_validator.py`, `tests/test_modis_l1b_validation.py`)
+- [x] **[TO2-MODIS-02] MWIR Thermal Anomaly Detection & Multi-Granule Pipeline** ([`personal/goldthread#13`](https://depot.code.corp.goog/personal/goldthread/issues/13), PR [`#14`](https://depot.code.corp.goog/personal/goldthread/pull/14), [`b/545221139`](https://b.corp.google.com/issues/545221139))
+
 
 - [x] **[TO2] Adopt uv for Python package and virtualenv management** ([`personal/goldthread#11`](https://depot.code.corp.goog/personal/goldthread/issues/11), PR [`#12`](https://depot.code.corp.goog/personal/goldthread/pull/12), [`b/545157875`](https://b.corp.google.com/issues/545157875))
 - [x] **[TO2] Establish CI/CD Pipeline and PR Quality Gates** ([`personal/goldthread#10`](https://depot.code.corp.goog/personal/goldthread/issues/10), PR [`#9`](https://depot.code.corp.goog/personal/goldthread/pull/9), [`b/545154550`](https://b.corp.google.com/issues/545154550))

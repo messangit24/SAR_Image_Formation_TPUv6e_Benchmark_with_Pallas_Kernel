@@ -1,4 +1,20 @@
 """MODIS L0-L1B processing and MWIR thermal anomaly detection modules."""
+from .l1b_validator import (
+    GranuleValidationReport,
+    ValidationMetrics,
+    compute_validation_metrics,
+    evaluate_calibrated_band,
+    export_report_json,
+    generate_markdown_summary,
+    generate_synthetic_l1a_l1b,
+)
+from .multi_granule_pipeline import (
+    GranuleResult,
+    MultiGranuleCatalog,
+    ThermalCluster,
+    cluster_thermal_detections,
+    process_granule_arrays,
+)
 from .mwir_detector import (
     DetectionConfig,
     ThermalDetection,
@@ -8,13 +24,6 @@ from .mwir_detector import (
     inv_planck,
     planck,
     solve_dozier,
-)
-from .multi_granule_pipeline import (
-    GranuleResult,
-    MultiGranuleCatalog,
-    ThermalCluster,
-    cluster_thermal_detections,
-    process_granule_arrays,
 )
 
 __all__ = [
@@ -31,4 +40,12 @@ __all__ = [
     "ThermalCluster",
     "cluster_thermal_detections",
     "process_granule_arrays",
+    "GranuleValidationReport",
+    "ValidationMetrics",
+    "compute_validation_metrics",
+    "evaluate_calibrated_band",
+    "export_report_json",
+    "generate_markdown_summary",
+    "generate_synthetic_l1a_l1b",
 ]
+
