@@ -8,7 +8,7 @@ out/*.np*
 !out/modis_l0_to_l1b.png
 !out/modis_l0_truecolor.png
 !out/modis_opir_mwir.png
-.venv/*
+.venv
 .mamba/
 opir/data/
 opir/venv/
@@ -26,7 +26,6 @@ tpu_sar_data/
 *.tfstate*
 
 # BMAD
-.agents/
 _bmad-output/
 _bmad/config.user.toml
 _bmad/custom/config.user.toml

@@ -40,7 +40,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system ".[reviewer]"
+          uv pip install --system -r .github/pr-reviewer/requirements.txt
 
       - name: Run AI Reviewer
         run: |
