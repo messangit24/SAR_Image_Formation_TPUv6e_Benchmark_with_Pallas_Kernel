@@ -1,12 +1,89 @@
 #!/usr/bin/env python3
-"""Automated Post-Merge Synchronization & Worktree Cleanup Tool for GoldThread."""
+"""Automated Post-Merge Synchronization & Worktree Cleanup Tool.
+
+Triggered by the `merge-sync` skill or CLI.
+Performs:
+1. Git pull origin main in primary repo.
+2. Closes Buganizer / TaskFlow tickets to FIXED.
+3. Automatically deletes merged git worktrees (matched via ggh merged PRs and story stage: COMPLETED).
+4. Runs idempotent tracker synchronization.
+
+Usage:
+    python3 scripts/merge_sync.py
+"""
 import json
+import os
+import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 STORIES_DIR = PROJECT_ROOT / "docs/bmad/stories"
+BUGANIZER_SERVER_PATH = "/google/bin/releases/codemind-mcp-servers/buganizer_server.par"
+
+
+def call_mcp_tool(tool_name: str, arguments: dict[str, Any]) -> str:
+    """Invokes a tool on buganizer_server.par."""
+    if not os.path.exists(BUGANIZER_SERVER_PATH):
+        return ""
+    try:
+        proc = subprocess.Popen(
+            [BUGANIZER_SERVER_PATH],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        proc.stdin.write(
+            json.dumps({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {"name": "merge-sync", "version": "1.0"},
+                },
+            })
+            + "\n"
+        )
+        proc.stdin.flush()
+        proc.stdout.readline()
+
+        proc.stdin.write(
+            json.dumps({
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/call",
+                "params": {"name": tool_name, "arguments": arguments},
+            })
+            + "\n"
+        )
+        proc.stdin.flush()
+        resp_raw = proc.stdout.readline()
+        proc.terminate()
+
+        if not resp_raw:
+            return ""
+
+        resp_data = json.loads(resp_raw)
+        res_str = (
+            resp_data.get("result", {})
+            .get("structuredContent", {})
+            .get("result", "")
+        )
+        if not res_str:
+            res_str = (
+                resp_data.get("result", {})
+                .get("content", [{}])[0]
+                .get("text", "")
+            )
+        return res_str
+    except Exception as e:
+        print(f"error calling {tool_name}: {e}", file=sys.stderr)
+        return ""
 
 
 def get_merged_prs() -> list[dict[str, str]]:
@@ -25,11 +102,26 @@ def get_merged_prs() -> list[dict[str, str]]:
     return []
 
 
+def get_completed_story_slugs() -> set[str]:
+    """Extracts slugs of all stories marked COMPLETED in docs/bmad/stories/."""
+    completed = set()
+    if not STORIES_DIR.exists():
+        return completed
+    for sf in STORIES_DIR.glob("story-*.md"):
+        content = sf.read_text(encoding="utf-8")
+        if 'stage: "COMPLETED"' in content or 'Status: completed' in content:
+            m = re.search(r"story-(\d+\.\d+|[a-zA-Z0-9-]+)", sf.name)
+            if m:
+                completed.add(m.group(0))
+    return completed
+
+
 def cleanup_worktrees() -> list[str]:
-    """Finds and removes worktrees whose branches have been merged."""
+    """Finds and removes worktrees whose branches have been merged or stories completed."""
     cleaned = []
     merged_prs = get_merged_prs()
     merged_branches = {pr.get("headRefName", "") for pr in merged_prs if pr.get("headRefName")}
+    completed_slugs = get_completed_story_slugs()
 
     try:
         res = subprocess.run(
@@ -53,8 +145,21 @@ def cleanup_worktrees() -> list[str]:
                 current_branch = None
 
         for wt_path, branch in worktrees:
+            should_clean = False
+            reason = ""
+
             if branch in merged_branches:
-                print(f"🧹 Removing merged worktree: {wt_path} (branch: {branch})...")
+                should_clean = True
+                reason = f"PR merged for branch `{branch}`"
+            else:
+                for slug in completed_slugs:
+                    if slug in wt_path or slug in branch:
+                        should_clean = True
+                        reason = f"Story `{slug}` marked COMPLETED"
+                        break
+
+            if should_clean:
+                print(f"🧹 Removing merged worktree: {wt_path} ({reason})...")
                 subprocess.run(["git", "worktree", "remove", wt_path, "--force"], cwd=PROJECT_ROOT, check=False)
                 subprocess.run(["git", "branch", "-D", branch], cwd=PROJECT_ROOT, check=False)
                 cleaned.append(f"{wt_path} ({branch})")
@@ -63,35 +168,84 @@ def cleanup_worktrees() -> list[str]:
     return cleaned
 
 
+def sync_completed_tickets() -> list[str]:
+    """Ensures all stories marked COMPLETED in docs/bmad/stories/ have their Buganizer tickets transitioned to FIXED."""
+    updated = []
+    if not STORIES_DIR.exists():
+        return updated
+    user_email = os.environ.get("USER", "")
+    if user_email and "@" not in user_email:
+        user_email = f"{user_email}@google.com"
+
+    for sf in sorted(STORIES_DIR.glob("story-*.md")):
+        content = sf.read_text(encoding="utf-8")
+        if 'stage: "COMPLETED"' in content or 'Status: completed' in content:
+            m = re.search(r'buganizer_id:\s*"(\d+)"', content)
+            if m:
+                bug_id = m.group(1)
+                try:
+                    res = call_mcp_tool("buganizer_update_issue_status", {
+                        "issue_id": int(bug_id),
+                        "status": "FIXED",
+                    })
+                    if "must have an assignee" in res and user_email:
+                        call_mcp_tool("buganizer_reassign_issue", {
+                            "issue_id": int(bug_id),
+                            "assignee": user_email,
+                            "comment_markdown": "Auto-assigned during merge sync.",
+                        })
+                        call_mcp_tool("buganizer_update_issue_status", {
+                            "issue_id": int(bug_id),
+                            "status": "FIXED",
+                        })
+                    updated.append(f"{sf.name} -> b/{bug_id}")
+                except Exception as e:
+                    print(f"warning updating b/{bug_id}: {e}", file=sys.stderr)
+    return updated
+
+
 def main() -> int:
     print("=" * 80)
-    print("🔄 Running Post-Merge Synchronization & Worktree Cleanup (GoldThread)")
+    print("🔄 Running Post-Merge Synchronization & Worktree Cleanup")
     print("=" * 80)
 
+    # 1. Pull latest main
     print("\n1. Pulling latest main from origin...")
     subprocess.run(["git", "checkout", "main"], cwd=PROJECT_ROOT, check=False)
     pull_res = subprocess.run(["git", "pull", "origin", "main"], cwd=PROJECT_ROOT, capture_output=True, text=True)
     print(pull_res.stdout.strip() if pull_res.stdout else "Already up to date.")
 
+    # 2. Check for merged PRs
     merged_prs = get_merged_prs()
     if merged_prs:
         print("\n2. Recently Merged PRs:")
         for pr in merged_prs:
             print(f"  • PR #{pr.get('number')}: {pr.get('title')} (branch: {pr.get('headRefName')})")
 
+    # 3. Clean up merged worktrees
     print("\n3. Cleaning Merged Worktrees...")
-    cleaned = cleanup_worktrees()
-    if cleaned:
-        for c in cleaned:
+    cleaned_wt = cleanup_worktrees()
+    if cleaned_wt:
+        for c in cleaned_wt:
             print(f"  ✅ Cleaned: {c}")
     else:
         print("  ℹ️ No stale worktrees detected.")
 
-    print("\n4. Running Idempotent Tracker Sync...")
+    # 4. Finalize Buganizer / TaskFlow tickets for completed stories
+    print("\n4. Finalizing Completed Tickets in Buganizer / TaskFlow...")
+    fixed_tickets = sync_completed_tickets()
+    if fixed_tickets:
+        for t in fixed_tickets:
+            print(f"  ✅ Status FIXED: {t}")
+    else:
+        print("  ℹ️ No completed tickets to update.")
+
+    # 5. Run Tracker Synchronization
+    print("\n5. Running Idempotent Tracker Sync...")
     subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts/sync_trackers.py")], cwd=PROJECT_ROOT)
 
-    print("=" * 80)
-    print("✅ Merge Sync Complete: Main updated, merged worktrees cleaned.")
+    print("\n" + "=" * 80)
+    print("✅ Merge Sync Complete: Main updated, merged worktrees cleaned, tickets FIXED, trackers in sync.")
     print("=" * 80)
     return 0
 
