@@ -156,4 +156,25 @@ To ensure agents and engineers never build against outdated requirements, all do
    - `Stale`: Superseded or unverified documentation requiring re-validation.
    - `Archived`: Historical reference preserved for retrospective context.
 
+---
+
+## 🔤 Modular Language Coding Standards (Skills-Based Architecture)
+
+Rather than rigid monolithic formatting rules, language-specific engineering standards are encapsulated in **modular, reusable skills** in `.agents/skills/`:
+
+* **Python Standards ([`write-python`](file:///.agents/skills/write-python/SKILL.md))**:
+  - Python 3.12+ modern typing (`list[str]`, `str | None`, Pydantic v2 / frozen dataclasses).
+  - Lazy imports inside functions for heavy ML/scientific packages (`torch`, `jax`, `transformers`, `cv2`, `pandas`) to keep CLI and test startup $<100\text{ms}$.
+  - Hermetic testing (`pytest` with fixtures/mocks, zero network in unit tests).
+  - "Why" documentation and explicit domain exceptions.
+* **TypeScript & Web Standards ([`write-typescript`](file:///.agents/skills/write-typescript/SKILL.md))**:
+  - Strict typing (zero `any`, discriminated unions, explicit return types).
+  - Zod runtime schema validation on all boundary inputs (APIs, URLs, localStorage).
+  - Clean React hook patterns and accessibility (ARIA / semantic HTML).
+
+### Dual-Sided Enforcement:
+1. **Developer Agent Pull**: Coding agents (`dev-story`, `/owl`) dynamically pull in `write-python` or `write-typescript` during Step 3 worktree implementation.
+2. **Reviewer Agent Enforcement**: Reviewer agents (`bmad-code-review`, `.github/pr-reviewer/`) strictly verify PR diffs against these language skills, flagging missing type annotations, top-level heavy imports, or unhandled errors before PR approval.
+
+
 
