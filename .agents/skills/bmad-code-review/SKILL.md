@@ -1,6 +1,6 @@
 ---
 name: bmad-code-review
-description: Standalone adversarial red-team code review. Cynically inspects git diff against acceptance criteria, deep module design principles, language standards (write-python/write-typescript), memory leaks, and boundary edge cases.
+description: Standalone adversarial red-team code review. Cynically inspects git diff against acceptance criteria, deep module design principles (where applicable), language standards (write-python/write-typescript), memory leaks, and boundary edge cases.
 ---
 
 # Adversarial Red-Team Code Review (`bmad-code-review`)
@@ -17,13 +17,13 @@ Your objective is to find bugs, security leaks, edge-case failures, unhandled ex
 
 ## 🔍 The 6-Layer Adversarial Inspection
 
-1. **Acceptance Criteria & Vertical Slice Verification**:
+1. **Acceptance Criteria & Deliverable Verification**:
    - Does the implementation satisfy EVERY acceptance criterion declared in the story?
-   - Is there an executable end-to-end integration test asserting the complete vertical slice?
-2. **Deep Modules & Interface Encapsulation**:
-   - **Is the module deep?** Does it offer a simple, elegant public interface that hides substantial internal complexity?
-   - **Are abstractions leaky?** Are private implementation details exposed as public getters/setters?
-   - **Are tests interface-focused?** Are unit/integration tests testing the behavior of the public interface rather than mocking/testing private internal plumbing?
+   - Is there an executable verification test or proof for the deliverables?
+2. **Deep Modules & Interface Encapsulation (Where Code/APIs are Modified)**:
+   - **Is the module deep?** Where new classes or services are introduced, do they offer a simple, elegant public interface that hides internal complexity?
+   - **Are abstractions leaky?** Are internal implementation details exposed needlessly?
+   - **Are tests interface-focused?** Are unit/integration tests asserting behavior through the public interface?
 3. **Language Standards Compliance**:
    - **Python (`write-python`)**: Built-in generics (PEP 585/604), lazy imports for heavy ML libraries (`torch`, `jax`, `transformers`, `cv2`, `pandas`), hermetic unit tests with zero network calls.
    - **TypeScript (`write-typescript`)**: Zero `any` policy, Zod runtime boundary validation, typed return signatures, clean `useEffect` cleanup handlers.
@@ -48,7 +48,7 @@ Present findings categorized by severity:
 - `path/to/file.py:L45`: Description of blocker and concrete remediation.
 
 ### 🟡 Important Improvements (Should Fix)
-- `path/to/module.py:L12`: Module is shallow and exposes internal state; encapsulate helper steps into a deep public method.
+- `path/to/module.py:L12`: Consider deeper encapsulation for helper steps.
 
 ### 🟢 Suggestions & Cleanups (Nice to Have)
 - `path/to/module.py:L10`: Consider lazy import for heavy dependency.
