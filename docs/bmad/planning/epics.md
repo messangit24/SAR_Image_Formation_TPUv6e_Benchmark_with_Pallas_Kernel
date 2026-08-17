@@ -1,5 +1,8 @@
 # GoldThread Epic Breakdown & Requirements Mapping
 
+> **Last Updated:** 2026-08-17  
+> **Status:** Active Reference
+
 ## Epic 1: MODIS Telemetry Decommutation & L1B Radiometric Calibration
 Hermetic ingestion of raw CCSDS satellite packets, 12-bit sample decoding, thermal emissive band calibration, and Planck radiometric inversion.
 

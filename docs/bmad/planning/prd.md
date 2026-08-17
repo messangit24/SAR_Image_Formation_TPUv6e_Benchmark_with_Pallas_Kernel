@@ -1,5 +1,8 @@
 # GoldThread / TPUbench Product Requirements Document (PRD)
 
+> **Last Updated:** 2026-08-17  
+> **Status:** Active Reference
+
 ## 1. Executive Summary & Mission
 GoldThread (AGO TO2) delivers high-throughput Synthetic Aperture Radar (SAR) image formation and automated Earth Observation (MODIS/VIIRS) thermal anomaly processing on Google Cloud TPU infrastructure.
 

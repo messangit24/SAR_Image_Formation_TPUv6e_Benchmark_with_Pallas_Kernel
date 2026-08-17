@@ -1,5 +1,8 @@
 # GoldThread / TPUbench System Architecture Spine
 
+> **Last Updated:** 2026-08-17  
+> **Status:** Active Reference
+
 ## 1. Architectural Invariants
 - **AD-1 (JAX Functional Purity)**: Core signal processing routines are implemented as pure, JIT-compilable JAX functions suitable for Cloud TPU execution.
 - **AD-2 (Telemetry Hermeticity)**: Telemetry bitfield unpacking and radiometric calibrators operate deterministically from local granule buffers.
