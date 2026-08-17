@@ -69,7 +69,7 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
 
 1. **Contextual Brainstorming & Seam Analysis (`bmad-brainstorming` + `/grill-me`)**:
    - Analyze existing `prd.md` and `architecture.md`. Use `/grill-me` to probe how the new feature integrates without breaking existing invariants.
-2. **Story Specification & Vertical Slice Definition (`bmad-create-story`)**:
+2. **Story Specification & Vertical Slice Definition (`bmad-create-epics-and-stories`)**:
    - Create `docs/bmad/stories/story-X.Y-<name>.md` declaring:
      - `depends_on: ["story-X.Y"]` (upstream prerequisites).
      - `execution_mode: "AFK"` (autonomous) or `"HUMAN_MONITORED"` (critical oversight).
@@ -103,7 +103,7 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
 | **2** | **`bmad-prd`** | `docs/bmad/planning/prd.md` | Grounds ideas into formal Functional & Non-Functional Requirements. |
 | **3** | **`bmad-architecture`** | `docs/bmad/planning/architecture.md` | Defines technical architecture spine, DB schemas, API contracts, and invariants. |
 | **4** | **`bmad-create-epics-and-stories`** | `planning/epics.md`<br/>`stories/story-*.md` | Breaks architecture into Epics and sharded vertical slice stories. |
-| **5** | **`bmad-create-story`** | `stories/story-X.Y-*.md` | Creates a single new vertical slice story mid-project. |
+| **5** | **`bmad-create-epics-and-stories`** | `stories/story-X.Y-*.md` | Creates a single new vertical slice story mid-project. |
 | **6** | **`update-taskflow`** | **Buganizer & TaskFlow** | **The mandatory concluding step**: Mints Epics, mints Stories, links parent hierarchy, and stamps IDs into frontmatter. |
 | **7** | **`dev-story`** | Isolated Git Worktree | Pre-flight dependency check, isolated worktree scaffolding, plan approval gate, verification gates, and PR submission. |
 | **8** | **`bmad-code-review`** | PR Review Findings | Standalone adversarial red-team code review on `git diff`. |
