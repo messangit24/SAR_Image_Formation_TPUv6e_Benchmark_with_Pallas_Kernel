@@ -1,18 +1,23 @@
-# AGENTS.md — The GoldThread AI-Native Operating Manual
+# AGENTS.md — The AI-Native Operating Manual
 
-This document defines the operating rules, verification standards, and lifecycle protocols for AI coding assistants (Gemini, Jetski, Claude) and software engineers pair-programming on **GoldThread / TPUbench**.
+> **Last Updated:** 2026-08-17  
+> **Status:** Active Dev Guidance
+
+This document defines the operating rules, verification standards, and lifecycle protocols for AI coding assistants (Gemini, Jetski, Claude) and software engineers pair-programming in this repository.
 
 ---
 
-## 🏛️ Core Invariants
+## 🏛️ Core Principles
 
-1. **In-Repo Single Source of Truth**: All requirements (`docs/bmad/planning/prd.md`), architecture designs (`docs/bmad/planning/architecture.md`), and sharded story contracts (`docs/bmad/stories/`) live in the Git repository.
-2. **Workspace Isolation**: **No feature development or code changes occur directly on `main`**. Every story, feature, or bug fix is implemented inside an isolated Git worktree (`../goldthread-<story>`).
+1. **In-Repo Single Source of Truth**: Requirements (`docs/bmad/planning/prd.md`), architecture designs (`docs/bmad/planning/architecture.md`), and sharded story contracts (`docs/bmad/stories/`) live in the Git repository.
+2. **Workspace Isolation**: **No feature development or code changes occur directly on `main`**. Every story, feature, or bug fix is implemented inside an isolated Git worktree (`../<repo>-<story>`).
 3. **Collaborative Planning Gate**: The agent proposes a step-by-step implementation plan and **MUST wait for explicit human approval** before modifying code.
-4. **Hard Verification Gates**: Every change must satisfy automated linting (`uv run ruff check src tests scripts`) and unit tests (`uv run pytest -q`) before submission.
+4. **Hard Verification Gates**: Every change must satisfy automated linting, unit tests, and type checks before submission. Passing tests are mandatory.
 5. **Adversarial Red-Team Review**: The agent conducts a cynical edge-case review on the `git diff` before opening a Pull Request.
-6. **Live Cloud Synchronization**: In-repo specs automatically synchronize with Google TaskFlow (Workspace 6001488), Buganizer, and GitHub without manual form-filling.
-7. **Strict Human Merge Gate**: Humans review and manually merge Pull Requests. Merging triggers automated post-merge synchronization and worktree cleanup via `merge-sync`.
+6. **Live Cloud Synchronization**: In-repo specs automatically synchronize with Google TaskFlow, Buganizer, and GitHub without manual form-filling.
+7. **Strict Human Merge Gate**: Humans review and manually merge Pull Requests. Merging triggers automated post-merge synchronization and worktree cleanup.
+8. **Documentation Freshness & Lifecycle Metadata**: Every document maintained under `docs/` MUST declare its Last Updated Date and status badge at the top (`> **Last Updated:** YYYY-MM-DD\n> **Status:** Active Reference | Draft | Stale | Archived`). Agents and humans must update this timestamp whenever modifying architectural, PRD, or workflow documents.
+
 
 ---
 
@@ -30,8 +35,8 @@ graph TD
     G1 -->|Approved| S3["3. Implement in Worktree<br/>Code + Unit & Integration Tests"]:::step
     G1 -->|Revisions Requested| S2
 
-    S3 --> G2["4. Verification Gates<br/><code>uv run ruff check</code><br/><code>uv run pytest -q</code>"]:::gate
-    G2 --> S4["5. Adversarial Red-Team Review<br/>Scan diff for numerical stability & edge cases"]:::step
+    S3 --> G2["4. Verification Gates<br/>Linting & Tests"]:::gate
+    G2 --> S4["5. Adversarial Red-Team Review<br/>Scan diff for edge cases & regressions"]:::step
     S4 --> S5["6. Push Branch, Issue & PR<br/><code>ggh issue create</code> & <code>ggh pr create</code><br/>Update Buganizer ticket with PR link"]:::step
 
     S5 --> S6["7. Dual-Speed Review & CI Checks<br/><code>ggh pr checks</code> + Fix AI Feedback<br/>Human Manual Review Iteration"]:::human
@@ -45,46 +50,46 @@ graph TD
 ### Step-by-Step Execution Guide:
 
 ### Step 1: Pick Up Ticket & Scaffold Worktree (`dev-story` skill)
-Developer selects a story from [TaskFlow GoldThread (Workspace 6001488)](https://taskflow.corp.google.com/workspaces/6001488/goals):
+Developer selects a story from the backlog and initializes the isolated environment:
 ```bash
 python3 scripts/dev_story.py --story docs/bmad/stories/<story-file>.md --setup-worktree
 ```
-- Creates `../goldthread-<story-slug>` branching from `origin/main`.
-- Zero-copy symlinks dependencies (`.venv`, `data`, `.env`).
+- Creates `../<repo>-<story-slug>` branching from `origin/main`.
+- Zero-copy symlinks dependencies (`.venv`, `node_modules`, `.env`).
 - Automatically transitions TaskFlow / Buganizer ticket to `IN_PROGRESS` (`ASSIGNED`).
 
-### Step 2: Collaborative Planning & Interactive Alignment (Human Gate)
+### Step 2: Collaborative Planning & Socratic Alignment (`/grill-me` Gate)
 - The agent reads the story specification and proposes a granular step-by-step implementation plan.
-- The developer and agent iterate on telemetry parsing, radiometric calibration algorithms, or GKE orchestration.
+- **Socratic Grilling (`/grill-me`)**: For complex stories or architectural alterations, developer and agent leverage the `/grill-me` skill to stress-test requirements, boundary edge cases, backward-compatibility, and verification strategies before writing code.
+- The developer and agent iterate to resolve any open questions or adjust requirements.
 - **Hard Gate**: Code modification **NEVER** begins until the developer explicitly approves the plan.
 
 ### Step 3: Worktree Implementation (Test-Driven Development & `/owl` Mode)
 - **Deep Execution with `/owl`**: For self-contained stories without external repository dependencies (especially in `execution_mode: "AFK"`), leverage the `/owl` slash command for multi-perspective planning, systematic TDD checkpointing, and rigorous self-verification.
 - **Mandatory Test-Driven Development (TDD) Protocol**:
-  1. **🔴 Red (Test-First)**: Author unit/integration tests directly in `tests/test_*.py` asserting telemetry decoding, radiometric calibration accuracy, or JAX kernel coherence before modifying production code. Run `uv run pytest -q tests/test_<feature>.py` to verify tests fail for the right reasons.
-  2. **🟢 Green (Implement Minimal Code)**: Author the minimal signal processing logic in `src/` to satisfy the tests. Run `uv run pytest -q` until all tests pass cleanly.
-  3. **🔵 Refactor & Harden**: Refactor for numerical stability, JAX JIT purity, and memory efficiency while keeping tests green.
-- All modifications remain strictly isolated in `../goldthread-<story-slug>`.
+  1. **🔴 Red (Test-First)**: Author unit/integration tests directly in `tests/test_*.py` asserting the story's Acceptance Criteria and data contracts before modifying production code. Run `uv run pytest -q tests/test_<feature>.py` to verify the tests fail for the right reason.
+  2. **🟢 Green (Implement Minimal Code)**: Implement the minimal production logic in `src/` required to satisfy the tests. Run `uv run pytest -q` until all tests pass cleanly.
+  3. **🔵 Refactor & Harden**: Refactor implementation for clarity, performance, and strict typing while keeping tests green.
 
 ### Step 4: Hard Verification Gates (Definition of Done)
 Run verification commands and inspect real outputs:
-- `uv run ruff check src tests scripts` → **Clean (0 errors)**.
-- `uv run pytest -q` → **All green**.
-- **Verify live against real telemetry/MODIS data** when touching radiometric or decompression pipelines.
+- Backend: `uv run ruff check src tests scripts` && `uv run pytest -q`
+- Frontend: `cd web && npx tsc --noEmit`
+- Live Path: Verify against real endpoints / data when runtime paths are touched.
 
 ### Step 5: Adversarial BMAD Red-Team Review
 - The agent scans the `git diff` for:
-  - Big-endian bitfield unpacking overflow or boundary misalignment.
-  - Floating-point overflow / division by zero in Planck inversion ($c_1 / (\lambda^5 (\exp(c_2/\lambda T) - 1))$).
-  - Memory leaks in high-throughput satellite swath rendering.
+  - Unhandled boundary conditions and exceptions.
+  - Resource leaks (memory, database connections, unclosed handles).
+  - Race conditions, queue thrashing, or performance bottlenecks.
 - Surfaced issues are fixed on the branch before opening the PR.
 
 ### Step 6: PR Submission & Tracker Linking
 - Push branch: `git push -u origin feat/<story-slug>`.
-- Open GitHub Issue and Pull Request using `ggh`:
+- Open GitHub Issue and Pull Request:
   ```bash
-  ggh issue create --title "[GOLDTHREAD] <Story Title>" --body "<Story Path, TaskFlow Link, AC Checklist>"
-  ggh pr create --base main --head feat/<story-slug> --title "[GOLDTHREAD] <Story Title>" --body "<Summary, Issue #, Verification Proofs>"
+  ggh issue create --title "[<PREFIX>] <Story Title>" --body "<Story Path, TaskFlow Link, AC Checklist>"
+  ggh pr create --base main --head feat/<story-slug> --title "[<PREFIX>] <Story Title>" --body "<Summary, Issue #, Verification Proofs>"
   ```
 - Post update comment to TaskFlow / Buganizer ticket (`b/<id>`) linking PR and Issue URLs.
 
@@ -110,7 +115,7 @@ When drafting or creating user stories (in `docs/bmad/stories/` and `docs/bmad/p
 1. **Explicit Story Dependencies (`depends_on`)**:
    - Declare all upstream prerequisite stories in the YAML frontmatter and markdown body:
      ```yaml
-     depends_on: ["story-modis-1.1", "story-modis-1.2"]  # list of prerequisite story slugs
+     depends_on: ["story-1.1", "story-1.2"]  # list of prerequisite story slugs
      ```
    - If the story has no prerequisites and is ready to pick up immediately: `depends_on: []`.
    - **Pre-Flight Dependency Gate**: Before picking up a story in Step 1, verify that all declared `depends_on` stories are marked `stage: "COMPLETED"` (or `- [x]`). Do not scaffold worktrees for blocked stories out of order.
@@ -125,8 +130,30 @@ When drafting or creating user stories (in `docs/bmad/stories/` and `docs/bmad/p
        - *Requirement*: Must document an explicit `human_monitoring_rationale` explaining why developer presence is required during worktree execution.
 
 3. **Vertical Slice Architecture Principle (Tracer Bullets vs. Horizontal Layers)**:
-   - **Strict Anti-Pattern — No Horizontal Layering**: Never decompose stories by architectural tier (e.g., Story 1 = Telemetry unpack only, Story 2 = Calibration math only, Story 3 = GCS pipeline only).
+   - **Strict Anti-Pattern — No Horizontal Layering**: Never decompose stories by architectural tier (e.g., Story 1 = DB schema only, Story 2 = detector only, Story 3 = triage only, Story 4 = UI only, where nothing is testable end-to-end until the final story).
    - **Mandatory Vertical Slices**: Every story MUST cut vertically through the stack to deliver a functional, testable end-to-end flow:
-     - **Story 1 (Walking Skeleton / Tracer Bullet)**: Builds the minimal end-to-end path through the entire pipeline (e.g., Raw Data $\to$ Core Reconstruction Algorithm $\to$ Calibrated Output $\to$ E2E Integration/Coherence Test). Must be runnable and measurable from Day 1.
-     - **Subsequent Stories (Progressive Enrichment)**: Add incremental depth, additional spectral bands, hardware acceleration (JAX Cloud TPU kernels), and distributed batch orchestration.
-     - **Continuous Verifiability**: Every single story must include an end-to-end integration test or benchmark command (`uv run pytest -q`) proving the complete pipeline works with that story's additions.
+     - **Story 1 (Walking Skeleton / Tracer Bullet)**: Builds the minimal end-to-end path through the entire pipeline (e.g., Input Data $\to$ Primary Processing Branch $\to$ Core Business Logic $\to$ Persistence/Output $\to$ E2E Integration/Benchmark Test). Must be runnable and measurable from Day 1.
+     - **Subsequent Stories (Progressive Enrichment)**: Add incremental depth, additional algorithmic branches, deep reasoning tiers, advanced caching, interactive UI views, and edge-case handling.
+     - **Continuous Verifiability**: Every single story must include an end-to-end integration test or benchmark command (e.g. `uv run pytest -q tests/test_e2e_*.py`) proving the complete pipeline works with that story's additions.
+
+---
+
+## 📅 Documentation Freshness & Lifecycle Metadata Standards
+
+To ensure agents and engineers never build against outdated requirements, all documentation under `docs/` (planning, PRDs, architecture, workflows, and specifications) MUST include a standardized metadata block directly beneath the H1 title:
+
+```markdown
+> **Last Updated:** YYYY-MM-DD  
+> **Status:** Active Reference  # Options: Active Reference | In-Review | Draft | Stale | Archived
+```
+
+### Lifecycle Rules:
+1. **Mandatory Date Stamping**: Whenever an agent or engineer updates an architectural diagram, requirements list, or workflow guide, they **MUST** update the `Last Updated` date to the current date.
+2. **Status Definitions**:
+   - `Active Reference`: The authoritative, live source of truth for the codebase.
+   - `In-Review`: Proposed changes currently under human or peer review.
+   - `Draft`: Brainstorming or initial architectural framing in progress.
+   - `Stale`: Superseded or unverified documentation requiring re-validation.
+   - `Archived`: Historical reference preserved for retrospective context.
+
+

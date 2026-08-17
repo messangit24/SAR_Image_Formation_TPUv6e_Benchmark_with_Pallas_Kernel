@@ -1,9 +1,9 @@
-# AI-SDLC & BMAD Workflow Guide
+# AI-Native Software Development Life Cycle (AI-SDLC) Workflow Guide
 
 > **Last Updated:** 2026-08-17  
 > **Status:** Active Reference
 
-A comprehensive operating guide to the **Modern AI-Native Software Development Life Cycle (AI-SDLC)**. Covers the core philosophy, the 5-stage conceptual pipeline, standing up greenfield repositories (0 ➔ 1), adding features to existing codebases (1 ➔ N), and automating multi-tracker synchronization.
+A comprehensive operating guide to the **AI-Native Software Development Life Cycle (AI-SDLC)**. Covers the core philosophy, the 5-stage conceptual pipeline, standing up greenfield repositories (0 ➔ 1), adding features to existing codebases (1 ➔ N), Socratic alignment via `/grill-me`, and automating multi-tracker synchronization.
 
 ---
 
@@ -14,19 +14,24 @@ In traditional human engineering, writing code is the primary bottleneck. Develo
 
 In the **AI-Native Era**, code generation is instantaneous ($0 marginal cost, 0 latency). The primary failure mode is generating thousands of lines of plausible-looking code that solves the wrong problem, violates architectural invariants, cannot be verified incrementally, or breaks existing systems.
 
+### 🎤 Socratic Alignment via `/grill-me`
+The `/grill-me` skill is the interactive alignment engine of the AI-SDLC. Rather than allowing the agent to assume default requirements or rush into implementation plans, `/grill-me` conducts a multi-turn Socratic interview at two critical milestones:
+1. **During Brainstorming & Research**: Probing edge cases, non-functional latency/throughput constraints, failure recovery, and scope boundaries.
+2. **Before / During Implementation Plan Creation**: Stress-testing file modifications, schema migrations, backward compatibility, and test coverage before touching code.
+
 ### The 5-Stage Conceptual Progression
 Whether creating a brand-new service or adding a minor feature, all work progresses through 5 disciplined stages:
 
 ```
 💡 1. IDEA / SPARK
        ⬇
-🧠 2. BRAINSTORM & RESEARCH (`bmad-brainstorming`)
+🧠 2. BRAINSTORM & SOCRATIC ALIGNMENT (`bmad-brainstorming` + `/grill-me`)
        ⬇
 📄 3. PRD, ARCHITECTURE & EPICS (`bmad-prd`, `bmad-architecture`, `bmad-create-epics-and-stories`)
        ⬇
 🎯 4. TRACKER SYNC & TASKFLOW (`update-taskflow` ➔ Buganizer & TaskFlow)
        ⬇
-🧪 5. DEV IMPLEMENTATION & TDD (`dev-story`, `/owl`, worktree, Red-Green-Refactor)
+🧪 5. DEV IMPLEMENTATION, PLANNING & TDD (`/grill-me` ➔ `dev-story` ➔ `/owl` ➔ TDD)
        ⬇
 🛡️ 6. ADVERSARIAL REVIEW, CI & HUMAN MERGE (`bmad-code-review`, PR checks, merge-sync)
 ```
@@ -42,8 +47,9 @@ When bootstrapping a brand-new project, platform, or service:
    git clone git@depot.code.corp.goog:personal/ai-sdlc-starter.git my-project
    cd my-project && chmod +x scripts/*.py
    ```
-2. **Brainstorm & Feasibility (`bmad-brainstorming`)**:
+2. **Brainstorm & Socratic Interview (`bmad-brainstorming` + `/grill-me`)**:
    - Explore target user personas, technical trade-offs, algorithmic models, and boundary risks.
+   - Run `/grill-me` to challenge assumptions and clarify underspecified requirements.
 3. **Formalize PRD & Architecture (`bmad-prd`, `bmad-architecture`)**:
    - Write `docs/bmad/planning/prd.md` to lock in Functional Requirements (FRs) and Non-Functional Requirements (NFRs).
    - Write `docs/bmad/planning/architecture.md` to define database schemas, interface contracts, and system invariants.
@@ -61,8 +67,8 @@ When bootstrapping a brand-new project, platform, or service:
 
 When adding functionality, refactoring an engine, or executing mid-project evolution:
 
-1. **Contextual Brainstorming & Seam Analysis (`bmad-brainstorming`)**:
-   - Analyze existing `prd.md` and `architecture.md` to identify extension points without violating existing invariants.
+1. **Contextual Brainstorming & Seam Analysis (`bmad-brainstorming` + `/grill-me`)**:
+   - Analyze existing `prd.md` and `architecture.md`. Use `/grill-me` to probe how the new feature integrates without breaking existing invariants.
 2. **Story Specification & Vertical Slice Definition (`bmad-create-story`)**:
    - Create `docs/bmad/stories/story-X.Y-<name>.md` declaring:
      - `depends_on: ["story-X.Y"]` (upstream prerequisites).
@@ -74,8 +80,8 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
    - Run `python3 scripts/dev_story.py --story <path> --setup-worktree`.
    - Validates that all `depends_on` prerequisite stories are `COMPLETED`.
    - Symlinks heavy dependencies (`.venv`, `node_modules`, `.env`, `data`) with zero file duplication.
-5. **Plan Approval Gate (Human Review)**:
-   - Agent formulates step-by-step implementation plan. Code modification **never** begins until the developer approves.
+5. **Plan Alignment & Socratic Grilling (`/grill-me` Gate)**:
+   - Agent formulates step-by-step implementation plan. Run `/grill-me` to stress-test the proposed files, schema alterations, and verification tests. Code modification **never** begins until the developer approves.
 6. **Test-Driven Implementation (`/owl` Mode)**:
    - For self-contained stories, leverage `/owl` for deep autonomous reasoning.
    - Follow strict TDD: 🔴 **Red** (failing test first) $\to$ 🟢 **Green** (minimal code) $\to$ 🔵 **Refactor** (clean and type-check).
@@ -93,7 +99,7 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
 
 | # | Skill Name | Primary Output File / Action | Purpose |
 | :- | :--- | :--- | :--- |
-| **1** | **`bmad-brainstorming`** | `docs/bmad/planning/research/` | Explores requirements, problem space, algorithms, and trade-offs. |
+| **1** | **`bmad-brainstorming`** | `docs/bmad/planning/research/` | Explores requirements, problem space, algorithms, and trade-offs (amplified by `/grill-me`). |
 | **2** | **`bmad-prd`** | `docs/bmad/planning/prd.md` | Grounds ideas into formal Functional & Non-Functional Requirements. |
 | **3** | **`bmad-architecture`** | `docs/bmad/planning/architecture.md` | Defines technical architecture spine, DB schemas, API contracts, and invariants. |
 | **4** | **`bmad-create-epics-and-stories`** | `planning/epics.md`<br/>`stories/story-*.md` | Breaks architecture into Epics and sharded vertical slice stories. |
