@@ -28,18 +28,22 @@ graph TD
 ---
 
 ### Step 1: Pre-Flight Readiness & Worktree Setup
-Run the scaffolding tool:
-```bash
-python3 scripts/dev_story.py --story docs/bmad/stories/<story-file>.md --setup-worktree
-```
+- **Dependency Gate**: Inspect story frontmatter `depends_on`. Ensure all prerequisite stories are `COMPLETED` before proceeding.
+- **Execution Mode Check**: Note `execution_mode: "AFK"` (autonomous) vs `execution_mode: "HUMAN_MONITORED"` (critical oversight required).
+- Run the scaffolding tool:
+  ```bash
+  python3 scripts/dev_story.py --story docs/bmad/stories/<story-file>.md --setup-worktree
+  ```
 - Creates `../orbweaver-<story-slug>` branching from `origin/main`.
 - Symlinks `.venv`, `node_modules`, `data`, and `.env` instantly without copying heavy files.
 - Updates Buganizer ticket status to `ASSIGNED` (`IN_PROGRESS`).
 
 ### Step 2: Propose Implementation Plan (Wait for Approval)
-- Read story specification and acceptance criteria.
+- Read story specification, acceptance criteria, and dependency context.
 - Formulate a clear step-by-step implementation plan (target files, architectural seams, verification tests).
 - **Hard Gate**: Present the plan to the developer and wait for explicit approval before modifying code.
+- If `execution_mode: "AFK"`, notify the developer that execution can proceed autonomously once approved.
+- If `execution_mode: "HUMAN_MONITORED"`, surface the `human_monitoring_rationale` and maintain interactive feedback checkpoints.
 
 ### Step 3: Worktree Implementation
 - Navigate to `../orbweaver-<story-slug>`.
