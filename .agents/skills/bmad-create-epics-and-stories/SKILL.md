@@ -1,6 +1,6 @@
 ---
 name: bmad-create-epics-and-stories
-description: Unified Epic & Story creation engine. Automatically determines whether requirements represent a full greenfield decomposition, a brand-new Epic with multiple stories, or a single story addition. Decomposes architecture into vertical slice stories with depends_on, execution_mode (AFK vs HUMAN_MONITORED), and updates TaskFlow.
+description: Unified Epic & Story creation engine. Automatically determines whether requirements represent a full greenfield decomposition, a brand-new Epic with multiple stories, or a single story addition. Decomposes architecture into vertical slice stories with deep module interfaces, depends_on, execution_mode (AFK vs HUMAN_MONITORED), and updates TaskFlow.
 ---
 
 # Universal Epic & Story Creation Engine (`bmad-create-epics-and-stories`)
@@ -38,6 +38,15 @@ Upon activation, analyze user intent, brainstorm notes, and existing `docs/bmad/
 
 ---
 
+## 🏛️ Deep Module Planning Invariant
+
+Every story MUST plan out a **deep module**:
+1. **Simple Public Interface**: Design a small, clean, typed public API (e.g. `Worker.process(task: Task) -> Result`).
+2. **Encapsulated Complexity**: Explicitly state what complexity is hidden behind the boundary (e.g. caching, retry mechanisms, socket polling, serialization, disk operations).
+3. **Interface-Centric Testing**: Acceptance criteria must assert behavior strictly against the public interface, avoiding brittle tests coupled to internal private plumbing.
+
+---
+
 ## 📋 Mandatory Story Specification Standards
 
 Every generated story file in `docs/bmad/stories/` MUST adhere to this exact structure:
@@ -59,15 +68,19 @@ execution_mode: "AFK"      # "AFK" (autonomous) or "HUMAN_MONITORED" (critical o
 
 ## Vertical Slice Summary
 Explain the end-to-end slice cutting across the stack:
-Input Data $\to$ Core Business Logic $\to$ Persistence/Output $\to$ E2E Integration Test.
+Input Data $\to$ Deep Core Logic $\to$ Persistence/Output $\to$ E2E Integration Test.
+
+## Deep Module Interface & Encapsulation
+- **Public Interface Contract**: Define the clean, typed function/class signature exposed to callers.
+- **Hidden Complexity**: Detail the internal state, I/O, error recovery, or orchestration hidden behind this interface.
 
 ## Architecture & Seams
 Mermaid diagram and technical contracts touched by this slice.
 
 ## Acceptance Criteria
-- [ ] **AC 1 — Core Logic**: Implement functional behavior.
-- [ ] **AC 2 — Contracts & Schema**: Type-checked input/output serialization.
-- [ ] **AC 3 — End-to-End Verification Test**: Author `tests/test_e2e_*.py`.
+- [ ] **AC 1 — Public Interface & Core Logic**: Implement the deep module satisfying the typed public contract.
+- [ ] **AC 2 — Contracts & Schema**: Type-checked input/output serialization (Pydantic / Zod).
+- [ ] **AC 3 — Interface-Centric Test**: Author `tests/test_e2e_*.py` asserting slice behavior via the public interface.
 - [ ] **AC 4 — Verification Gate**: `uv run ruff check` and `uv run pytest -q` pass 100% green.
 ```
 

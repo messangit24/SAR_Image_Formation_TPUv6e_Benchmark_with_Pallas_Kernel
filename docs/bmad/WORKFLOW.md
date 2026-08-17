@@ -54,11 +54,13 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
 
 1. **Contextual Brainstorming & Seam Analysis (`bmad-brainstorming`)**:
    - Analyze existing `prd.md` and `architecture.md`. Use `/grill-me` to probe how the new feature integrates without breaking existing invariants.
-2. **Story Specification & Vertical Slice Definition (`bmad-create-epics-and-stories`)**:
+2. **Story Specification & Deep Module Definition (`bmad-create-epics-and-stories`)**:
    - Decomposes the requirement into either a single story or a brand-new multi-story Epic:
-     - `depends_on: ["story-X.Y"]` (upstream prerequisites).
-     - `execution_mode: "AFK"` (autonomous) or `"HUMAN_MONITORED"` (critical oversight).
-     - Vertical slice scope with a verifiable end-to-end integration test.
+     - **Deep Module Seam**: Small, clean public interface hiding internal complexity.
+     - **Explicit Dependencies**: `depends_on: ["story-X.Y"]` (upstream prerequisites).
+     - **Execution Mode**: `execution_mode: "AFK"` (autonomous) or `"HUMAN_MONITORED"` (critical oversight).
+     - **Interface-Centric Acceptance Criteria**: Verifiable end-to-end integration test asserting public behavior.
+
 3. **Synchronize Trackers (`update-taskflow`)**:
    - Run `update-taskflow` to mint Buganizer tickets and stamp IDs into story frontmatter.
    - **🛑 Action**: Close the planning session.
