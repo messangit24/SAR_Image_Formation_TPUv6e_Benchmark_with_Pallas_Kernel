@@ -1,65 +1,60 @@
 ---
 name: write-typescript
-description: Authoritative TypeScript and React/Web engineering standards, strict typing rules, Zod validation, and frontend idioms. Enforced by dev-story, /owl, and review agents.
+description: Authoritative TypeScript and React/Web engineering standards, deep module design rules, strict typing rules, Zod validation, and frontend idioms. Enforced by dev-story, /owl, and review agents.
 ---
 
-# TypeScript & Frontend Engineering Standards (`write-typescript`)
+# TypeScript & Web Engineering Standards (`write-typescript`)
 
-Use this skill when authoring, refactoring, or reviewing TypeScript, React, Next.js, or web application code.
-
----
-
-## 🏛️ 1. Strict Typing & Type Safety (TS 5+)
-
-- **Zero `any` Policy**: Never use `any`. Use `unknown` for unvalidated inputs and narrow types using type guards or Zod schemas.
-- **Discriminated Unions**: Model domain states, asynchronous statuses, and event payloads as discriminated unions:
-  ```typescript
-  type AsyncState<T> =
-    | { status: 'idle' }
-    | { status: 'loading' }
-    | { status: 'success'; data: T }
-    | { status: 'error'; error: string };
-  ```
-- **Explicit Return Types**: All exported functions, hooks, and API endpoints must declare explicit return types.
-- **Readonly Immuntability**: Use `readonly` arrays and properties for immutable application state.
+Use this skill when authoring, refactoring, or reviewing TypeScript and web application code in this repository.
 
 ---
 
-## 🌐 2. Runtime Schema Validation (Zod)
+## 🏛️ 1. Deep Modules & Interface-Centric Architecture
 
-- All external inputs (API request/response payloads, URL parameters, localStorage, WebSocket messages) **MUST** be validated at the boundary using Zod:
-  ```typescript
-  import { z } from 'zod';
-
-  export const UserSchema = z.object({
-    id: z.string().uuid(),
-    email: z.string().email(),
-    role: z.enum(['admin', 'user', 'viewer']),
-  });
-
-  export type User = z.infer<typeof UserSchema>;
-  ```
+Modules, UI components, and service layers MUST be **deep**:
+- **Simple Public Interface**: Expose a minimal, elegant set of props or API functions.
+- **Hidden Complexity**: Encapsulate internal DOM manipulation, state transitions, API polling, and retry mechanisms within the module boundary.
+- **Interface-Centric Testing**: Test components and services via their public inputs, outputs, and user-visible events (e.g. `@testing-library/react`), avoiding tests that reach into private implementation internals.
+- **Anti-Pattern (Shallow Spaghetti Modules)**: Avoid creating leaky abstractions that force parents or consumers to manage multi-step internal state.
 
 ---
 
-## ⚛️ 3. React & UI Best Practices
+## 📐 2. Strict Type System & Zero-Any Invariant (TS 5+)
 
-- **Functional Components**: Use arrow functions or standard function declarations with typed props.
-- **Custom Hooks for Logic**: Decouple business logic and data fetching from UI rendering into reusable custom hooks (`useFeatureData.ts`).
-- **Clean Effect Cleanup**: Every `useEffect` with subscriptions, timers, or event listeners must return an explicit cleanup function.
-- **Accessibility (a11y)**: All interactive elements must include proper ARIA attributes, semantic HTML tags (`<button>`, `<main>`, `<nav>`), and keyboard navigability.
-
----
-
-## 🛡️ 4. Security & Sanitization
-
-- **XSS Prevention**: Never use `dangerouslySetInnerHTML` unless explicitly sanitized with DOMPurify.
-- **Safe Navigation**: Avoid unchecked property access; use optional chaining (`user?.profile?.avatar`) and nullish coalescing (`??`).
-- **Environment Variables**: Access client/server env vars through a validated config module (e.g. `@/lib/env.ts`).
+- **Zero `any` Policy**: Never use `any`. Use `unknown` for unvalidated boundaries and narrow with type guards or Zod schemas.
+- **Discriminated Unions**: Model domain states, async statuses, and UI modes with explicit discriminated union types (`type State = { status: 'idle' } | { status: 'loading' } | ...`).
+- **Explicit Return Types**: All exported functions, custom hooks, and API handlers MUST declare return types.
+- **`satisfies` Operator**: Use `as const satisfies ...` for immutable lookup tables and configuration maps.
 
 ---
 
-## 🧪 5. Testing & Verification
+## 🛡️ 3. Runtime Boundary Validation (Zod)
 
-- **Component Tests**: Use Vitest / Jest with React Testing Library focusing on user-visible behavior (e.g. `screen.getByRole('button')`).
-- **Type Checking Gate**: Every change must pass `tsc --noEmit` with zero warnings.
+All data entering from the outside world (API responses, WebSocket frames, URL query params, `localStorage`, form inputs) **MUST pass through a runtime Zod schema**:
+
+```typescript
+import { z } from 'zod';
+
+export const UserProfileSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  role: z.enum(['admin', 'member', 'viewer']),
+});
+
+export type UserProfile = z.infer<typeof UserProfileSchema>;
+```
+
+---
+
+## ⚛️ 4. Modern React Patterns & Decoupled State
+
+- **Custom Hooks for Business Logic**: Decouple state machines and data-fetching into custom hooks (`useStoryExecution`), keeping JSX rendering components lean and visual.
+- **Explicit Cleanup in Effects**: Every `useEffect` managing event listeners, intervals, or WebSocket connections must return an explicit cleanup function.
+- **Accessibility (a11y)**: Use semantic HTML (`<button>`, `<main>`, `<nav>`) and proper ARIA labels (`aria-expanded`, `aria-live`).
+
+---
+
+## 🧪 5. Hermetic Component & Unit Testing
+
+- **User-Centric Assertions**: Use `@testing-library/react` and assert against screen text, accessible roles, and user interactions.
+- **Mock External APIs**: Mock `fetch` / Axios using MSW (Mock Service Worker) or hermetic mock handlers. Zero external live network calls in test suites.

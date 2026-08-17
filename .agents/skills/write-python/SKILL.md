@@ -1,6 +1,6 @@
 ---
 name: write-python
-description: Authoritative Python coding standards, typing rules, lazy import patterns, and test practices for developers and AI agents. Enforced by dev-story, /owl, and review agents.
+description: Authoritative Python coding standards, deep module design rules, typing rules, lazy import patterns, and test practices for developers and AI agents. Enforced by dev-story, /owl, and review agents.
 ---
 
 # Python Engineering & Quality Standards (`write-python`)
@@ -9,7 +9,17 @@ Use this skill when authoring, refactoring, or reviewing Python code in this rep
 
 ---
 
-## 🏛️ 1. Type Annotations & Modern Idioms (Python 3.12+)
+## 🏛️ 1. Deep Modules & Interface-Centric Design
+
+Modules, classes, and services MUST be **deep** (John Ousterhout principle):
+- **Simple Public Interface**: Expose a small, clean, intuitive set of public methods/functions with strict type annotations.
+- **Hidden Complexity**: Encapsulate substantial internal complexity (caching, retries, concurrency, file I/O, serialization, multi-step orchestration) behind the interface barrier.
+- **Interface-Driven Testing**: Tests MUST exercise and assert behavior **through the public interface**, not private methods (`_internal_helper`). This ensures tests remain resilient to internal refactoring.
+- **Anti-Pattern (Shallow Modules)**: Avoid creating sprawling classes with dozens of public getter/setter helper methods that do little work, expose internal state, and force callers to coordinate the internal steps.
+
+---
+
+## 📐 2. Type Annotations & Modern Idioms (Python 3.12+)
 
 - **Modern Built-in Generics (PEP 585 & 604)**:
   - Use `list[str]`, `dict[str, Any]`, `set[int]`, `tuple[int, ...]` instead of legacy `typing.List`, `typing.Dict`.
@@ -20,7 +30,7 @@ Use this skill when authoring, refactoring, or reviewing Python code in this rep
 
 ---
 
-## ⚡ 2. Performance & Startup: Lazy Imports
+## ⚡ 3. Performance & Startup: Lazy Imports
 
 Heavy machine learning, scientific, or serialization libraries (e.g. `torch`, `jax`, `tensorflow`, `cv2`, `pandas`, `polars`, `transformers`) **MUST be imported lazily inside the functions that use them**:
 
@@ -43,7 +53,7 @@ def run_inference(data: list[float]) -> dict[str, Any]:
 
 ---
 
-## 📝 3. Documentation & "Why" Comments
+## 📝 4. Documentation & "Why" Comments
 
 - **Module Docstrings**: Every `.py` file must begin with a concise docstring describing its role, inputs, and outputs.
 - **Explain "Why", Not "What"**: Comments must explain the rationale behind non-obvious algorithms, trade-offs, bug workarounds, or hardware constraints.
@@ -51,7 +61,7 @@ def run_inference(data: list[float]) -> dict[str, Any]:
 
 ---
 
-## 🛡️ 4. Security & Robustness Invariants
+## 🛡️ 5. Security & Robustness Invariants
 
 - **Safe Path Operations**: Always use `pathlib.Path` and `.resolve()`. Validate against path traversal attacks.
 - **Hermetic Serialization**: Use `json.loads` or `yaml.safe_load`. Never use `pickle.loads` or raw `eval()`.
@@ -60,7 +70,7 @@ def run_inference(data: list[float]) -> dict[str, Any]:
 
 ---
 
-## 🧪 5. Test-Driven Development & Hermeticity
+## 🧪 6. Test-Driven Development & Hermeticity
 
 - **Test Placement & Naming**: Tests reside under `tests/test_<module_name>.py`.
 - **Zero Network in Unit Tests**: All external HTTP calls, GCP services, and DB connections must use hermetic mocks, monkeypatching, or local in-memory fixtures.

@@ -18,6 +18,8 @@ This document defines the operating rules, verification standards, and lifecycle
 7. **Strict Human Merge Gate**: Humans review and manually merge Pull Requests. Merging triggers automated post-merge synchronization and worktree cleanup.
 8. **Documentation Freshness & Lifecycle Metadata**: Every document maintained under `docs/` MUST declare its Last Updated Date and status badge at the top (`> **Last Updated:** YYYY-MM-DD\n> **Status:** Active Reference | Draft | Stale | Archived`). Agents and humans must update this timestamp whenever modifying architectural, PRD, or workflow documents.
 9. **Session Freshness & Anti-Context-Bloat Rule**: To prevent reasoning degradation, hallucinations, and "dumb decisions" caused by massive prompt histories, maintain strict **separation across 3 agent roles**: Planning Session $\to$ Fresh Dev Session per Story $\to$ Autonomous GitHub Actions PR Reviewer. Never implement multiple stories in one conversation session.
+10. **Deep Modules & Interface-Centric Design**: Modules and classes MUST be **deep** (simple, intuitive public interface hiding substantial internal complexity). Tests must exercise and assert behavior through this public interface rather than private plumbing. This prevents shallow spaghetti abstractions, preserves human and agent comprehensibility, and enables safe internal refactoring.
+
 
 
 
