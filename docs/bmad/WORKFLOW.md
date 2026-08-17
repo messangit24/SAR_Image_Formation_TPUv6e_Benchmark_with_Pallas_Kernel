@@ -40,7 +40,8 @@ When bootstrapping a brand-new project, platform, or service:
 4. **Decompose into Epics & Vertical Slice Stories (`bmad-create-epics-and-stories`)**:
    - Break architecture into Epics.
    - **Mandatory Walking Skeleton (Story 1.1)**: Build a minimal, runnable end-to-end path (Input $\to$ Core Logic $\to$ Storage/Output $\to$ E2E Integration Test). Declares `depends_on: []` and `execution_mode: "AFK"`.
-5. **Synchronize Cloud Trackers (`update-taskflow`)**:
+5. **Human Confirmation & Cloud Tracker Sync (`update-taskflow`)**:
+   - Present the breakdown to the developer. **Wait for explicit confirmation (`Proceed` / `LGTM`)** before syncing.
    - Run `python3 scripts/sync_trackers.py --update-all` to mint parent Epics, child stories, and link hierarchy in Buganizer and TaskFlow.
    - **🛑 Action**: Close the planning conversation session.
 6. **Implement Walking Skeleton via TDD (`dev-story`)**:
@@ -61,9 +62,11 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
      - **Execution Mode**: `execution_mode: "AFK"` (autonomous) or `"HUMAN_MONITORED"` (critical oversight).
      - **Interface-Centric Acceptance Criteria**: Verifiable end-to-end integration test asserting public behavior.
 
-3. **Synchronize Trackers (`update-taskflow`)**:
-   - Run `update-taskflow` to mint Buganizer tickets and stamp IDs into story frontmatter.
+3. **Human Confirmation & Tracker Sync (`update-taskflow`)**:
+   - Present proposed stories/epics to the developer for review.
+   - **Wait for explicit user confirmation (`Proceed` / `LGTM`)**, then run `update-taskflow` to mint Buganizer tickets and stamp IDs into story frontmatter.
    - **🛑 Action**: Close the planning session.
+
 4. **Scaffold Isolated Worktree (`dev-story`)**:
    - Open a fresh dev session. Run `python3 scripts/dev_story.py --story <path> --setup-worktree`.
    - Validates that all `depends_on` prerequisite stories are `COMPLETED`.

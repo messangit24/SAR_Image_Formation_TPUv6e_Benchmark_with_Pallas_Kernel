@@ -14,7 +14,7 @@ This document defines the operating rules, verification standards, and lifecycle
 3. **Collaborative Planning Gate**: The agent proposes a step-by-step implementation plan and **MUST wait for explicit human approval** before modifying code.
 4. **Hard Verification Gates**: Every change must satisfy automated linting, unit tests, and type checks before submission. Passing tests are mandatory.
 5. **Adversarial Red-Team Review**: The agent conducts a cynical edge-case review on the `git diff` before opening a Pull Request.
-6. **Live Cloud Synchronization**: In-repo specs automatically synchronize with Google TaskFlow, Buganizer, and GitHub without manual form-filling.
+6. **Human-Confirmed Cloud Synchronization**: In-repo specs synchronize with Google TaskFlow and Buganizer ONLY after explicit human review and confirmation during the planning phase.
 7. **Strict Human Merge Gate**: Humans review and manually merge Pull Requests. Merging triggers automated post-merge synchronization and worktree cleanup.
 8. **Documentation Freshness & Lifecycle Metadata**: Every document maintained under `docs/` MUST declare its Last Updated Date and status badge at the top (`> **Last Updated:** YYYY-MM-DD\n> **Status:** Active Reference | Draft | Stale | Archived`). Agents and humans must update this timestamp whenever modifying architectural, PRD, or workflow documents.
 9. **Session Freshness & Anti-Context-Bloat Rule**: To prevent reasoning degradation, hallucinations, and "dumb decisions" caused by massive prompt histories, maintain strict **separation across 3 agent roles**: Planning Session $\to$ Fresh Dev Session per Story $\to$ Autonomous GitHub Actions PR Reviewer. Never implement multiple stories in one conversation session.

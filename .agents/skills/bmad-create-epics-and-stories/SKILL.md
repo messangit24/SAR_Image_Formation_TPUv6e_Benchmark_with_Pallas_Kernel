@@ -1,6 +1,6 @@
 ---
 name: bmad-create-epics-and-stories
-description: Unified Epic & Story creation engine. Automatically determines whether requirements represent a full greenfield decomposition, a brand-new Epic with multiple stories, or a single story addition. Decomposes architecture into vertical slice stories with deep module interfaces (where appropriate), depends_on, execution_mode (AFK vs HUMAN_MONITORED), and updates TaskFlow.
+description: Unified Epic & Story creation engine. Automatically determines whether requirements represent a full greenfield decomposition, a brand-new Epic with multiple stories, or a single story addition. Decomposes architecture into vertical slice stories with deep module interfaces (where appropriate), depends_on, execution_mode (AFK vs HUMAN_MONITORED), waits for explicit human confirmation, and updates TaskFlow.
 ---
 
 # Universal Epic & Story Creation Engine (`bmad-create-epics-and-stories`)
@@ -88,12 +88,20 @@ Mermaid diagram and technical contracts touched by this slice.
 
 ---
 
-## 🔄 Concluding Step: Cloud Tracker Synchronization
+## 🛑 Mandatory Human Confirmation Gate (Before Cloud Tracker Sync)
 
-Immediately after writing story files:
-1. Update `docs/bmad/stories/sprint-status.yaml` with the new story entries.
-2. Run the tracker synchronization command:
-   ```bash
-   python3 scripts/sync_trackers.py --update-all
-   ```
-3. Verify that all Epics and child story tickets are minted in Buganizer and TaskFlow with parent-child links established and IDs stamped into frontmatter.
+**DO NOT synchronize tickets to Buganizer or TaskFlow automatically.**
+
+Immediately after generating or updating in-repo planning files (`epics.md`, `stories/story-*.md`, `sprint-status.yaml`):
+
+1. **Present the Planning Summary to the User**:
+   - List all proposed Epics and child stories with their scope, dependencies (`depends_on`), and execution modes (`AFK` vs `HUMAN_MONITORED`).
+2. **Explicit User Review Prompt**:
+   > 💡 **User Review & Confirmation Gate**: Please review the proposed Epics and Stories breakdown above. If you would like any adjustments, let me know. Once you confirm (**`Proceed`** or **`LGTM`**), I will run `update-taskflow` to mint parent Epics and child story tickets in Buganizer and TaskFlow.
+3. **Execute Sync ONLY Upon Explicit Confirmation**:
+   - When the user confirms, run:
+     ```bash
+     python3 scripts/sync_trackers.py --update-all
+     ```
+   - Verify that all Epics and child story tickets are minted in Buganizer and TaskFlow with parent-child links established and IDs stamped into frontmatter.
+   - Remind the user to close this planning conversation session to maintain peak session freshness before opening a fresh dev session for story implementation.
