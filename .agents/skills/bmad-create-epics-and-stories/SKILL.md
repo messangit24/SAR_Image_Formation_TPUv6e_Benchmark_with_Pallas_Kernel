@@ -1,93 +1,84 @@
 ---
-name: bmad-create-epics-and-stories
-description: 'Break requirements into epics and user stories. Use when the user says "create the epics and stories list"'
+name: bmad-create-story
+description: Unified Epic & Story creation engine. Automatically determines whether requirements represent a full greenfield decomposition, a brand-new Epic with multiple stories, or a single story addition. Decomposes architecture into vertical slice stories with depends_on, execution_mode (AFK vs HUMAN_MONITORED), and updates TaskFlow.
 ---
 
-# Create Epics and Stories
+# Universal Epic & Story Creation Engine (`bmad-create-story`)
 
-**Goal:** Transform PRD requirements and Architecture decisions into comprehensive stories organized by user value, creating detailed, actionable stories with complete acceptance criteria for the Developer agent.
+Use this skill immediately after brainstorming (`bmad-brainstorming` + `/grill-me`) and architectural planning (`bmad-prd`, `bmad-architecture`) to generate, shard, and structure user stories.
 
-**Your Role:** In addition to your name, communication_style, and persona, you are also a product strategist and technical specifications writer collaborating with a product owner. This is a partnership, not a client-vendor relationship. You bring expertise in requirements decomposition, technical implementation context, and acceptance criteria writing, while the user brings their product vision, user needs, and business requirements. Work together as equals.
+---
 
-## Conventions
+## 🎯 Universal Scope Resolution (Auto-Routing)
 
-- Bare paths (e.g. `steps/step-01-validate-prerequisites.md`) resolve from the skill root.
-- `{skill-root}` resolves to this skill's installed directory (where `customize.toml` lives).
-- `{project-root}`-prefixed paths resolve from the project working directory.
-- `{skill-name}` resolves to the skill directory's basename.
+Upon activation, analyze user intent, brainstorm notes, and existing `docs/bmad/planning/` files to select the appropriate mode:
 
-## WORKFLOW ARCHITECTURE
+### Mode 1: Greenfield Project Breakdown (0 ➔ 1)
+* **Trigger**: Initial project setup or when `epics.md` is empty/new.
+* **Actions**:
+  1. Read `docs/bmad/planning/prd.md` and `docs/bmad/planning/architecture.md`.
+  2. Structure `docs/bmad/planning/epics.md` with Epics 1..N.
+  3. Create **Story 1.1 as the Walking Skeleton / Tracer Bullet** (`depends_on: []`, `execution_mode: "AFK"`, minimal end-to-end runnable baseline with integration test).
+  4. Shard all subsequent stories into `docs/bmad/stories/story-X.Y-*.md`.
 
-This uses **step-file architecture** for disciplined execution:
+### Mode 2: Major Subsystem / New Epic Addition (1 ➔ N)
+* **Trigger**: A new multi-feature initiative, major pipeline, or architectural expansion (e.g. *Orbweaver Epic 19*).
+* **Actions**:
+  1. Determine next Epic number `X` in `docs/bmad/planning/epics.md`.
+  2. Append `## Epic X: <Title>` and requirement mappings to `epics.md`.
+  3. Create **Story X.1 as the Subsystem Walking Skeleton** (`depends_on: []`, `execution_mode: "AFK"`).
+  4. Create progressive enrichment stories (`story-X.2`, `story-X.3`, ...) with explicit `depends_on: ["story-X.1"]`.
 
-### Core Principles
+### Mode 3: Single Story Addition
+* **Trigger**: An isolated feature, endpoint, or bug fix belonging to an existing Epic.
+* **Actions**:
+  1. Locate parent Epic in `epics.md` and assign next story number `X.Y`.
+  2. Create `docs/bmad/stories/story-X.Y-<name>.md`.
+  3. Declare upstream `depends_on` and `execution_mode`.
 
-- **Micro-file Design**: Each step toward the overall goal is a self-contained instruction file; adhere to one file at a time, as directed
-- **Just-In-Time Loading**: Only 1 current step file will be loaded and followed to completion - never load future step files until told to do so
-- **Sequential Enforcement**: Sequence within the step files must be completed in order, no skipping or optimization allowed
-- **State Tracking**: Document progress in output file frontmatter using `stepsCompleted` array when a workflow produces a document
-- **Append-Only Building**: Build documents by appending content as directed to the output file
+---
 
-### Step Processing Rules
+## 📋 Mandatory Story Specification Standards
 
-1. **READ COMPLETELY**: Always read the entire step file before taking any action
-2. **FOLLOW SEQUENCE**: Execute all numbered sections in order, never deviate
-3. **WAIT FOR INPUT**: If a menu is presented, halt and wait for user selection
-4. **CHECK CONTINUATION**: If the step has a menu with Continue as an option, only proceed to next step when user selects 'C' (Continue)
-5. **SAVE STATE**: Update `stepsCompleted` in frontmatter before loading next step
-6. **LOAD NEXT**: When directed, read fully and follow the next step file
+Every generated story file in `docs/bmad/stories/` MUST adhere to this exact structure:
 
-### Critical Rules (NO EXCEPTIONS)
+```markdown
+---
+title: "Story X.Y: <Title>"
+stage: "BACKLOG"
+epic: "Epic X (<Epic Title>)"
+depends_on: ["story-X.1"]  # list of prerequisite story slugs, or [] if ready immediately
+execution_mode: "AFK"      # "AFK" (autonomous) or "HUMAN_MONITORED" (critical oversight)
+---
+# Story X.Y: <Title>
 
-- 🛑 **NEVER** load multiple step files simultaneously
-- 📖 **ALWAYS** read entire step file before execution
-- 🚫 **NEVER** skip steps or optimize the sequence
-- 💾 **ALWAYS** update frontmatter of output files when writing the final output for a specific step
-- 🎯 **ALWAYS** follow the exact instructions in the step file
-- ⏸️ **ALWAYS** halt at menus and wait for user input
-- 📋 **NEVER** create mental todo lists from future steps
+## Status: backlog
+## Epic: Epic X (<Epic Title>)
+## Execution Mode: AFK (Autonomous) | HUMAN_MONITORED (Supervised)
+## Dependencies: Upstream stories (`depends_on`)
 
-## On Activation
+## Vertical Slice Summary
+Explain the end-to-end slice cutting across the stack:
+Input Data $\to$ Core Business Logic $\to$ Persistence/Output $\to$ E2E Integration Test.
 
-### Step 1: Resolve the Workflow Block
+## Architecture & Seams
+Mermaid diagram and technical contracts touched by this slice.
 
-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`
+## Acceptance Criteria
+- [ ] **AC 1 — Core Logic**: Implement functional behavior.
+- [ ] **AC 2 — Contracts & Schema**: Type-checked input/output serialization.
+- [ ] **AC 3 — End-to-End Verification Test**: Author `tests/test_e2e_*.py`.
+- [ ] **AC 4 — Verification Gate**: `uv run ruff check` and `uv run pytest -q` pass 100% green.
+```
 
-**If the script fails**, resolve the `workflow` block yourself by reading these three files in base → team → user order and applying the same structural merge rules as the resolver:
+---
 
-1. `{skill-root}/customize.toml` — defaults
-2. `{project-root}/_bmad/custom/{skill-name}.toml` — team overrides
-3. `{project-root}/_bmad/custom/{skill-name}.user.toml` — personal overrides
+## 🔄 Concluding Step: Cloud Tracker Synchronization
 
-Any missing file is skipped. Scalars override, tables deep-merge, arrays of tables keyed by `code` or `id` replace matching entries and append new entries, and all other arrays append.
-
-### Step 2: Execute Prepend Steps
-
-Execute each entry in `{workflow.activation_steps_prepend}` in order before proceeding.
-
-### Step 3: Load Persistent Facts
-
-Treat every entry in `{workflow.persistent_facts}` as foundational context you carry for the rest of the workflow run. Entries prefixed `file:` are paths or globs under `{project-root}` — load the referenced contents as facts. All other entries are facts verbatim.
-
-### Step 4: Load Config
-
-Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
-- Use `{user_name}` for greeting
-- Use `{communication_language}` for all communications
-- Use `{document_output_language}` for output documents
-- Use `{planning_artifacts}` for output location and artifact scanning
-- Use `{project_knowledge}` for additional context scanning
-
-### Step 5: Greet the User
-
-Greet `{user_name}`, speaking in `{communication_language}`.
-
-### Step 6: Execute Append Steps
-
-Execute each entry in `{workflow.activation_steps_append}` in order.
-
-Activation is complete. If `activation_steps_prepend` or `activation_steps_append` were non-empty, confirm every entry was executed in order before proceeding. Do not begin the main workflow until all activation steps have been completed.
-
-## Execution
-
-Read fully and follow: `./steps/step-01-validate-prerequisites.md` to begin the workflow.
+Immediately after writing story files:
+1. Update `docs/bmad/stories/sprint-status.yaml` with the new story entries.
+2. Run the tracker synchronization command:
+   ```bash
+   python3 scripts/sync_trackers.py --update-all
+   ```
+3. Verify that all Epics and child story tickets are minted in Buganizer and TaskFlow with parent-child links established and IDs stamped into frontmatter.
