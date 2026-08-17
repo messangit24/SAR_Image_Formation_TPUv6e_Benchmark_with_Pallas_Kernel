@@ -17,6 +17,8 @@ This document defines the operating rules, verification standards, and lifecycle
 6. **Live Cloud Synchronization**: In-repo specs automatically synchronize with Google TaskFlow, Buganizer, and GitHub without manual form-filling.
 7. **Strict Human Merge Gate**: Humans review and manually merge Pull Requests. Merging triggers automated post-merge synchronization and worktree cleanup.
 8. **Documentation Freshness & Lifecycle Metadata**: Every document maintained under `docs/` MUST declare its Last Updated Date and status badge at the top (`> **Last Updated:** YYYY-MM-DD\n> **Status:** Active Reference | Draft | Stale | Archived`). Agents and humans must update this timestamp whenever modifying architectural, PRD, or workflow documents.
+9. **Session Freshness & Anti-Context-Bloat Rule**: To prevent reasoning degradation, hallucinations, and "dumb decisions" caused by massive prompt histories, maintain strict **separation across 3 agent roles**: Planning Session $\to$ Fresh Dev Session per Story $\to$ Autonomous GitHub Actions PR Reviewer. Never implement multiple stories in one conversation session.
+
 
 
 ---
@@ -175,6 +177,53 @@ Rather than rigid monolithic formatting rules, language-specific engineering sta
 ### Dual-Sided Enforcement:
 1. **Developer Agent Pull**: Coding agents (`dev-story`, `/owl`) dynamically pull in `write-python` or `write-typescript` during Step 3 worktree implementation.
 2. **Reviewer Agent Enforcement**: Reviewer agents (`bmad-code-review`, `.github/pr-reviewer/`) strictly verify PR diffs against these language skills, flagging missing type annotations, top-level heavy imports, or unhandled errors before PR approval.
+
+---
+
+## 🧠 Session Freshness & The 3-Agent Separation of Concerns
+
+### The Context Bloat Problem
+As an AI coding agent session grows over many turns, older conversation logs, intermediate bash outputs, and large file diffs accumulate in the context window. This causes:
+* **Attention Saturation**: The model overlooks critical system invariants established earlier.
+* **Instruction Drift**: The agent hallucinates or makes "dumb decisions" by mixing up obsolete brainstorm ideas with live architecture.
+* **Slower Latency & Token Waste**: Inflated prompt sizes slow down turnaround.
+
+### The 3-Agent Architecture & Fresh Session Rule
+
+To maintain peak reasoning sharpness, enforce a strict separation across **three distinct agent roles**:
+
+1. **Role 1: The Architect / Planning Agent (Session 1)**
+   - **Scope**: Runs `bmad-brainstorming` + `/grill-me`, `bmad-prd`, and `bmad-architecture`.
+   - **Decomposition**: Runs `bmad-create-epics-and-stories` to generate Epics and sharded story files.
+   - **Sync**: Runs `update-taskflow` to mint parent Epics and child tickets in Buganizer and TaskFlow.
+   - **🛑 Hard Action**: **CLOSE THIS CONVERSATION SESSION** immediately once tickets are minted and stamped into frontmatter. Never proceed to code implementation in this session.
+
+2. **Role 2: The Dev / Implementation Agent (Session 2 — One Story per Session)**
+   - **Scope**: Open a brand-new, **fresh conversation session** dedicated exclusively to implementing one story.
+   - **Execution**: Runs `dev-story` to scaffold an isolated worktree (`../<repo>-<story>`), proposes the implementation plan, and obtains human approval via `/grill-me`.
+   - **TDD & `/owl`**: Pulls in `write-python` / `write-typescript` standards and executes TDD Red-Green-Refactor cycles via `/owl`.
+   - **In-Session Subagent**: Spawns an adversarial red-team subagent (`bmad-code-review`) to cynically inspect the `git diff`.
+   - **Submission**: Opens the GitHub Pull Request via `ggh pr create`.
+   - **🛑 Hard Action**: Once the PR is merged and `merge-sync` is executed, **CLOSE THIS CONVERSATION SESSION**. Never reuse a dev session to implement a second story.
+
+3. **Role 3: The Autonomous GitHub CI/CD Reviewer (Session 3 — Cloud-Native)**
+   - **Scope**: Runs in GitHub Actions (`.github/workflows/gemini-pr-review.yml`).
+   - **Independence**: Provides an unbiased, external review on the final PR diff before human merging.
+
+---
+
+## 🔑 Setting Up GitHub AI Reviewer (Google AI Studio Key)
+
+The repository includes a turnkey GitHub Actions AI Code Reviewer (`.github/workflows/gemini-pr-review.yml`). To enable it:
+
+1. **Obtain API Key**: Go to [Google AI Studio](https://aistudio.google.com/app/apikey) and generate a free API key.
+2. **Add GitHub Repository Secret**:
+   - In your GitHub / Depot repository, navigate to **Settings ➔ Secrets and variables ➔ Actions**.
+   - Click **New repository secret**.
+   - Name: `GEMINI_API_KEY` (or `GOOGLE_API_KEY`).
+   - Value: Paste your Google AI Studio API key.
+3. **Automated Review Execution**: Every opened Pull Request automatically triggers an in-depth Gemini code review with inline line comments and a Pass/Fix verdict. You can re-trigger on demand by commenting `@gemini-cli /review` on the PR.
+
 
 
 
