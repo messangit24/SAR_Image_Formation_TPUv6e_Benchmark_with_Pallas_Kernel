@@ -126,3 +126,27 @@ docs/bmad/
     ├── story-1.1-starter.md       # Sharded, independently testable story specifications
     └── story-1.2-api.md
 ```
+
+---
+
+## 📺 Recommended Video References & Walkthroughs
+
+For visual walkthroughs of the architecture and live hands-on story development:
+
+1. **[BMAD Architecture & Multi-Agent Design Walkthrough](https://www.youtube.com/watch?v=v4F1gFy-hqg)**:
+   - Deep conceptual breakdown of the BMAD framework, multi-agent context boundaries, and structured artifact generation.
+2. **[Live AI-Native Story Development in Action](https://www.youtube.com/watch?v=-QFHIoCo-Ko)**:
+   - Real-time demonstration of an engineer and AI agent picking up a story, scaffolding an isolated worktree, writing failing tests first (TDD), executing with `/owl`, and merging.
+
+---
+
+## ⚡ User Slash Command Prompting Protocol
+
+Because slash commands (like `/owl`, `/grill-me`, `/goal`) are user-facing shortcuts executed by the human in the chat UI, AI agents **cannot invoke them autonomously**. Instead, agents follow a proactive prompting protocol:
+
+| Lifecycle Stage | Agent Action | Recommended User Prompt |
+| :--- | :--- | :--- |
+| **Brainstorming / PRD** | Explores scope, trade-offs | *"💡 Type `/grill-me` to stress-test these assumptions in an interactive interview."* |
+| **Step 2 (Plan Approval)** | Drafts step-by-step plan | *"💡 Type `/grill-me` to stress-test this implementation plan, or reply `Proceed`/`LGTM` to start."* |
+| **Step 3 (Implementation)** | Worktree scaffolded | *"💡 For deep autonomous execution with TDD checkpoints, type `/owl` (or `/goal`)."* |
+| **Step 5 (Adversarial Review)** | Tests passing | Spawns `bmad-code-review` subagent or prompts: *"💡 Running adversarial red-team review."* |
