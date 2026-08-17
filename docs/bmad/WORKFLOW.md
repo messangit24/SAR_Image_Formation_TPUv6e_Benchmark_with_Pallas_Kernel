@@ -14,27 +14,11 @@ In traditional human engineering, writing code is the primary bottleneck. Develo
 
 In the **AI-Native Era**, code generation is instantaneous ($0 marginal cost, 0 latency). The primary failure mode is generating thousands of lines of plausible-looking code that solves the wrong problem, violates architectural invariants, cannot be verified incrementally, or breaks existing systems.
 
-### 🎤 Socratic Alignment via `/grill-me`
-The `/grill-me` skill is the interactive alignment engine of the AI-SDLC. Rather than allowing the agent to assume default requirements or rush into implementation plans, `/grill-me` conducts a multi-turn Socratic interview at two critical milestones:
-1. **During Brainstorming & Research**: Probing edge cases, non-functional latency/throughput constraints, failure recovery, and scope boundaries.
-2. **Before / During Implementation Plan Creation**: Stress-testing file modifications, schema migrations, backward compatibility, and test coverage before touching code.
-
-### The 5-Stage Conceptual Progression
-Whether creating a brand-new service or adding a minor feature, all work progresses through 5 disciplined stages:
-
-```
-💡 1. IDEA / SPARK
-       ⬇
-🧠 2. BRAINSTORM & SOCRATIC ALIGNMENT (`bmad-brainstorming` + `/grill-me`)
-       ⬇
-📄 3. PRD, ARCHITECTURE & EPICS (`bmad-prd`, `bmad-architecture`, `bmad-create-epics-and-stories`)
-       ⬇
-🎯 4. TRACKER SYNC & TASKFLOW (`update-taskflow` ➔ Buganizer & TaskFlow)
-       ⬇
-🧪 5. DEV IMPLEMENTATION, PLANNING & TDD (`/grill-me` ➔ `dev-story` ➔ `/owl` ➔ TDD)
-       ⬇
-🛡️ 6. ADVERSARIAL REVIEW, CI & HUMAN MERGE (`bmad-code-review`, PR checks, merge-sync)
-```
+### 📺 Conceptual Inspiration & Recommended Walkthroughs
+1. **[High-Level AI-Native Software Development Concepts](https://www.youtube.com/watch?v=v4F1gFy-hqg)**:
+   - Primary conceptual inspiration for this framework—explores how engineering shifts when LLMs write code, why problem framing and boundary definitions become the primary developer tasks, and how multi-agent structures prevent cognitive saturation.
+2. **[Live AI-Native Story Development in Action](https://www.youtube.com/watch?v=-QFHIoCo-Ko)**:
+   - Practical demonstration of an engineer using an AI agent to pick up a story, work within an isolated worktree, apply test-driven development (TDD), and complete a verified PR.
 
 ---
 
@@ -47,9 +31,9 @@ When bootstrapping a brand-new project, platform, or service:
    git clone git@depot.code.corp.goog:personal/ai-sdlc-starter.git my-project
    cd my-project && chmod +x scripts/*.py
    ```
-2. **Brainstorm & Socratic Interview (`bmad-brainstorming` + `/grill-me`)**:
+2. **Brainstorm & Socratic Interview (`bmad-brainstorming`)**:
    - Explore target user personas, technical trade-offs, algorithmic models, and boundary risks.
-   - Run `/grill-me` to challenge assumptions and clarify underspecified requirements.
+   - *💡 User Prompt*: Type `/grill-me` if you want to stress-test assumptions and clarify underspecified requirements through an interactive interview.
 3. **Formalize PRD & Architecture (`bmad-prd`, `bmad-architecture`)**:
    - Write `docs/bmad/planning/prd.md` to lock in Functional Requirements (FRs) and Non-Functional Requirements (NFRs).
    - Write `docs/bmad/planning/architecture.md` to define database schemas, interface contracts, and system invariants.
@@ -58,8 +42,9 @@ When bootstrapping a brand-new project, platform, or service:
    - **Mandatory Walking Skeleton (Story 1.1)**: Build a minimal, runnable end-to-end path (Input $\to$ Core Logic $\to$ Storage/Output $\to$ E2E Integration Test). Declares `depends_on: []` and `execution_mode: "AFK"`.
 5. **Synchronize Cloud Trackers (`update-taskflow`)**:
    - Run `python3 scripts/sync_trackers.py --update-all` to mint parent Epics, child stories, and link hierarchy in Buganizer and TaskFlow.
-6. **Implement Walking Skeleton via TDD (`dev-story`, `/owl`)**:
-   - Scaffold worktree for Story 1.1, author integration test first, implement minimal logic, verify green, and open PR #1 to establish a runnable baseline.
+   - **🛑 Action**: Close the planning conversation session.
+6. **Implement Walking Skeleton via TDD (`dev-story`)**:
+   - Open a fresh dev session for Story 1.1. Scaffold the worktree, author the integration test first, implement minimal logic, verify green, and open PR #1 to establish a runnable baseline.
 
 ---
 
@@ -67,47 +52,52 @@ When bootstrapping a brand-new project, platform, or service:
 
 When adding functionality, refactoring an engine, or executing mid-project evolution:
 
-1. **Contextual Brainstorming & Seam Analysis (`bmad-brainstorming` + `/grill-me`)**:
+1. **Contextual Brainstorming & Seam Analysis (`bmad-brainstorming`)**:
    - Analyze existing `prd.md` and `architecture.md`. Use `/grill-me` to probe how the new feature integrates without breaking existing invariants.
 2. **Story Specification & Vertical Slice Definition (`bmad-create-epics-and-stories`)**:
-   - Create `docs/bmad/stories/story-X.Y-<name>.md` declaring:
+   - Decomposes the requirement into either a single story or a brand-new multi-story Epic:
      - `depends_on: ["story-X.Y"]` (upstream prerequisites).
      - `execution_mode: "AFK"` (autonomous) or `"HUMAN_MONITORED"` (critical oversight).
      - Vertical slice scope with a verifiable end-to-end integration test.
 3. **Synchronize Trackers (`update-taskflow`)**:
    - Run `update-taskflow` to mint Buganizer tickets and stamp IDs into story frontmatter.
+   - **🛑 Action**: Close the planning session.
 4. **Scaffold Isolated Worktree (`dev-story`)**:
-   - Run `python3 scripts/dev_story.py --story <path> --setup-worktree`.
+   - Open a fresh dev session. Run `python3 scripts/dev_story.py --story <path> --setup-worktree`.
    - Validates that all `depends_on` prerequisite stories are `COMPLETED`.
    - Symlinks heavy dependencies (`.venv`, `node_modules`, `.env`, `data`) with zero file duplication.
-5. **Plan Alignment & Socratic Grilling (`/grill-me` Gate)**:
-   - Agent formulates step-by-step implementation plan. Run `/grill-me` to stress-test the proposed files, schema alterations, and verification tests. Code modification **never** begins until the developer approves.
-6. **Test-Driven Implementation (`/owl` Mode)**:
-   - For self-contained stories, leverage `/owl` for deep autonomous reasoning.
+5. **Plan Alignment & Socratic Grilling**:
+   - Agent formulates step-by-step implementation plan. Developer can run `/grill-me` to stress-test the proposed files, schema alterations, and verification tests. Code modification **never** begins until the developer approves.
+6. **Test-Driven Implementation (`dev-story` + TDD)**:
+   - Pull in `write-python` or `write-typescript` standards.
    - Follow strict TDD: 🔴 **Red** (failing test first) $\to$ 🟢 **Green** (minimal code) $\to$ 🔵 **Refactor** (clean and type-check).
+   - *💡 User Prompt*: For self-contained stories, the developer can type `/owl` (or `/goal`) for deep autonomous execution.
 7. **Verification Gates & Adversarial Red-Team Review**:
    - `uv run ruff check src tests scripts` && `uv run pytest -q`.
-   - Run `bmad-code-review` to inspect the `git diff` for edge cases, memory leaks, and boundary gaps.
+   - The agent spawns `bmad-code-review` subagent to cynically inspect the `git diff` for edge cases, memory leaks, and boundary gaps.
 8. **PR Submission, Human Merge & Automated Post-Merge Sync**:
    - Open GitHub PR via `ggh` and update Buganizer ticket with progress.
+   - GitHub Actions AI Reviewer (`gemini-pr-review.yml`) checks the PR diff.
    - Developer performs final review and manually clicks **Merge**.
    - Running `git checkout main && git pull origin main` triggers the post-merge hook (`merge_sync.py`), which marks the story completed, transitions the Buganizer ticket to `FIXED`, and deletes the temporary worktree.
+   - **🛑 Action**: Close the dev session.
 
 ---
 
-## 🧰 The Curated 9-Skill AI-SDLC Suite
+## 🧰 The Curated 10-Skill AI-SDLC Suite
 
 | # | Skill Name | Primary Output File / Action | Purpose |
 | :- | :--- | :--- | :--- |
-| **1** | **`bmad-brainstorming`** | `docs/bmad/planning/research/` | Explores requirements, problem space, algorithms, and trade-offs (amplified by `/grill-me`). |
+| **1** | **`bmad-brainstorming`** | `docs/bmad/planning/research/` | Explores requirements, problem space, algorithms, and trade-offs (optionally grilled with `/grill-me`). |
 | **2** | **`bmad-prd`** | `docs/bmad/planning/prd.md` | Grounds ideas into formal Functional & Non-Functional Requirements. |
 | **3** | **`bmad-architecture`** | `docs/bmad/planning/architecture.md` | Defines technical architecture spine, DB schemas, API contracts, and invariants. |
-| **4** | **`bmad-create-epics-and-stories`** | `planning/epics.md`<br/>`stories/story-*.md` | Breaks architecture into Epics and sharded vertical slice stories. |
-| **5** | **`bmad-create-epics-and-stories`** | `stories/story-X.Y-*.md` | Creates a single new vertical slice story mid-project. |
-| **6** | **`update-taskflow`** | **Buganizer & TaskFlow** | **The mandatory concluding step**: Mints Epics, mints Stories, links parent hierarchy, and stamps IDs into frontmatter. |
-| **7** | **`dev-story`** | Isolated Git Worktree | Pre-flight dependency check, isolated worktree scaffolding, plan approval gate, verification gates, and PR submission. |
-| **8** | **`bmad-code-review`** | PR Review Findings | Standalone adversarial red-team code review on `git diff`. |
-| **9** | **`merge-sync`** | Main branch & Cloud Trackers | Pulls `main`, marks stories `- [x]`, transitions Buganizer/TaskFlow tickets to `FIXED`, and deletes merged worktrees. |
+| **4** | **`bmad-create-epics-and-stories`** | `planning/epics.md`<br/>`stories/story-*.md` | Unified engine: decomposes architecture into Epics, new subsystems, and sharded vertical slice stories. |
+| **5** | **`update-taskflow`** | **Buganizer & TaskFlow** | **The mandatory concluding step**: Mints Epics, mints Stories, links parent hierarchy, and stamps IDs into frontmatter. |
+| **6** | **`dev-story`** | Isolated Git Worktree | Pre-flight dependency check, isolated worktree scaffolding, plan approval gate, verification gates, and PR submission. |
+| **7** | **`bmad-code-review`** | PR Review Findings | Standalone adversarial red-team code review on `git diff` (spawned as subagent). |
+| **8** | **`write-python`** | Python Source Files | Modern Python typing, lazy imports, hermetic testing, and security invariants. |
+| **9** | **`write-typescript`** | TypeScript / React Files | Strict TypeScript, Zod boundary validation, and React patterns. |
+| **10** | **`merge-sync`** | Main branch & Cloud Trackers | Pulls `main`, marks stories `- [x]`, transitions Buganizer/TaskFlow tickets to `FIXED`, and deletes merged worktrees. |
 
 ---
 
@@ -126,27 +116,3 @@ docs/bmad/
     ├── story-1.1-starter.md       # Sharded, independently testable story specifications
     └── story-1.2-api.md
 ```
-
----
-
-## 📺 Recommended Video References & Walkthroughs
-
-For visual walkthroughs of the architecture and live hands-on story development:
-
-1. **[BMAD Architecture & Multi-Agent Design Walkthrough](https://www.youtube.com/watch?v=v4F1gFy-hqg)**:
-   - Deep conceptual breakdown of the BMAD framework, multi-agent context boundaries, and structured artifact generation.
-2. **[Live AI-Native Story Development in Action](https://www.youtube.com/watch?v=-QFHIoCo-Ko)**:
-   - Real-time demonstration of an engineer and AI agent picking up a story, scaffolding an isolated worktree, writing failing tests first (TDD), executing with `/owl`, and merging.
-
----
-
-## ⚡ User Slash Command Prompting Protocol
-
-Because slash commands (like `/owl`, `/grill-me`, `/goal`) are user-facing shortcuts executed by the human in the chat UI, AI agents **cannot invoke them autonomously**. Instead, agents follow a proactive prompting protocol:
-
-| Lifecycle Stage | Agent Action | Recommended User Prompt |
-| :--- | :--- | :--- |
-| **Brainstorming / PRD** | Explores scope, trade-offs | *"💡 Type `/grill-me` to stress-test these assumptions in an interactive interview."* |
-| **Step 2 (Plan Approval)** | Drafts step-by-step plan | *"💡 Type `/grill-me` to stress-test this implementation plan, or reply `Proceed`/`LGTM` to start."* |
-| **Step 3 (Implementation)** | Worktree scaffolded | *"💡 For deep autonomous execution with TDD checkpoints, type `/owl` (or `/goal`)."* |
-| **Step 5 (Adversarial Review)** | Tests passing | Spawns `bmad-code-review` subagent or prompts: *"💡 Running adversarial red-team review."* |
