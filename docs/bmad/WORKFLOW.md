@@ -118,3 +118,14 @@ docs/bmad/
     ├── story-1.1-starter.md       # Sharded, independently testable story specifications
     └── story-1.2-api.md
 ```
+
+---
+
+## 🌐 Worktree Resource & Machinery Isolation Patterns
+
+When scaling parallel agent workflows across multiple Git worktrees:
+
+1. **Database Namespacing**: `scripts/dev_story.py` writes a unique `DATABASE_URL=postgresql://localhost:5432/<repo>_<story>` into the worktree `.env`, preventing schema migration races.
+2. **Port Offsets**: Web server and sidecar ports are dynamically offset (`PORT=8000+offset`) to prevent `EADDRINUSE` port collisions.
+3. **Hardware FileLocks**: Exclusive hardware accelerators (TPUs/GPUs) use file-based mutexes (`filelock`) in test fixtures to queue access cleanly without crashing.
+4. **12-Factor Compliance**: Application source code in `src/` only reads standard environment variables, ensuring zero worktree or dev-specific code leaks into production.

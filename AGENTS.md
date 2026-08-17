@@ -230,3 +230,22 @@ The repository includes a turnkey GitHub Actions AI Code Reviewer (`.github/work
 
 
 
+
+---
+
+## 🌐 Worktree Resource Isolation Patterns (Postgres, Ports, and Hardware)
+
+To enable true parallel execution across multiple concurrent worktrees without database schema collisions, port binding errors (`EADDRINUSE`), or hardware contention:
+
+### 1. Database Isolation (Postgres / SQL)
+* **Dynamic Database Names**: `scripts/dev_story.py` automatically configures an isolated database name (e.g. `DATABASE_URL=postgresql://localhost:5432/<repo>_<story_slug>`) in the worktree's local `.env`.
+* **Pytest Session Isolation**: Test fixtures bootstrap and migrate their worktree's isolated database during test execution.
+* **12-Factor Production Invariant**: Production code in `src/` only ever reads standard environment variables (`DATABASE_URL`). Zero worktree-specific logic enters production code.
+
+### 2. Dynamic Port Allocation (Web Servers & Sidecars)
+* **Port Offsets**: `dev_story.py` deterministically assigns non-overlapping ports (`PORT=8000+offset`, `SIDECAR_PORT=8100+offset`) in each worktree `.env`.
+* **Dynamic Test Binding**: Automated test harnesses bind to port `0` so the OS allocates an ephemeral port dynamically.
+
+### 3. Hardware & Machinery Locks (GPUs, TPUs, Shared Devices)
+* **Inter-Process FileLocks**: Where multiple worktrees share a physical accelerator (GPU/TPU) that cannot run concurrent sessions, tests use an inter-process filelock mutex (`with FileLock("/tmp/device_0.lock"): ...`) to safely queue execution instead of throwing OOM or device-busy errors.
+* **Emulation Mode**: Provide mock/CPU execution flags (`MOCK_HARDWARE=1` / `JAX_PLATFORM_NAME=cpu`) so worktrees can verify data transformations and pipelines without acquiring physical hardware slots.

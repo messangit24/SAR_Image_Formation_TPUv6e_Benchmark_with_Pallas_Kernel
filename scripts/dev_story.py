@@ -3,9 +3,10 @@
 
 Automates:
 1. Pre-flight dependency check (depends_on) and execution mode inspection (AFK vs HUMAN_MONITORED).
-2. Worktree creation with zero-copy symlinks (.venv, node_modules, .env, data).
-3. Buganizer / TaskFlow ticket status updates (NEW -> IN_PROGRESS / ASSIGNED).
-4. Verification test execution.
+2. Worktree creation with zero-copy symlinks (.venv, node_modules, data) and isolated .env.
+3. Dynamic resource allocation (isolated DATABASE_URL and PORT offsets) to prevent worktree collisions.
+4. Buganizer / TaskFlow ticket status updates (NEW -> IN_PROGRESS / ASSIGNED).
+5. Verification test execution.
 
 Usage:
     # Setup isolated worktree for a story:
@@ -164,8 +165,69 @@ def check_dependencies(story_path: Path, meta: dict[str, Any]) -> bool:
     return all_met
 
 
+def generate_isolated_env(worktree_path: Path, slug: str) -> None:
+    """Generates an isolated .env with unique database and port offsets to prevent worktree collisions."""
+    slug_clean = re.sub(r"[^a-zA-Z0-9_]", "_", slug).lower()
+
+    # Calculate deterministic port offset based on slug numbers or hash
+    m = re.search(r"(\d+)(?:\.(\d+))?", slug)
+    if m:
+        major = int(m.group(1))
+        minor = int(m.group(2)) if m.group(2) else 0
+        port_offset = (major * 10 + minor) % 500
+    else:
+        port_offset = abs(hash(slug)) % 500
+
+    app_port = 8000 + port_offset
+    sidecar_port = 8100 + port_offset
+    repo_name = PROJECT_ROOT.name.replace("-", "_")
+    db_name = f"{repo_name}_{slug_clean}"
+
+    base_env_path = PROJECT_ROOT / ".env"
+    base_env_example = PROJECT_ROOT / ".env.example"
+
+    env_lines = []
+    if base_env_path.exists():
+        env_lines = base_env_path.read_text(encoding="utf-8").splitlines()
+    elif base_env_example.exists():
+        env_lines = base_env_example.read_text(encoding="utf-8").splitlines()
+
+    overrides = {
+        "PORT": str(app_port),
+        "APP_PORT": str(app_port),
+        "SIDECAR_PORT": str(sidecar_port),
+        "DATABASE_URL": f"postgresql://localhost:5432/{db_name}",
+        "DB_NAME": db_name,
+        "POSTGRES_DB": db_name,
+        "WORKTREE_NAME": worktree_path.name,
+    }
+
+    updated_keys = set()
+    final_lines = []
+    for line in env_lines:
+        trimmed = line.strip()
+        if trimmed and not trimmed.startswith("#") and "=" in trimmed:
+            k, _ = trimmed.split("=", 1)
+            k = k.strip()
+            if k in overrides:
+                final_lines.append(f"{k}={overrides[k]}")
+                updated_keys.add(k)
+                continue
+        final_lines.append(line)
+
+    for k, v in overrides.items():
+        if k not in updated_keys:
+            final_lines.append(f"{k}={v}")
+
+    target_env = worktree_path / ".env"
+    target_env.write_text("\n".join(final_lines) + "\n", encoding="utf-8")
+    print(f"  ⚙️ Configured isolated `.env`:")
+    print(f"    • PORT: {app_port} | SIDECAR_PORT: {sidecar_port}")
+    print(f"    • DATABASE_URL: postgresql://localhost:5432/{db_name}")
+
+
 def setup_worktree(story_path: Path) -> Path:
-    """Creates isolated worktree and symlinks heavy dependencies."""
+    """Creates isolated worktree, symlinks heavy deps, and generates isolated .env."""
     meta = parse_story_frontmatter(story_path)
     check_dependencies(story_path, meta)
 
@@ -185,11 +247,10 @@ def setup_worktree(story_path: Path) -> Path:
         subprocess.run(cmd, cwd=PROJECT_ROOT, check=True)
         print(f"  ✅ Worktree created on branch `{branch_name}`.")
 
-    # Symlinks
+    # Symlinks (Zero-copy for heavy directories)
     links = [
         (".venv", worktree_path / ".venv"),
         ("web/node_modules", worktree_path / "web/node_modules"),
-        (".env", worktree_path / ".env"),
         ("data", worktree_path / "data"),
     ]
 
@@ -199,6 +260,9 @@ def setup_worktree(story_path: Path) -> Path:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.symlink_to(src)
             print(f"  🔗 Symlinked `{src_rel}`")
+
+    # Generate isolated environment variables (.env)
+    generate_isolated_env(worktree_path, slug)
 
     # Update Buganizer status if ID present
     bug_id = meta.get("buganizer_id")
