@@ -45,12 +45,14 @@ graph TD
 - If `execution_mode: "AFK"`, notify the developer that execution can proceed autonomously once approved.
 - If `execution_mode: "HUMAN_MONITORED"`, surface the `human_monitoring_rationale` and maintain interactive feedback checkpoints.
 
-### Step 3: Worktree Implementation
-- Navigate to `../orbweaver-<story-slug>`.
-- Implement changes following codebase idioms.
-- Add unit/integration tests covering acceptance criteria.
+### Step 3: Worktree Implementation (Test-Driven Development & `/owl` Mode)
+- **Deep Execution with `/owl`**: For self-contained stories in AFK mode (not touching external multi-repo dependencies), recommend and trigger the `/owl` workflow to execute deep multi-perspective reasoning and rigorous checkpoint verification.
+- **Mandatory Test-Driven Development (TDD) Protocol**:
+  1. **🔴 Red (Test-First)**: Author unit/integration tests in `tests/test_*.py` asserting the exact acceptance criteria, data contracts, and boundary conditions. Run `uv run pytest -q tests/test_<feature>.py` to verify the tests fail for the right reasons.
+  2. **🟢 Green (Implement Minimal Code)**: Author the production code in `src/` to satisfy the tests. Run `uv run pytest -q tests/test_<feature>.py` until all tests pass cleanly.
+  3. **🔵 Refactor & Harden**: Refactor implementation for clarity, performance, and type safety while keeping tests green.
 
-### Step 4: Verification Gates
+### Step 4: Hard Verification Gates
 Execute all verification gates in the worktree:
 ```bash
 uv run ruff check src tests scripts

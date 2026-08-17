@@ -74,10 +74,13 @@ When drafting stories with `bmad-create-story` or `bmad-create-epics-and-stories
 
 ## 🛠️ The 7-Step Story Development Loop
 
-1. **Pre-Flight & Scaffold Worktree**: `python3 scripts/dev_story.py --story docs/bmad/stories/<story>.md --setup-worktree`
+1. **Pre-Flight & Scaffold Worktree**: `python3 scripts/dev_story.py --story docs/bmad/stories/<story>.md --setup-worktree` (validates `depends_on` and notes `execution_mode`).
 2. **Propose Plan & Wait for Approval**: Interactive alignment between human and agent.
-3. **Worktree Implementation**: Code in isolated worktree with zero dirty `main`.
-4. **Verification Gates**: Run automated linting and test suites.
+3. **Worktree Implementation (TDD & `/owl` Mode)**:
+   - For self-contained stories without external repo dependencies, trigger `/owl` for autonomous deep reasoning and checkpointing.
+   - Follow **Test-Driven Development (TDD)**: 🔴 **Red** (Author failing test asserting ACs) $\to$ 🟢 **Green** (Implement minimal code to pass) $\to$ 🔵 **Refactor** (Harden and type-check).
+4. **Verification Gates**: Run automated linting (`uv run ruff check src tests scripts`) and test suites (`uv run pytest -q`).
 5. **Adversarial Red-Team Review**: Scan diff for edge cases, leaks, and regressions (`bmad-code-review`).
 6. **PR Submission**: Push branch, open Issue and PR via `ggh`, and update Buganizer ticket.
 7. **Post-Merge**: Merge PR, run `python3 scripts/merge_sync.py` to finalize tickets to FIXED and clean worktrees.
+

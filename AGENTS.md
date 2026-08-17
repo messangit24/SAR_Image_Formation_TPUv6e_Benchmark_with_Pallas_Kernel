@@ -58,10 +58,13 @@ python3 scripts/dev_story.py --story docs/bmad/stories/<story-file>.md --setup-w
 - The developer and agent iterate on telemetry parsing, radiometric calibration algorithms, or GKE orchestration.
 - **Hard Gate**: Code modification **NEVER** begins until the developer explicitly approves the plan.
 
-### Step 3: Worktree Implementation & Code Integrity
+### Step 3: Worktree Implementation (Test-Driven Development & `/owl` Mode)
+- **Deep Execution with `/owl`**: For self-contained stories without external repository dependencies (especially in `execution_mode: "AFK"`), leverage the `/owl` slash command for multi-perspective planning, systematic TDD checkpointing, and rigorous self-verification.
+- **Mandatory Test-Driven Development (TDD) Protocol**:
+  1. **🔴 Red (Test-First)**: Author unit/integration tests directly in `tests/test_*.py` asserting telemetry decoding, radiometric calibration accuracy, or JAX kernel coherence before modifying production code. Run `uv run pytest -q tests/test_<feature>.py` to verify tests fail for the right reasons.
+  2. **🟢 Green (Implement Minimal Code)**: Author the minimal signal processing logic in `src/` to satisfy the tests. Run `uv run pytest -q` until all tests pass cleanly.
+  3. **🔵 Refactor & Harden**: Refactor for numerical stability, JAX JIT purity, and memory efficiency while keeping tests green.
 - All modifications remain strictly isolated in `../goldthread-<story-slug>`.
-- Code is authored in the repository's idioms with full Planck inversion and SAR coherence stability.
-- Automated tests are authored alongside features.
 
 ### Step 4: Hard Verification Gates (Definition of Done)
 Run verification commands and inspect real outputs:
