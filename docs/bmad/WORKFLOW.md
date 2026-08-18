@@ -132,3 +132,15 @@ When scaling parallel agent workflows across multiple Git worktrees:
 2. **Port Offsets**: Web server and sidecar ports are dynamically offset (`PORT=8000+offset`) to prevent `EADDRINUSE` port collisions.
 3. **Hardware FileLocks**: Exclusive hardware accelerators (TPUs/GPUs) use file-based mutexes (`filelock`) in test fixtures to queue access cleanly without crashing.
 4. **12-Factor Compliance**: Application source code in `src/` only reads standard environment variables, ensuring zero worktree or dev-specific code leaks into production.
+
+---
+
+## 🦉 Experimental: Autonomous Epic Execution (`dev-epic-owl`)
+
+When executing an entire Epic with multiple `AFK` stories:
+
+1. **Prerequisites**: Thorough planning completed (`bmad-prd`, `bmad-architecture`, `bmad-create-epics-and-stories`), with all stories having explicit `depends_on` and `execution_mode: "AFK"`.
+2. **Initial Socratic Grilling (`/grill-me`)**: The agent compiles the Epic Architecture Plan and interviews the developer up front to resolve all shared data models and interface contracts.
+3. **Dedicated Epic Worktree**: Scaffolds `../<repo>-epic-X` on branch `feat/epic-X`.
+4. **Topological Waves**: Stories execute in dependency waves. Each story goes through Red-Green-Refactor with `DeepCoder`, passes test gates, undergoes adversarial diff review via `bmad-code-review`, and receives an atomic commit.
+5. **Consolidated PR**: A single Pull Request is opened for the entire Epic, referencing all child tickets and the parent Epic in Buganizer.

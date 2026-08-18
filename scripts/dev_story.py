@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Story Development Scaffolder & Lifecycle Manager.
+"""Story & Epic Development Scaffolder & Lifecycle Manager.
 
 Automates:
 1. Pre-flight dependency check (depends_on) and execution mode inspection (AFK vs HUMAN_MONITORED).
@@ -9,8 +9,11 @@ Automates:
 5. Verification test execution.
 
 Usage:
-    # Setup isolated worktree for a story:
+    # Setup isolated worktree for a single story:
     python3 scripts/dev_story.py --story docs/bmad/stories/story-1.1-starter.md --setup-worktree
+
+    # Setup isolated worktree for an entire Epic:
+    python3 scripts/dev_story.py --epic 1 --setup-epic-worktree
 
     # Verify gates on current worktree:
     python3 scripts/dev_story.py --verify
@@ -314,6 +317,40 @@ def setup_worktree(story_path: Path) -> Path:
     return worktree_path
 
 
+def setup_epic_worktree(epic_id: str) -> Path:
+    """Creates isolated worktree for an entire Epic."""
+    slug = f"epic-{epic_id}"
+    repo_name = PROJECT_ROOT.name
+    worktree_name = f"{repo_name}-{slug}"
+    worktree_path = PROJECT_ROOT.parent / worktree_name
+    branch_name = f"feat/{slug}"
+
+    print(f"🌲 Creating isolated Epic worktree at: {worktree_path}")
+    if worktree_path.exists():
+        print(f"  ℹ️ Epic worktree directory already exists at {worktree_path}")
+    else:
+        cmd = ["git", "worktree", "add", str(worktree_path), "-b", branch_name, "origin/main"]
+        subprocess.run(cmd, cwd=PROJECT_ROOT, check=True)
+        print(f"  ✅ Epic worktree created on branch `{branch_name}`.")
+
+    # Symlinks
+    links = [
+        (".venv", worktree_path / ".venv"),
+        ("web/node_modules", worktree_path / "web/node_modules"),
+        ("data", worktree_path / "data"),
+    ]
+
+    for src_rel, target in links:
+        src = PROJECT_ROOT / src_rel
+        if src.exists() and not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.symlink_to(src)
+            print(f"  🔗 Symlinked `{src_rel}`")
+
+    generate_isolated_env(worktree_path, slug)
+    return worktree_path
+
+
 def run_verifications(workdir: Path) -> bool:
     """Runs ruff and pytest verification suite."""
     print("🔍 Running Verification Gates...")
@@ -336,9 +373,11 @@ def run_verifications(workdir: Path) -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Story dev manager.")
+    parser = argparse.ArgumentParser(description="Story & Epic dev manager.")
     parser.add_argument("--story", help="Path to story markdown file")
     parser.add_argument("--setup-worktree", action="store_true", help="Create worktree and symlink env")
+    parser.add_argument("--epic", help="Epic number (e.g. 19)")
+    parser.add_argument("--setup-epic-worktree", action="store_true", help="Create epic worktree and symlink env")
     parser.add_argument("--verify", action="store_true", help="Run verification gates")
     args = parser.parse_args()
 
@@ -347,6 +386,10 @@ def main() -> int:
         if not story_file.is_absolute():
             story_file = PROJECT_ROOT / story_file
         setup_worktree(story_file)
+        return 0
+
+    if args.setup_epic_worktree and args.epic:
+        setup_epic_worktree(str(args.epic))
         return 0
 
     if args.verify:
