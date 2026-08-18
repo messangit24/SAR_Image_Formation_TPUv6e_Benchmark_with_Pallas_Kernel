@@ -1,17 +1,17 @@
 ---
 name: dev-epic-or-story-owl-afk
-description: Autonomous Epic & Story orchestrator powered by owl (DeepCoder and bmad-code-review subagents). Executes single stories or entire multi-story Epics end-to-end in an isolated worktree, starting with an interactive architectural alignment gate (/grill-me), implementing via TDD + Red-Team Review, opening Pull Requests, and iterating on automated PR reviews & CI checks until green.
+description: Autonomous Epic & Story orchestrator powered by owl (DeepCoder and code-review subagents). Executes single stories or entire multi-story Epics end-to-end in an isolated worktree, starting with an interactive architectural alignment gate (/grill-me), implementing via TDD + Red-Team Review, opening Pull Requests, and iterating on automated PR reviews & CI checks until green (with graceful timeout progression).
 ---
 
 > **CONFIDENTIALITY NOTICE**: Google-Internal Use Only. This skill specification and its orchestration routines are proprietary and cannot be shared externally or committed to public external repositories.
 
 # Autonomous Epic & Story Orchestrator (`dev-epic-or-story-owl-afk`)
 
-Use this skill when you have completed a planning session (`bmad-prd`, `bmad-architecture`, `bmad-create-epics-and-stories`) and want to autonomously develop:
+Use this skill when you have completed a planning session (`prd`, `architecture`, `create-epics-and-stories`) and want to autonomously develop:
 1. **A Single Story** (`story-X.Y` marked `execution_mode: "AFK"`).
 2. **An Entire Multi-Story Epic** (`Epic X` with all constituent stories marked `execution_mode: "AFK"`).
 
-`dev-epic-or-story-owl-afk` automates the complete developer loop: **`/grill-me` alignment $\to$ `/owl LGTM` (DeepCoder TDD) $\to$ `/owl bmad adv review` (DeepInvestigator Red-Team) $\to$ Refinement Loop $\to$ PR Submission $\to$ Automated PR Comments & CI Resolution Loop**.
+`dev-epic-or-story-owl-afk` automates the complete developer loop: **`/grill-me` alignment $\to$ `/owl LGTM` (DeepCoder TDD) $\to$ `/owl code-review` (DeepInvestigator Red-Team) $\to$ Refinement Loop $\to$ PR Submission $\to$ Automated PR Comments & CI Resolution Loop**.
 
 ---
 
@@ -21,9 +21,10 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
    - The Orchestrator agent **MUST NEVER** call `write_to_file` or `replace_file_content` to implement story logic.
    - All code generation, TDD tests, and refactoring **MUST** be performed by invoking `DeepCoder` via `invoke_subagent`.
 2. **MANDATORY ADVERSARIAL RED-TEAM SUBAGENT**:
-   - Every story **MUST** undergo adversarial review via `DeepInvestigator` / `bmad-code-review` via `invoke_subagent` before committing.
-3. **MANDATORY PR COMMENT & CI MONITORING**:
-   - After opening the Pull Request, the orchestrator **MUST NOT** exit immediately. It must wait for automated CI checks and AI review comments (`ggh pr checks`, `ggh pr view`), iterate with `DeepCoder` on any findings, and push fixes until all checks pass green.
+   - Every story **MUST** undergo adversarial review via `DeepInvestigator` / `code-review` via `invoke_subagent` before committing.
+3. **MANDATORY PR COMMENT & CI MONITORING (WITH TIMEOUT PROGRESSION)**:
+   - After opening the Pull Request, the orchestrator inspects automated CI checks and AI review comments (`ggh pr checks`, `ggh pr view`).
+   - If CI/CD checks take too long (e.g. > 3–5 minutes or waiting in long queues), do not hang indefinitely: note the in-flight status and proceed with next steps or complete the handoff cleanly.
 4. **STOP AND WAIT FOR SUBAGENTS**:
    - After invoking each subagent, the orchestrator must stop calling tools and wait for the subagent's response.
 
@@ -39,10 +40,10 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
   3. **Worktree Scaffolding**: Create isolated worktree `../<repo>-<story_slug>` on branch `feat/<story_slug>` with isolated `.env`.
   4. **The `/owl` Dev & Review Loop**:
      - **`/owl LGTM`**: Dispatch `DeepCoder` for TDD implementation.
-     - **`/owl bmad adv review`**: Dispatch `DeepInvestigator` for adversarial review.
+     - **`/owl code-review`**: Dispatch `DeepInvestigator` for adversarial review.
      - **Refine & Repeat**: Iterate until review is 100% clean.
   5. **PR Submission**: Open Pull Request `feat(<story_slug>): <title>` linking `b/<story_bug_id>`.
-  6. **Automated PR Feedback Resolution**: Wait for CI checks & AI reviewer comments, iterate fixes with `DeepCoder`, and push until green.
+  6. **Automated PR Feedback Resolution**: Inspect CI checks & AI reviewer comments, iterate fixes with `DeepCoder`, and push until green (or proceed if CI queues take too long).
 
 ---
 
@@ -54,7 +55,7 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
   3. **Dedicated Epic Worktree**: Scaffolds `../<repo>-epic-X` on branch `feat/epic-X` with dynamic `.env`.
   4. **Topological Wave Execution**: For each story in each wave, execute the **`/owl` Dev & Review Loop**.
   5. **Consolidated Epic PR**: Open single consolidated PR `feat(epic-X): <Epic Title>` referencing parent Epic `b/<epic_bug_id>` and all child tickets.
-  6. **Automated PR Feedback Resolution**: Wait for CI checks & AI reviewer comments across the entire Epic PR, iterate fixes with `DeepCoder`, and push until green.
+  6. **Automated PR Feedback Resolution**: Inspect CI checks & AI reviewer comments across the Epic PR, iterate fixes with `DeepCoder`, and push until green (or proceed if CI queues take too long).
 
 ---
 
@@ -73,7 +74,7 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
    - Test strategy (acceptance criteria assertion against public interface).
 2. Conduct interactive Socratic interview using `/grill-me` with the `ask_question` tool.
 3. **🛑 Mandatory Gate**: Prompt the developer for explicit approval:
-   > 💡 **Alignment Gate**: Please review the implementation plan above. Once you confirm (**`Proceed`** or **`LGTM`**), I will scaffold the isolated worktree and autonomously execute the `/owl LGTM` and `/owl bmad adv review` loop.
+   > 💡 **Alignment Gate**: Please review the implementation plan above. Once you confirm (**`Proceed`** or **`LGTM`**), I will scaffold the isolated worktree and autonomously execute the `/owl LGTM` and `/owl code-review` loop.
 4. **WAIT** for the user to respond with `Proceed` or `LGTM` before proceeding to Phase 3.
 
 ### Phase 3: Worktree Scaffolding
@@ -128,7 +129,7 @@ Instructions:
 ```
 **🛑 STOP AND WAIT**: Wait for the `DeepCoder` subagent to return its completion report.
 
-### Step 4.3: Execute `/owl bmad adv review` (Red-Team Review Subagent)
+### Step 4.3: Execute `/owl code-review` (Red-Team Review Subagent)
 Once `DeepCoder` completes, the orchestrator triggers the adversarial red-team review routine.
 
 Call `invoke_subagent`:
@@ -138,7 +139,7 @@ invoke_subagent(
         "TypeName": "self",
         "Role": "DeepInvestigator",
         "Workspace": "inherit",
-        "Prompt": """Task: Conduct an adversarial red-team code review of the git diff for story-X.Y: bmad adv review
+        "Prompt": """Task: Conduct an adversarial red-team code review of the git diff for story-X.Y: code-review
 
 Additional Context:
 Worktree Location: <path_to_worktree>
@@ -156,7 +157,7 @@ Instructions:
    - `VERDICT: ACTION REQUIRED` (with precise file:line feedback and required fixes)."""
     }],
     toolAction="Dispatching owl DeepInvestigator",
-    toolSummary="Execute /owl bmad adv review"
+    toolSummary="Execute /owl code-review"
 )
 ```
 **🛑 STOP AND WAIT**: Wait for the `DeepInvestigator` subagent's review report.
@@ -166,7 +167,7 @@ Instructions:
   1. Send the review feedback back to the `DeepCoder` subagent via `send_message`:
      `Task: Resolve the following adversarial review findings: <findings>`
   2. Wait for `DeepCoder` to apply fixes and verify green.
-  3. Re-run `/owl bmad adv review` via `send_message` to the review subagent.
+  3. Re-run `/owl code-review` via `send_message` to the review subagent.
   4. Repeat until the review report returns **`VERDICT: PASS`**.
 
 ### Step 4.5: Final Verification Gate & Atomic Git Commit
@@ -197,9 +198,9 @@ Once review is 100% clean:
 
 ---
 
-## 🔍 Phase 6: Automated PR Review & CI Iteration Loop
+## 🔍 Phase 6: Automated PR Review & CI Iteration Loop (With Graceful Timeout)
 
-After creating the Pull Request, the orchestrator **MUST NOT exit**. It monitors automated CI and AI reviews:
+After creating the Pull Request, the orchestrator inspects automated CI and AI reviews:
 
 1. **Poll CI Checks & Automated Reviews**:
    - Inspect status using `ggh`:
@@ -207,6 +208,7 @@ After creating the Pull Request, the orchestrator **MUST NOT exit**. It monitors
      ggh pr checks
      ggh pr view --json reviews,comments
      ```
+   - **Graceful Timeout**: If CI/CD checks take longer than 3–5 minutes or are stuck in long background queues, do not hang indefinitely. Note the in-flight status and proceed with the next steps or conclude the story handoff cleanly.
 2. **Evaluate and Resolve Feedback**:
    - **If CI Fails or Automated Reviewers Leave Comments**:
      1. Extract the failure logs or line review comments.

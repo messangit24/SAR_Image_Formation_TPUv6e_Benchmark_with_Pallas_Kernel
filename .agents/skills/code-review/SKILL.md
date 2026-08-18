@@ -1,9 +1,9 @@
 ---
-name: bmad-code-review
+name: code-review
 description: Standalone adversarial red-team code review. Cynically inspects git diff against acceptance criteria, deep module design principles (where applicable), language standards (write-python/write-typescript), memory leaks, and boundary edge cases.
 ---
 
-# Adversarial Red-Team Code Review (`bmad-code-review`)
+# Adversarial Red-Team Code Review (`code-review`)
 
 Use this skill to conduct a cynical, rigorous pre-PR review on the worktree's `git diff`.
 

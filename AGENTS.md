@@ -179,7 +179,7 @@ Rather than rigid monolithic formatting rules, language-specific engineering sta
 
 ### Dual-Sided Enforcement:
 1. **Developer Agent Pull**: Coding agents (`dev-story`, `/owl`) dynamically pull in `write-python` or `write-typescript` during Step 3 worktree implementation.
-2. **Reviewer Agent Enforcement**: Reviewer agents (`bmad-code-review`, `.github/pr-reviewer/`) strictly verify PR diffs against these language skills, flagging missing type annotations, top-level heavy imports, or unhandled errors before PR approval.
+2. **Reviewer Agent Enforcement**: Reviewer agents (`code-review`, `.github/pr-reviewer/`) strictly verify PR diffs against these language skills, flagging missing type annotations, top-level heavy imports, or unhandled errors before PR approval.
 
 ---
 
@@ -196,8 +196,8 @@ As an AI coding agent session grows over many turns, older conversation logs, in
 To maintain peak reasoning sharpness, enforce a strict separation across **three distinct agent roles**:
 
 1. **Role 1: The Architect / Planning Agent (Session 1)**
-   - **Scope**: Runs `bmad-brainstorming` + `/grill-me`, `bmad-prd`, and `bmad-architecture`.
-   - **Decomposition**: Runs `bmad-create-epics-and-stories` to generate Epics and sharded story files.
+   - **Scope**: Runs `brainstorming` + `/grill-me`, `prd`, and `architecture`.
+   - **Decomposition**: Runs `create-epics-and-stories` to generate Epics and sharded story files.
    - **Sync**: Runs `update-taskflow` to mint parent Epics and child tickets in Buganizer and TaskFlow.
    - **🛑 Hard Action**: **CLOSE THIS CONVERSATION SESSION** immediately once tickets are minted and stamped into frontmatter. Never proceed to code implementation in this session.
 
@@ -205,7 +205,7 @@ To maintain peak reasoning sharpness, enforce a strict separation across **three
    - **Scope**: Open a brand-new, **fresh conversation session** dedicated exclusively to implementing one story.
    - **Execution**: Runs `dev-story` to scaffold an isolated worktree (`../<repo>-<story>`), proposes the implementation plan, and obtains human approval via `/grill-me`.
    - **TDD & `/owl`**: Pulls in `write-python` / `write-typescript` standards and executes TDD Red-Green-Refactor cycles via `/owl`.
-   - **In-Session Subagent**: Spawns an adversarial red-team subagent (`bmad-code-review`) to cynically inspect the `git diff`.
+   - **In-Session Subagent**: Spawns an adversarial red-team subagent (`code-review`) to cynically inspect the `git diff`.
    - **Submission**: Opens the GitHub Pull Request via `ggh pr create`.
    - **🛑 Hard Action**: Once the PR is merged and `merge-sync` is executed, **CLOSE THIS CONVERSATION SESSION**. Never reuse a dev session to implement a second story.
 
@@ -258,7 +258,7 @@ When an entire Epic has been broken down into detailed, self-contained vertical 
 
 1. **Epic Alignment Gate (`/grill-me`)**: The agent synthesizes an Epic Master Architecture & Implementation Plan and conducts an interactive Socratic interview up front to resolve schemas, APIs, deep modules, and edge cases across all stories.
 2. **Dedicated Epic Worktree**: Scaffolds `../<repo>-epic-X` on branch `feat/epic-X` with dynamic resource allocation (`DATABASE_URL`, port offsets).
-3. **Topological Wave Execution**: Implements stories in dependency order (`Wave 1` roots $\to$ `Wave 2` dependents). Each story undergoes strict TDD (`DeepCoder`), automated verification gates (`ruff`, `pytest`), and an adversarial red-team review subagent (`bmad-code-review`) before being committed.
+3. **Topological Wave Execution**: Implements stories in dependency order (`Wave 1` roots $\to$ `Wave 2` dependents). Each story undergoes strict TDD (`DeepCoder`), automated verification gates (`ruff`, `pytest`), and an adversarial red-team review subagent (`code-review`) before being committed.
 4. **Consolidated PR with Full Traceability**: Opens a single cohesive Pull Request (`feat/epic-X: <Epic Title>`) linking the parent Epic `b/<epic_bug_id>` and all constituent `b/<story_bug_id>` tickets.
 
 > ⚠️ **CONFIDENTIALITY NOTICE**: The **`dev-epic-or-story-owl-afk`** skill and its orchestration routines are **Google-Internal & Confidential**.

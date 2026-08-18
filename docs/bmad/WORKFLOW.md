@@ -31,13 +31,13 @@ When bootstrapping a brand-new project, platform, or service:
    git clone git@depot.code.corp.goog:personal/ai-sdlc-starter.git my-project
    cd my-project && chmod +x scripts/*.py
    ```
-2. **Brainstorm & Socratic Interview (`bmad-brainstorming`)**:
+2. **Brainstorm & Socratic Interview (`brainstorming`)**:
    - Explore target user personas, technical trade-offs, algorithmic models, and boundary risks.
    - *💡 User Prompt*: Type `/grill-me` if you want to stress-test assumptions and clarify underspecified requirements through an interactive interview.
-3. **Formalize PRD & Architecture (`bmad-prd`, `bmad-architecture`)**:
+3. **Formalize PRD & Architecture (`prd`, `architecture`)**:
    - Write `docs/bmad/planning/prd.md` to lock in Functional Requirements (FRs) and Non-Functional Requirements (NFRs).
    - Write `docs/bmad/planning/architecture.md` to define database schemas, interface contracts, and system invariants.
-4. **Decompose into Epics & Vertical Slice Stories (`bmad-create-epics-and-stories`)**:
+4. **Decompose into Epics & Vertical Slice Stories (`create-epics-and-stories`)**:
    - Break architecture into Epics.
    - **Mandatory Walking Skeleton (Story 1.1)**: Build a minimal, runnable end-to-end path (Input $\to$ Core Logic $\to$ Storage/Output $\to$ E2E Integration Test). Declares `depends_on: []` and `execution_mode: "AFK"`.
 5. **Human Confirmation & Cloud Tracker Sync (`update-taskflow`)**:
@@ -53,9 +53,9 @@ When bootstrapping a brand-new project, platform, or service:
 
 When adding functionality, refactoring an engine, or executing mid-project evolution:
 
-1. **Contextual Brainstorming & Seam Analysis (`bmad-brainstorming`)**:
+1. **Contextual Brainstorming & Seam Analysis (`brainstorming`)**:
    - Analyze existing `prd.md` and `architecture.md`. Use `/grill-me` to probe how the new feature integrates without breaking existing invariants.
-2. **Story Specification & Deep Module Definition (`bmad-create-epics-and-stories`)**:
+2. **Story Specification & Deep Module Definition (`create-epics-and-stories`)**:
    - Decomposes the requirement into either a single story or a brand-new multi-story Epic:
      - **Deep Module Seam**: Small, clean public interface hiding internal complexity.
      - **Explicit Dependencies**: `depends_on: ["story-X.Y"]` (upstream prerequisites).
@@ -79,7 +79,7 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
    - *💡 User Prompt*: For self-contained stories, the developer can type `/owl` (or `/goal`) for deep autonomous execution.
 7. **Verification Gates & Adversarial Red-Team Review**:
    - `uv run ruff check src tests scripts` && `uv run pytest -q`.
-   - The agent spawns `bmad-code-review` subagent to cynically inspect the `git diff` for edge cases, memory leaks, and boundary gaps.
+   - The agent spawns `code-review` subagent to cynically inspect the `git diff` for edge cases, memory leaks, and boundary gaps.
 8. **PR Submission, Human Merge & Automated Post-Merge Sync**:
    - Open GitHub PR via `ggh` and update Buganizer ticket with progress.
    - GitHub Actions AI Reviewer (`gemini-pr-review.yml`) checks the PR diff.
@@ -93,13 +93,13 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
 
 | # | Skill Name | Primary Output File / Action | Purpose |
 | :- | :--- | :--- | :--- |
-| **1** | **`bmad-brainstorming`** | `docs/bmad/planning/research/` | Explores requirements, problem space, algorithms, and trade-offs (optionally grilled with `/grill-me`). |
-| **2** | **`bmad-prd`** | `docs/bmad/planning/prd.md` | Grounds ideas into formal Functional & Non-Functional Requirements. |
-| **3** | **`bmad-architecture`** | `docs/bmad/planning/architecture.md` | Defines technical architecture spine, DB schemas, API contracts, and invariants. |
-| **4** | **`bmad-create-epics-and-stories`** | `planning/epics.md`<br/>`stories/story-*.md` | Unified engine: decomposes architecture into Epics, new subsystems, and sharded vertical slice stories. |
+| **1** | **`brainstorming`** | `docs/bmad/planning/research/` | Explores requirements, problem space, algorithms, and trade-offs (optionally grilled with `/grill-me`). |
+| **2** | **`prd`** | `docs/bmad/planning/prd.md` | Grounds ideas into formal Functional & Non-Functional Requirements. |
+| **3** | **`architecture`** | `docs/bmad/planning/architecture.md` | Defines technical architecture spine, DB schemas, API contracts, and invariants. |
+| **4** | **`create-epics-and-stories`** | `planning/epics.md`<br/>`stories/story-*.md` | Unified engine: decomposes architecture into Epics, new subsystems, and sharded vertical slice stories. |
 | **5** | **`update-taskflow`** | **Buganizer & TaskFlow** | **The mandatory concluding step**: Mints Epics, mints Stories, links parent hierarchy, and stamps IDs into frontmatter. |
 | **6** | **`dev-story`** | Isolated Git Worktree | Pre-flight dependency check, isolated worktree scaffolding, plan approval gate, verification gates, and PR submission. |
-| **7** | **`bmad-code-review`** | PR Review Findings | Standalone adversarial red-team code review on `git diff` (spawned as subagent). |
+| **7** | **`code-review`** | PR Review Findings | Standalone adversarial red-team code review on `git diff` (spawned as subagent). |
 | **8** | **`write-python`** | Python Source Files | Modern Python typing, lazy imports, hermetic testing, and security invariants. |
 | **9** | **`write-typescript`** | TypeScript / React Files | Strict TypeScript, Zod boundary validation, and React patterns. |
 | **10** | **`merge-sync`** | Main branch & Cloud Trackers | Auto-merges open PRs (human approval), pulls `main`, marks stories `- [x]`, transitions Buganizer/TaskFlow tickets to `FIXED`, and deletes merged worktrees. |
@@ -140,8 +140,8 @@ When scaling parallel agent workflows across multiple Git worktrees:
 
 When executing an entire Epic with multiple `AFK` stories:
 
-1. **Prerequisites**: Thorough planning completed (`bmad-prd`, `bmad-architecture`, `bmad-create-epics-and-stories`), with all stories having explicit `depends_on` and `execution_mode: "AFK"`.
+1. **Prerequisites**: Thorough planning completed (`prd`, `architecture`, `create-epics-and-stories`), with all stories having explicit `depends_on` and `execution_mode: "AFK"`.
 2. **Initial Socratic Grilling (`/grill-me`)**: The agent compiles the Epic Architecture Plan and interviews the developer up front to resolve all shared data models and interface contracts.
 3. **Dedicated Epic Worktree**: Scaffolds `../<repo>-epic-X` on branch `feat/epic-X`.
-4. **Topological Waves**: Stories execute in dependency waves. Each story goes through Red-Green-Refactor with `DeepCoder`, passes test gates, undergoes adversarial diff review via `bmad-code-review`, and receives an atomic commit.
+4. **Topological Waves**: Stories execute in dependency waves. Each story goes through Red-Green-Refactor with `DeepCoder`, passes test gates, undergoes adversarial diff review via `code-review`, and receives an atomic commit.
 5. **Consolidated PR**: A single Pull Request is opened for the entire Epic, referencing all child tickets and the parent Epic in Buganizer.

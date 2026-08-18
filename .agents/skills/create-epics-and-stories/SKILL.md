@@ -1,11 +1,11 @@
 ---
-name: bmad-create-epics-and-stories
+name: create-epics-and-stories
 description: Unified Epic & Story creation engine. Automatically determines whether requirements represent a full greenfield decomposition, a brand-new Epic with multiple stories, or a single story addition. Decomposes architecture into vertical slice stories with deep module interfaces (where appropriate), depends_on, execution_mode (AFK vs HUMAN_MONITORED), waits for explicit human confirmation, and updates TaskFlow.
 ---
 
-# Universal Epic & Story Creation Engine (`bmad-create-epics-and-stories`)
+# Universal Epic & Story Creation Engine (`create-epics-and-stories`)
 
-Use this skill immediately after brainstorming (`bmad-brainstorming` + `/grill-me`) and architectural planning (`bmad-prd`, `bmad-architecture`) to generate, shard, and structure Epics and user stories.
+Use this skill immediately after brainstorming (`brainstorming` + `/grill-me`) and architectural planning (`prd`, `architecture`) to generate, shard, and structure Epics and user stories.
 
 ---
 

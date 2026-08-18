@@ -18,7 +18,7 @@ graph TD
     G1 -->|Approved| S3["3. Implement in Worktree<br/>TDD (Red -> Green -> Refactor)<br/>Prompt user for <code>/owl</code>"]
     G1 -->|Revisions Requested| S2
     S3 --> G2["4. Verification Gates<br/><code>uv run ruff check</code><br/><code>uv run pytest -q</code>"]
-    G2 --> S4["5. Adversarial Red-Team Review<br/><code>bmad-code-review</code> subagent"]
+    G2 --> S4["5. Adversarial Red-Team Review<br/><code>code-review</code> subagent"]
     S4 --> S5["6. Push Branch, Issue & PR<br/><code>ggh issue create</code> & <code>ggh pr create</code><br/>Update Buganizer ticket with PR link"]
     S5 --> S6["7. Dual-Speed Review & CI Checks<br/><code>ggh pr checks</code> + Fix AI Feedback<br/>Human Manual Review Iteration"]
     S6 --> G3{"Human Merges PR?<br/>(No Auto-Merge)"}
@@ -62,7 +62,7 @@ cd web && npx tsc --noEmit   # If frontend touched
 ```
 
 ### Step 5: Adversarial Red-Team Review (Subagent)
-- The agent spawns an in-session subagent running `bmad-code-review` to inspect the `git diff` against language standards, edge cases, and memory leaks.
+- The agent spawns an in-session subagent running `code-review` to inspect the `git diff` against language standards, edge cases, and memory leaks.
 - Fix any identified blocker findings in the worktree before proceeding.
 
 ### Step 6: GitHub Issue & PR Submission
