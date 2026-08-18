@@ -22,68 +22,87 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 STORIES_DIR = PROJECT_ROOT / "docs/bmad/stories"
 BUGANIZER_SERVER_PATH = "/google/bin/releases/codemind-mcp-servers/buganizer_server.par"
+class BuganizerClient:
+    """Persistent connection to buganizer_server.par to execute multiple JSON-RPC calls without per-call process overhead."""
 
+    def __init__(self, timeout: float = 15.0):
+        self.proc = None
+        self.req_id = 1
+        self.timeout = timeout
+        if os.path.exists(BUGANIZER_SERVER_PATH):
+            try:
+                self.proc = subprocess.Popen(
+                    [BUGANIZER_SERVER_PATH],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                )
+                init_payload = json.dumps({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {"name": "merge-sync", "version": "1.0"},
+                    },
+                })
+                self.proc.stdin.write(init_payload + "\n")
+                self.proc.stdin.flush()
+                self.proc.stdout.readline()
+            except Exception as e:
+                self.proc = None
+                print(f"info: Buganizer MCP server initialization failed ({e}), skipping live ticket RPCs.", file=sys.stderr)
 
-def call_mcp_tool(tool_name: str, arguments: dict[str, Any]) -> str:
-    """Invokes a tool on buganizer_server.par."""
-    if not os.path.exists(BUGANIZER_SERVER_PATH):
-        return ""
-    try:
-        proc = subprocess.Popen(
-            [BUGANIZER_SERVER_PATH],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        proc.stdin.write(
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {},
-                    "clientInfo": {"name": "merge-sync", "version": "1.0"},
-                },
-            })
-            + "\n"
-        )
-        proc.stdin.flush()
-        proc.stdout.readline()
-
-        proc.stdin.write(
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": 2,
-                "method": "tools/call",
-                "params": {"name": tool_name, "arguments": arguments},
-            })
-            + "\n"
-        )
-        proc.stdin.flush()
-        resp_raw = proc.stdout.readline()
-        proc.terminate()
-
-        if not resp_raw:
+    def call(self, tool_name: str, arguments: dict[str, Any]) -> str:
+        if not self.proc or self.proc.poll() is not None:
             return ""
-
-        resp_data = json.loads(resp_raw)
-        res_str = (
-            resp_data.get("result", {})
-            .get("structuredContent", {})
-            .get("result", "")
-        )
-        if not res_str:
+        self.req_id += 1
+        req = json.dumps({
+            "jsonrpc": "2.0",
+            "id": self.req_id,
+            "method": "tools/call",
+            "params": {"name": tool_name, "arguments": arguments},
+        })
+        try:
+            self.proc.stdin.write(req + "\n")
+            self.proc.stdin.flush()
+            resp_line = self.proc.stdout.readline()
+            if not resp_line:
+                return ""
+            resp_data = json.loads(resp_line)
             res_str = (
                 resp_data.get("result", {})
-                .get("content", [{}])[0]
-                .get("text", "")
+                .get("structuredContent", {})
+                .get("result", "")
             )
-        return res_str
-    except Exception as e:
-        print(f"error calling {tool_name}: {e}", file=sys.stderr)
-        return ""
+            if not res_str:
+                res_str = (
+                    resp_data.get("result", {})
+                    .get("content", [{}])[0]
+                    .get("text", "")
+                )
+            return res_str
+        except Exception as e:
+            print(f"warning calling Buganizer MCP {tool_name}: {e}", file=sys.stderr)
+            return ""
+
+    def close(self):
+        if self.proc:
+            try:
+                self.proc.terminate()
+            except Exception:
+                pass
+
+
+def call_mcp_tool(tool_name: str, arguments: dict[str, Any], timeout: float = 15.0) -> str:
+    """One-shot helper to invoke a tool on buganizer_server.par."""
+    client = BuganizerClient(timeout=timeout)
+    res = client.call(tool_name, arguments)
+    client.close()
+    return res
 
 
 def get_merged_prs() -> list[dict[str, str]]:
@@ -173,34 +192,44 @@ def sync_completed_tickets() -> list[str]:
     updated = []
     if not STORIES_DIR.exists():
         return updated
-    user_email = os.environ.get("USER", "")
+    import getpass
+    user_email = os.environ.get("USER") or getpass.getuser() or "ermlickb"
     if user_email and "@" not in user_email:
         user_email = f"{user_email}@google.com"
 
+    client = BuganizerClient(timeout=15.0)
+
+    epics_to_check = set()
     for sf in sorted(STORIES_DIR.glob("story-*.md")):
         content = sf.read_text(encoding="utf-8")
-        if 'stage: "COMPLETED"' in content or 'Status: completed' in content:
+        if 'stage: "COMPLETED"' in content or 'Status: completed' in content or "- [x]" in content:
             m = re.search(r'buganizer_id:\s*"(\d+)"', content)
             if m:
-                bug_id = m.group(1)
+                bug_id = int(m.group(1))
                 try:
-                    res = call_mcp_tool("buganizer_update_issue_status", {
-                        "issue_id": int(bug_id),
+                    res = client.call("buganizer_update_issue_status", {
+                        "issue_id": bug_id,
                         "status": "FIXED",
                     })
-                    if "must have an assignee" in res and user_email:
-                        call_mcp_tool("buganizer_reassign_issue", {
-                            "issue_id": int(bug_id),
+                    if "must have an assignee" in str(res) and user_email:
+                        client.call("buganizer_reassign_issue", {
+                            "issue_id": bug_id,
                             "assignee": user_email,
                             "comment_markdown": "Auto-assigned during merge sync.",
                         })
-                        call_mcp_tool("buganizer_update_issue_status", {
-                            "issue_id": int(bug_id),
+                        res = client.call("buganizer_update_issue_status", {
+                            "issue_id": bug_id,
                             "status": "FIXED",
                         })
                     updated.append(f"{sf.name} -> b/{bug_id}")
                 except Exception as e:
                     print(f"warning updating b/{bug_id}: {e}", file=sys.stderr)
+
+            m_epic = re.search(r'epic_bug_id:\s*"(\d+)"', content)
+            if m_epic:
+                epics_to_check.add(int(m_epic.group(1)))
+
+    client.close()
     return updated
 
 

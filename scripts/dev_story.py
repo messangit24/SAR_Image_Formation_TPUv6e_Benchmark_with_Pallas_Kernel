@@ -16,6 +16,7 @@ Usage:
     python3 scripts/dev_story.py --verify
 """
 import argparse
+import getpass
 import json
 import os
 import re
@@ -29,66 +30,92 @@ STORIES_DIR = PROJECT_ROOT / "docs/bmad/stories"
 BUGANIZER_SERVER_PATH = "/google/bin/releases/codemind-mcp-servers/buganizer_server.par"
 
 
-def call_mcp_tool(tool_name: str, arguments: dict[str, Any]) -> str:
-    """Invokes a tool on buganizer_server.par."""
-    if not os.path.exists(BUGANIZER_SERVER_PATH):
-        return ""
-    try:
-        proc = subprocess.Popen(
-            [BUGANIZER_SERVER_PATH],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        proc.stdin.write(
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {},
-                    "clientInfo": {"name": "dev-story", "version": "1.0"},
-                },
-            })
-            + "\n"
-        )
-        proc.stdin.flush()
-        proc.stdout.readline()
+def get_current_user_email() -> str:
+    """Returns current user LDAP email."""
+    user = os.environ.get("USER")
+    if not user:
+        try:
+            user = getpass.getuser()
+        except Exception:
+            user = "ermlickb"
+    if user and "@" not in user:
+        user = f"{user}@google.com"
+    return user
 
-        proc.stdin.write(
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": 2,
-                "method": "tools/call",
-                "params": {"name": tool_name, "arguments": arguments},
-            })
-            + "\n"
-        )
-        proc.stdin.flush()
-        resp_raw = proc.stdout.readline()
-        proc.terminate()
 
-        if not resp_raw:
+class BuganizerClient:
+    """Persistent connection to buganizer_server.par to execute multiple JSON-RPC calls without per-call process overhead."""
+
+    def __init__(self, timeout: float = 15.0):
+        self.proc = None
+        self.req_id = 1
+        self.timeout = timeout
+        if os.path.exists(BUGANIZER_SERVER_PATH):
+            try:
+                self.proc = subprocess.Popen(
+                    [BUGANIZER_SERVER_PATH],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                )
+                init_payload = json.dumps({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {"name": "dev-story", "version": "1.0"},
+                    },
+                })
+                self.proc.stdin.write(init_payload + "\n")
+                self.proc.stdin.flush()
+                self.proc.stdout.readline()
+            except Exception as e:
+                self.proc = None
+                print(f"info: Buganizer MCP server initialization failed ({e}), skipping live ticket RPCs.", file=sys.stderr)
+
+    def call(self, tool_name: str, arguments: dict[str, Any]) -> str:
+        if not self.proc or self.proc.poll() is not None:
             return ""
-
-        resp_data = json.loads(resp_raw)
-        res_str = (
-            resp_data.get("result", {})
-            .get("structuredContent", {})
-            .get("result", "")
-        )
-        if not res_str:
+        self.req_id += 1
+        req = json.dumps({
+            "jsonrpc": "2.0",
+            "id": self.req_id,
+            "method": "tools/call",
+            "params": {"name": tool_name, "arguments": arguments},
+        })
+        try:
+            self.proc.stdin.write(req + "\n")
+            self.proc.stdin.flush()
+            resp_line = self.proc.stdout.readline()
+            if not resp_line:
+                return ""
+            resp_data = json.loads(resp_line)
             res_str = (
                 resp_data.get("result", {})
-                .get("content", [{}])[0]
-                .get("text", "")
+                .get("structuredContent", {})
+                .get("result", "")
             )
-        return res_str
-    except Exception as e:
-        print(f"error calling {tool_name}: {e}", file=sys.stderr)
-        return ""
+            if not res_str:
+                res_str = (
+                    resp_data.get("result", {})
+                    .get("content", [{}])[0]
+                    .get("text", "")
+                )
+            return res_str
+        except Exception as e:
+            print(f"warning calling Buganizer MCP {tool_name}: {e}", file=sys.stderr)
+            return ""
+
+    def close(self):
+        if self.proc:
+            try:
+                self.proc.terminate()
+            except Exception:
+                pass
 
 
 def parse_story_frontmatter(path: Path) -> dict[str, Any]:
@@ -169,7 +196,6 @@ def generate_isolated_env(worktree_path: Path, slug: str) -> None:
     """Generates an isolated .env with unique database and port offsets to prevent worktree collisions."""
     slug_clean = re.sub(r"[^a-zA-Z0-9_]", "_", slug).lower()
 
-    # Calculate deterministic port offset based on slug numbers or hash
     m = re.search(r"(\d+)(?:\.(\d+))?", slug)
     if m:
         major = int(m.group(1))
@@ -247,7 +273,7 @@ def setup_worktree(story_path: Path) -> Path:
         subprocess.run(cmd, cwd=PROJECT_ROOT, check=True)
         print(f"  ✅ Worktree created on branch `{branch_name}`.")
 
-    # Symlinks (Zero-copy for heavy directories)
+    # Symlinks
     links = [
         (".venv", worktree_path / ".venv"),
         ("web/node_modules", worktree_path / "web/node_modules"),
@@ -261,17 +287,29 @@ def setup_worktree(story_path: Path) -> Path:
             target.symlink_to(src)
             print(f"  🔗 Symlinked `{src_rel}`")
 
-    # Generate isolated environment variables (.env)
     generate_isolated_env(worktree_path, slug)
 
     # Update Buganizer status if ID present
     bug_id = meta.get("buganizer_id")
     if bug_id:
         print(f"  🔄 Updating Buganizer ticket b/{bug_id} to IN_PROGRESS (ASSIGNED)...")
-        call_mcp_tool("buganizer_update_issue_status", {
+        client = BuganizerClient(timeout=15.0)
+        res = client.call("buganizer_update_issue_status", {
             "issue_id": int(bug_id),
             "status": "ASSIGNED",
         })
+        if "must have an assignee" in str(res):
+            user_email = get_current_user_email()
+            client.call("buganizer_reassign_issue", {
+                "issue_id": int(bug_id),
+                "assignee": user_email,
+                "comment_markdown": "Auto-assigned during worktree setup.",
+            })
+            client.call("buganizer_update_issue_status", {
+                "issue_id": int(bug_id),
+                "status": "ASSIGNED",
+            })
+        client.close()
 
     return worktree_path
 
