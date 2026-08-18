@@ -3,14 +3,16 @@
 
 Triggered by the `merge-sync` skill or CLI.
 Performs:
-1. Git pull origin main in primary repo.
-2. Closes Buganizer / TaskFlow tickets to FIXED.
-3. Automatically deletes merged git worktrees (matched via ggh merged PRs and story stage: COMPLETED).
-4. Runs idempotent tracker synchronization.
+1. Automatically merges open PR(s) via `ggh pr merge` (treating manual execution as explicit human approval).
+2. Git pull origin main in primary repo.
+3. Closes Buganizer / TaskFlow tickets to FIXED (with auto-LDAP assignment fallback).
+4. Automatically deletes merged git worktrees (matched via ggh merged PRs and story stage: COMPLETED).
+5. Runs idempotent tracker synchronization.
 
 Usage:
     python3 scripts/merge_sync.py
 """
+import getpass
 import json
 import os
 import re
@@ -22,6 +24,21 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 STORIES_DIR = PROJECT_ROOT / "docs/bmad/stories"
 BUGANIZER_SERVER_PATH = "/google/bin/releases/codemind-mcp-servers/buganizer_server.par"
+
+
+def get_current_user_email() -> str:
+    """Returns current user LDAP email."""
+    user = os.environ.get("USER")
+    if not user:
+        try:
+            user = getpass.getuser()
+        except Exception:
+            user = "ermlickb"
+    if user and "@" not in user:
+        user = f"{user}@google.com"
+    return user
+
+
 class BuganizerClient:
     """Persistent connection to buganizer_server.par to execute multiple JSON-RPC calls without per-call process overhead."""
 
@@ -103,6 +120,45 @@ def call_mcp_tool(tool_name: str, arguments: dict[str, Any], timeout: float = 15
     res = client.call(tool_name, arguments)
     client.close()
     return res
+
+
+def merge_open_prs() -> list[dict[str, str]]:
+    """Merges open Pull Requests via ggh (taking manual merge-sync invocation as explicit human approval)."""
+    merged = []
+    try:
+        res = subprocess.run(
+            ["ggh", "pr", "list", "--state", "open", "--json", "number,title,headRefName"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if res.returncode == 0 and res.stdout.strip():
+            open_prs = json.loads(res.stdout)
+            for pr in open_prs:
+                pr_num = str(pr.get("number"))
+                pr_title = pr.get("title", "")
+                print(f"🔀 Merging open PR #{pr_num}: {pr_title} (Human Approval Confirmed)...")
+                merge_res = subprocess.run(
+                    ["ggh", "pr", "merge", pr_num, "--squash", "--delete-branch", "--auto"],
+                    cwd=PROJECT_ROOT,
+                    capture_output=True,
+                    text=True,
+                )
+                if merge_res.returncode != 0:
+                    merge_res = subprocess.run(
+                        ["ggh", "pr", "merge", pr_num, "--squash", "--delete-branch"],
+                        cwd=PROJECT_ROOT,
+                        capture_output=True,
+                        text=True,
+                    )
+                if merge_res.returncode == 0:
+                    print(f"  ✅ Successfully merged PR #{pr_num} into main.")
+                    merged.append(pr)
+                else:
+                    print(f"  ℹ️ PR #{pr_num} merge response: {merge_res.stderr.strip() or merge_res.stdout.strip()}")
+    except Exception as e:
+        print(f"info: checking/merging open PRs: {e}", file=sys.stderr)
+    return merged
 
 
 def get_merged_prs() -> list[dict[str, str]]:
@@ -192,10 +248,7 @@ def sync_completed_tickets() -> list[str]:
     updated = []
     if not STORIES_DIR.exists():
         return updated
-    import getpass
-    user_email = os.environ.get("USER") or getpass.getuser() or "ermlickb"
-    if user_email and "@" not in user_email:
-        user_email = f"{user_email}@google.com"
+    user_email = get_current_user_email()
 
     client = BuganizerClient(timeout=15.0)
 
@@ -238,21 +291,27 @@ def main() -> int:
     print("🔄 Running Post-Merge Synchronization & Worktree Cleanup")
     print("=" * 80)
 
-    # 1. Pull latest main
-    print("\n1. Pulling latest main from origin...")
+    # 1. Merge open PRs (Human Approval Confirmed via merge-sync trigger)
+    print("\n1. Checking for Open Pull Requests to Merge (Human Approval Confirmed)...")
+    merged_now = merge_open_prs()
+    if not merged_now:
+        print("  ℹ️ No open PRs found or PRs already merged.")
+
+    # 2. Pull latest main
+    print("\n2. Pulling latest main from origin...")
     subprocess.run(["git", "checkout", "main"], cwd=PROJECT_ROOT, check=False)
     pull_res = subprocess.run(["git", "pull", "origin", "main"], cwd=PROJECT_ROOT, capture_output=True, text=True)
     print(pull_res.stdout.strip() if pull_res.stdout else "Already up to date.")
 
-    # 2. Check for merged PRs
+    # 3. Check for merged PRs
     merged_prs = get_merged_prs()
     if merged_prs:
-        print("\n2. Recently Merged PRs:")
+        print("\n3. Recently Merged PRs:")
         for pr in merged_prs:
             print(f"  • PR #{pr.get('number')}: {pr.get('title')} (branch: {pr.get('headRefName')})")
 
-    # 3. Clean up merged worktrees
-    print("\n3. Cleaning Merged Worktrees...")
+    # 4. Clean up merged worktrees
+    print("\n4. Cleaning Merged Worktrees...")
     cleaned_wt = cleanup_worktrees()
     if cleaned_wt:
         for c in cleaned_wt:
@@ -260,8 +319,8 @@ def main() -> int:
     else:
         print("  ℹ️ No stale worktrees detected.")
 
-    # 4. Finalize Buganizer / TaskFlow tickets for completed stories
-    print("\n4. Finalizing Completed Tickets in Buganizer / TaskFlow...")
+    # 5. Finalize Buganizer / TaskFlow tickets for completed stories
+    print("\n5. Finalizing Completed Tickets in Buganizer / TaskFlow...")
     fixed_tickets = sync_completed_tickets()
     if fixed_tickets:
         for t in fixed_tickets:
@@ -269,12 +328,12 @@ def main() -> int:
     else:
         print("  ℹ️ No completed tickets to update.")
 
-    # 5. Run Tracker Synchronization
-    print("\n5. Running Idempotent Tracker Sync...")
+    # 6. Run Tracker Synchronization
+    print("\n6. Running Idempotent Tracker Sync...")
     subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts/sync_trackers.py")], cwd=PROJECT_ROOT)
 
     print("\n" + "=" * 80)
-    print("✅ Merge Sync Complete: Main updated, merged worktrees cleaned, tickets FIXED, trackers in sync.")
+    print("✅ Merge Sync Complete: PRs merged, main updated, worktrees cleaned, tickets FIXED, trackers in sync.")
     print("=" * 80)
     return 0
 

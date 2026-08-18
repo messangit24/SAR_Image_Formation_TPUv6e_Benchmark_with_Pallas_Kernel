@@ -102,7 +102,8 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
 | **7** | **`bmad-code-review`** | PR Review Findings | Standalone adversarial red-team code review on `git diff` (spawned as subagent). |
 | **8** | **`write-python`** | Python Source Files | Modern Python typing, lazy imports, hermetic testing, and security invariants. |
 | **9** | **`write-typescript`** | TypeScript / React Files | Strict TypeScript, Zod boundary validation, and React patterns. |
-| **10** | **`merge-sync`** | Main branch & Cloud Trackers | Pulls `main`, marks stories `- [x]`, transitions Buganizer/TaskFlow tickets to `FIXED`, and deletes merged worktrees. |
+| **10** | **`merge-sync`** | Main branch & Cloud Trackers | Auto-merges open PRs (human approval), pulls `main`, marks stories `- [x]`, transitions Buganizer/TaskFlow tickets to `FIXED`, and deletes merged worktrees. |
+
 
 ---
 
