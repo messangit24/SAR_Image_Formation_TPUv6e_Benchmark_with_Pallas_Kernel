@@ -1,6 +1,6 @@
 ---
 name: dev-epic-or-story-owl-afk
-description: Autonomous Epic & Story orchestrator powered by owl (DeepCoder and bmad-code-review subagents). Executes single stories or entire multi-story Epics end-to-end in an isolated worktree, starting with an interactive architectural alignment gate (/grill-me), implementing via TDD + Red-Team Review, and opening verified Pull Requests with full Buganizer/TaskFlow traceability.
+description: Autonomous Epic & Story orchestrator powered by owl (DeepCoder and bmad-code-review subagents). Executes single stories or entire multi-story Epics end-to-end in an isolated worktree, starting with an interactive architectural alignment gate (/grill-me), implementing via TDD + Red-Team Review, opening Pull Requests, and iterating on automated PR reviews & CI checks until green.
 ---
 
 > **CONFIDENTIALITY NOTICE**: Google-Internal Use Only. This skill specification and its orchestration routines are proprietary and cannot be shared externally or committed to public external repositories.
@@ -11,7 +11,7 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
 1. **A Single Story** (`story-X.Y` marked `execution_mode: "AFK"`).
 2. **An Entire Multi-Story Epic** (`Epic X` with all constituent stories marked `execution_mode: "AFK"`).
 
-`dev-epic-or-story-owl-afk` automates the exact developer loop: **`/grill-me` alignment $\to$ `/owl LGTM` (DeepCoder TDD) $\to$ `/owl bmad adv review` (DeepInvestigator Red-Team) $\to$ Refinement Loop $\to$ PR**.
+`dev-epic-or-story-owl-afk` automates the complete developer loop: **`/grill-me` alignment $\to$ `/owl LGTM` (DeepCoder TDD) $\to$ `/owl bmad adv review` (DeepInvestigator Red-Team) $\to$ Refinement Loop $\to$ PR Submission $\to$ Automated PR Comments & CI Resolution Loop**.
 
 ---
 
@@ -22,7 +22,9 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
    - All code generation, TDD tests, and refactoring **MUST** be performed by invoking `DeepCoder` via `invoke_subagent`.
 2. **MANDATORY ADVERSARIAL RED-TEAM SUBAGENT**:
    - Every story **MUST** undergo adversarial review via `DeepInvestigator` / `bmad-code-review` via `invoke_subagent` before committing.
-3. **STOP AND WAIT FOR SUBAGENTS**:
+3. **MANDATORY PR COMMENT & CI MONITORING**:
+   - After opening the Pull Request, the orchestrator **MUST NOT** exit immediately. It must wait for automated CI checks and AI review comments (`ggh pr checks`, `ggh pr view`), iterate with `DeepCoder` on any findings, and push fixes until all checks pass green.
+4. **STOP AND WAIT FOR SUBAGENTS**:
    - After invoking each subagent, the orchestrator must stop calling tools and wait for the subagent's response.
 
 ---
@@ -40,6 +42,7 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
      - **`/owl bmad adv review`**: Dispatch `DeepInvestigator` for adversarial review.
      - **Refine & Repeat**: Iterate until review is 100% clean.
   5. **PR Submission**: Open Pull Request `feat(<story_slug>): <title>` linking `b/<story_bug_id>`.
+  6. **Automated PR Feedback Resolution**: Wait for CI checks & AI reviewer comments, iterate fixes with `DeepCoder`, and push until green.
 
 ---
 
@@ -51,6 +54,7 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
   3. **Dedicated Epic Worktree**: Scaffolds `../<repo>-epic-X` on branch `feat/epic-X` with dynamic `.env`.
   4. **Topological Wave Execution**: For each story in each wave, execute the **`/owl` Dev & Review Loop**.
   5. **Consolidated Epic PR**: Open single consolidated PR `feat(epic-X): <Epic Title>` referencing parent Epic `b/<epic_bug_id>` and all child tickets.
+  6. **Automated PR Feedback Resolution**: Wait for CI checks & AI reviewer comments across the entire Epic PR, iterate fixes with `DeepCoder`, and push until green.
 
 ---
 
@@ -190,3 +194,49 @@ Once review is 100% clean:
 3. Open Pull Request via `ggh pr create`:
    - Title: `feat(<slug>): <Title>`
    - Body: Summary of completed vertical slice stories, verification proofs, and links to parent Epic `b/<epic_bug_id>` and child `b/<story_bug_id>` tickets.
+
+---
+
+## 🔍 Phase 6: Automated PR Review & CI Iteration Loop
+
+After creating the Pull Request, the orchestrator **MUST NOT exit**. It monitors automated CI and AI reviews:
+
+1. **Poll CI Checks & Automated Reviews**:
+   - Inspect status using `ggh`:
+     ```bash
+     ggh pr checks
+     ggh pr view --json reviews,comments
+     ```
+2. **Evaluate and Resolve Feedback**:
+   - **If CI Fails or Automated Reviewers Leave Comments**:
+     1. Extract the failure logs or line review comments.
+     2. Dispatch `DeepCoder` to resolve the issues:
+        ```python
+        invoke_subagent(
+            Subagents=[{
+                "TypeName": "self",
+                "Role": "DeepCoder",
+                "Workspace": "inherit",
+                "Prompt": """Task: Fix the following GitHub PR CI check failures and automated reviewer comments.
+
+PR Feedback:
+<verbatim_comments_and_errors>
+
+Instructions:
+1. Fix the issues in the worktree.
+2. Verify all tests pass with `uv run pytest -q` and `uv run ruff check`.
+3. Report summary of applied fixes."""
+            }],
+            toolAction="Fixing PR comments",
+            toolSummary="Dispatch DeepCoder for PR feedback resolution"
+        )
+        ```
+     3. Commit and push the fix:
+        ```bash
+        git add -A
+        git commit -m "fix(review): address automated PR review comments and CI checks"
+        git push origin feat/<slug>
+        ```
+     4. Re-check `ggh pr checks` and comments.
+3. **Final Handoff**:
+   - Once all CI checks are green (`SUCCESS`) and all automated comments are addressed, notify the user that the PR is ready for human merge (`merge-sync`).
