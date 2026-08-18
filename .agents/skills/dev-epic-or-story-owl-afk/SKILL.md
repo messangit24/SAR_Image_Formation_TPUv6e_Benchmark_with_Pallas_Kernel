@@ -1,17 +1,17 @@
 ---
-name: dev-epic-owl
+name: dev-epic-or-story-owl-afk
 description: Autonomous Epic & Story orchestrator powered by owl (DeepCoder and bmad-code-review subagents). Executes single stories or entire multi-story Epics end-to-end in an isolated worktree, starting with an interactive architectural alignment gate (/grill-me), implementing via TDD + Red-Team Review, and opening verified Pull Requests with full Buganizer/TaskFlow traceability.
 ---
 
 > **CONFIDENTIALITY NOTICE**: Google-Internal Use Only. This skill specification and its orchestration routines are proprietary and cannot be shared externally or committed to public external repositories.
 
-# Autonomous Epic & Story Orchestrator (`dev-epic-owl`)
+# Autonomous Epic & Story Orchestrator (`dev-epic-or-story-owl-afk`)
 
 Use this skill when you have completed a planning session (`bmad-prd`, `bmad-architecture`, `bmad-create-epics-and-stories`) and want to autonomously develop:
 1. **A Single Story** (`story-X.Y` marked `execution_mode: "AFK"`).
 2. **An Entire Multi-Story Epic** (`Epic X` with all constituent stories marked `execution_mode: "AFK"`).
 
-`dev-epic-owl` automates the entire development lifecycle from initial Socratic alignment (`/grill-me`) to a verified, red-team reviewed Pull Request.
+`dev-epic-or-story-owl-afk` automates the entire development lifecycle from initial Socratic alignment (`/grill-me`) to a verified, red-team reviewed Pull Request.
 
 ---
 

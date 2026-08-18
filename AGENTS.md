@@ -252,13 +252,13 @@ To enable true parallel execution across multiple concurrent worktrees without d
 
 ---
 
-## 🦉 Experimental: Autonomous Multi-Story Epic Development (`dev-epic-owl`)
+## 🦉 Experimental: Autonomous Multi-Story Epic Development (`dev-epic-or-story-owl-afk`)
 
-When an entire Epic has been broken down into detailed, self-contained vertical slice stories that are all marked `execution_mode: "AFK"`, you can execute the entire Epic in a single dedicated session using the **`dev-epic-owl`** skill:
+When an entire Epic has been broken down into detailed, self-contained vertical slice stories that are all marked `execution_mode: "AFK"`, you can execute the entire Epic in a single dedicated session using the **`dev-epic-or-story-owl-afk`** skill:
 
 1. **Epic Alignment Gate (`/grill-me`)**: The agent synthesizes an Epic Master Architecture & Implementation Plan and conducts an interactive Socratic interview up front to resolve schemas, APIs, deep modules, and edge cases across all stories.
 2. **Dedicated Epic Worktree**: Scaffolds `../<repo>-epic-X` on branch `feat/epic-X` with dynamic resource allocation (`DATABASE_URL`, port offsets).
 3. **Topological Wave Execution**: Implements stories in dependency order (`Wave 1` roots $\to$ `Wave 2` dependents). Each story undergoes strict TDD (`DeepCoder`), automated verification gates (`ruff`, `pytest`), and an adversarial red-team review subagent (`bmad-code-review`) before being committed.
 4. **Consolidated PR with Full Traceability**: Opens a single cohesive Pull Request (`feat/epic-X: <Epic Title>`) linking the parent Epic `b/<epic_bug_id>` and all constituent `b/<story_bug_id>` tickets.
 
-> ⚠️ **CONFIDENTIALITY NOTICE**: The **`dev-epic-owl`** skill and its orchestration routines are **Google-Internal & Confidential**.
+> ⚠️ **CONFIDENTIALITY NOTICE**: The **`dev-epic-or-story-owl-afk`** skill and its orchestration routines are **Google-Internal & Confidential**.

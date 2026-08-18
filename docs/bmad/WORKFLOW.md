@@ -135,7 +135,7 @@ When scaling parallel agent workflows across multiple Git worktrees:
 
 ---
 
-## 🦉 Experimental: Autonomous Epic Execution (`dev-epic-owl`)
+## 🦉 Experimental: Autonomous Epic Execution (`dev-epic-or-story-owl-afk`)
 
 When executing an entire Epic with multiple `AFK` stories:
 
