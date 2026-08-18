@@ -11,7 +11,7 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
 1. **A Single Story** (`story-X.Y` marked `execution_mode: "AFK"`).
 2. **An Entire Multi-Story Epic** (`Epic X` with all constituent stories marked `execution_mode: "AFK"`).
 
-`dev-epic-or-story-owl-afk` enforces multi-agent delegation: **the orchestrator coordinates work, while subagents write code and conduct adversarial reviews**.
+`dev-epic-or-story-owl-afk` automates the exact developer loop: **`/grill-me` alignment $\to$ `/owl LGTM` (DeepCoder TDD) $\to$ `/owl bmad adv review` (DeepInvestigator Red-Team) $\to$ Refinement Loop $\to$ PR**.
 
 ---
 
@@ -19,11 +19,11 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
 
 1. **ZERO DIRECT CODE MODIFICATION BY ORCHESTRATOR**:
    - The Orchestrator agent **MUST NEVER** call `write_to_file` or `replace_file_content` to implement story logic.
-   - All code generation, TDD tests, and refactoring **MUST** be performed by spawning a `DeepCoder` subagent via `invoke_subagent`.
+   - All code generation, TDD tests, and refactoring **MUST** be performed by invoking `DeepCoder` via `invoke_subagent`.
 2. **MANDATORY ADVERSARIAL RED-TEAM SUBAGENT**:
-   - Every story **MUST** be reviewed by spawning a separate `bmad-code-review` subagent via `invoke_subagent` before committing.
+   - Every story **MUST** undergo adversarial review via `DeepInvestigator` / `bmad-code-review` via `invoke_subagent` before committing.
 3. **STOP AND WAIT FOR SUBAGENTS**:
-   - After invoking a subagent, the orchestrator must stop calling tools and wait for the subagent's response.
+   - After invoking each subagent, the orchestrator must stop calling tools and wait for the subagent's response.
 
 ---
 
@@ -35,7 +35,10 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
   1. **Pre-flight**: Verify prerequisite `depends_on` stories are `COMPLETED` and `execution_mode` is `AFK`.
   2. **Socratic Alignment (`/grill-me`)**: Synthesize Story Implementation Plan (Deep Module public contract, hidden complexity, test seams) and interview developer via `/grill-me`. Wait for approval (`Proceed` / `LGTM`).
   3. **Worktree Scaffolding**: Create isolated worktree `../<repo>-<story_slug>` on branch `feat/<story_slug>` with isolated `.env`.
-  4. **Phase 4 Multi-Agent TDD Pipeline**: Spawn `DeepCoder` subagent $\to$ Run test gates $\to$ Spawn `bmad-code-review` subagent $\to$ Commit.
+  4. **The `/owl` Dev & Review Loop**:
+     - **`/owl LGTM`**: Dispatch `DeepCoder` for TDD implementation.
+     - **`/owl bmad adv review`**: Dispatch `DeepInvestigator` for adversarial review.
+     - **Refine & Repeat**: Iterate until review is 100% clean.
   5. **PR Submission**: Open Pull Request `feat(<story_slug>): <title>` linking `b/<story_bug_id>`.
 
 ---
@@ -46,7 +49,7 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
   1. **Intake & DAG Analysis**: Discover all `docs/bmad/stories/story-X.*.md`, confirm all are `AFK`, and compute Topological Execution Waves (Wave 1: roots $\to$ Wave 2: dependents).
   2. **Comprehensive Epic Alignment Gate (`/grill-me`)**: Synthesize Epic Master Plan across all stories and conduct Socratic interview (`/grill-me`). Wait for approval.
   3. **Dedicated Epic Worktree**: Scaffolds `../<repo>-epic-X` on branch `feat/epic-X` with dynamic `.env`.
-  4. **Topological Wave Execution**: For each story in each wave, execute the **Phase 4 Multi-Agent TDD Pipeline**.
+  4. **Topological Wave Execution**: For each story in each wave, execute the **`/owl` Dev & Review Loop**.
   5. **Consolidated Epic PR**: Open single consolidated PR `feat(epic-X): <Epic Title>` referencing parent Epic `b/<epic_bug_id>` and all child tickets.
 
 ---
@@ -66,7 +69,7 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
    - Test strategy (acceptance criteria assertion against public interface).
 2. Conduct interactive Socratic interview using `/grill-me` with the `ask_question` tool.
 3. **🛑 Mandatory Gate**: Prompt the developer for explicit approval:
-   > 💡 **Alignment Gate**: Please review the implementation plan above. Once you confirm (**`Proceed`** or **`LGTM`**), I will scaffold the isolated worktree and autonomously execute via `DeepCoder` and `bmad-code-review`.
+   > 💡 **Alignment Gate**: Please review the implementation plan above. Once you confirm (**`Proceed`** or **`LGTM`**), I will scaffold the isolated worktree and autonomously execute the `/owl LGTM` and `/owl bmad adv review` loop.
 4. **WAIT** for the user to respond with `Proceed` or `LGTM` before proceeding to Phase 3.
 
 ### Phase 3: Worktree Scaffolding
@@ -81,102 +84,109 @@ Use this skill when you have completed a planning session (`bmad-prd`, `bmad-arc
 
 ---
 
-## 🚀 Phase 4: Mandatory Multi-Agent TDD & Review Pipeline
+## 🚀 Phase 4: The Autonomous `/owl` Implementation & Review Loop
 
 For each target story (in topological dependency order):
 
 ### Step 4.1: Mark Story In-Progress
 Update YAML frontmatter in `docs/bmad/stories/story-X.Y.md` to `stage: "IN_PROGRESS"`.
 
-### Step 4.2: Spawn `DeepCoder` Subagent (Mandatory Tool Call)
-The orchestrator **MUST NOT write code directly**. Instead, invoke a subagent:
+### Step 4.2: Execute `/owl LGTM` (DeepCoder Subagent Delegation)
+The orchestrator executes the `owl` coding delegation routine. **DO NOT write code directly in the orchestrator session**.
 
+Call `invoke_subagent`:
 ```python
 invoke_subagent(
     Subagents=[{
         "TypeName": "self",
         "Role": "DeepCoder",
         "Workspace": "inherit",
-        "Prompt": """You are DeepCoder, an expert software engineer executing a story under the AI-SDLC framework.
+        "Prompt": """Task: Implement Story docs/bmad/stories/story-X.Y.md based on the approved plan: LGTM
 
-Target Story: docs/bmad/stories/story-X.Y.md
-Worktree Working Directory: <path_to_worktree>
+Additional Context:
+Worktree Location: <path_to_worktree>
+Story Content:
+<verbatim_story_acceptance_criteria_and_deep_module_specs>
 
 Instructions:
-1. Read the story file and extract all Acceptance Criteria and Deep Module specifications.
-2. Follow strict Test-Driven Development (TDD):
+1. Follow strict Test-Driven Development (TDD):
    - Red: Write failing unit/integration tests in tests/ asserting acceptance criteria against the public interface. Run `uv run pytest -q` to confirm failure.
-   - Green: Implement production code in src/ with minimal complexity until all tests pass.
-   - Refactor: Clean interfaces, apply strict typing, and enforce lazy imports (write-python/write-typescript standards).
-3. Run verification gates in the worktree:
+   - Green: Implement minimal production code in src/ until tests pass.
+   - Refactor: Enforce strict typing, clean encapsulation, and lazy imports (write-python/write-typescript standards).
+2. Run verification gates in the worktree:
    - `uv run ruff check src tests`
    - `uv run pytest -q`
-4. Report back with a summary of implemented files and test results."""
+3. Return a completion report summarizing implemented files and verification results."""
     }],
-    toolAction="Dispatching DeepCoder subagent",
-    toolSummary="Spawn DeepCoder for story implementation"
+    toolAction="Dispatching owl DeepCoder",
+    toolSummary="Execute /owl LGTM story implementation"
 )
 ```
-**🛑 STOP AND WAIT**: Do not proceed until the `DeepCoder` subagent reports completion.
+**🛑 STOP AND WAIT**: Wait for the `DeepCoder` subagent to return its completion report.
 
-### Step 4.3: Automated Verification Verification
-Run the verification commands in the worktree:
-```bash
-uv run ruff check src tests && uv run pytest -q
-```
-If tests fail, send the error log back to the `DeepCoder` subagent via `send_message` to fix.
+### Step 4.3: Execute `/owl bmad adv review` (Red-Team Review Subagent)
+Once `DeepCoder` completes, the orchestrator triggers the adversarial red-team review routine.
 
-### Step 4.4: Spawn `bmad-code-review` Subagent (Mandatory Tool Call)
-The orchestrator **MUST NOT review its own work**. Spawn an adversarial red-team reviewer subagent:
-
+Call `invoke_subagent`:
 ```python
 invoke_subagent(
     Subagents=[{
         "TypeName": "self",
-        "Role": "Red-Team Reviewer",
+        "Role": "DeepInvestigator",
         "Workspace": "inherit",
-        "Prompt": """You are an adversarial red-team code reviewer inspecting the git diff for story-X.Y.
+        "Prompt": """Task: Conduct an adversarial red-team code review of the git diff for story-X.Y: bmad adv review
 
-Worktree Working Directory: <path_to_worktree>
-Story Specification: docs/bmad/stories/story-X.Y.md
+Additional Context:
+Worktree Location: <path_to_worktree>
+Story File: docs/bmad/stories/story-X.Y.md
 
 Instructions:
-1. Inspect the diff against origin/main (`git diff origin/main`).
-2. Cynically check:
-   - Acceptance criteria completeness (did the implementation miss any AC?).
-   - Deep Module encapsulation (is the public interface simple and typed? is internal complexity hidden?).
-   - Language standards (typing, lazy imports, no dead code).
-   - Boundary edge cases, race conditions, memory leaks, and error handling.
-3. Return a structured review report:
-   - PASS / ACTION REQUIRED verdict.
-   - Specific file and line references for any issues."""
+1. Run `git diff origin/main` in the worktree.
+2. Cynically evaluate the diff against:
+   - Acceptance Criteria: Did the implementation satisfy ALL acceptance criteria?
+   - Deep Module Encapsulation: Is the public interface simple and typed? Is internal complexity hidden?
+   - Edge Cases & Memory Leaks: Are there unhandled boundary conditions, race conditions, or resource leaks?
+   - Language Standards: Strict typing, lazy imports, no dead code.
+3. Return a verdict:
+   - `VERDICT: PASS` (if diff is clean, robust, and meets all criteria)
+   - `VERDICT: ACTION REQUIRED` (with precise file:line feedback and required fixes)."""
     }],
-    toolAction="Dispatching Red-Team Review subagent",
-    toolSummary="Spawn bmad-code-review for story verification"
+    toolAction="Dispatching owl DeepInvestigator",
+    toolSummary="Execute /owl bmad adv review"
 )
 ```
-**🛑 STOP AND WAIT**: Do not proceed until the review subagent returns its verdict.
-- If the reviewer returns **ACTION REQUIRED**: Send the actionable feedback to the `DeepCoder` subagent via `send_message` to resolve.
-- If the reviewer returns **PASS**: Proceed to Step 4.5.
+**🛑 STOP AND WAIT**: Wait for the `DeepInvestigator` subagent's review report.
 
-### Step 4.5: Atomic Git Commit & Story Completion
-In the worktree:
-1. Commit the story:
+### Step 4.4: Refinement Loop (Repeat As Needed)
+- If the reviewer returns **`VERDICT: ACTION REQUIRED`**:
+  1. Send the review feedback back to the `DeepCoder` subagent via `send_message`:
+     `Task: Resolve the following adversarial review findings: <findings>`
+  2. Wait for `DeepCoder` to apply fixes and verify green.
+  3. Re-run `/owl bmad adv review` via `send_message` to the review subagent.
+  4. Repeat until the review report returns **`VERDICT: PASS`**.
+
+### Step 4.5: Final Verification Gate & Atomic Git Commit
+Once review is 100% clean:
+1. Run test suite:
+   ```bash
+   uv run ruff check src tests && uv run pytest -q
+   ```
+2. Commit story in worktree:
    ```bash
    git add -A
    git commit -m "feat(story-X.Y): <Story Title> (closes b/<buganizer_id>)"
    ```
-2. Update frontmatter in `story-X.Y.md` to `stage: "COMPLETED"`.
+3. Update frontmatter in `story-X.Y.md` to `stage: "COMPLETED"`.
 
 ---
 
 ## 🏁 Phase 5: Pull Request Submission & Traceability
 
-1. Run the entire test suite across the repository:
+1. Run full verification suite across the repository:
    ```bash
    uv run ruff check src tests && uv run pytest -q
    ```
-2. Push the branch to origin (`git push origin feat/<slug>`).
-3. Open the Pull Request via `ggh pr create`:
+2. Push branch to origin (`git push origin feat/<slug>`).
+3. Open Pull Request via `ggh pr create`:
    - Title: `feat(<slug>): <Title>`
    - Body: Summary of completed vertical slice stories, verification proofs, and links to parent Epic `b/<epic_bug_id>` and child `b/<story_bug_id>` tickets.
