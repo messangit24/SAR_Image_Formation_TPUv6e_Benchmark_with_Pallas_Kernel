@@ -38,11 +38,9 @@ COPY src/ ./src/
 COPY scripts/ ./scripts/
 COPY README.md README_MODIS.md ./
 
-# Install project package in editable mode
-RUN uv pip install --no-deps -e .
-
-# Install Cloud TPU runtime support for JAX
-RUN uv pip install --upgrade "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html || true
+# Install project package using uv frozen sync to prevent unverified pip downloads
+# Cloud TPU runtime support: jax[tpu] acceleration is verified and managed via locked dependencies
+RUN uv sync --frozen
 
 # Set workspace permissions for non-root user
 RUN chown -R tpubench:tpubench /workspace

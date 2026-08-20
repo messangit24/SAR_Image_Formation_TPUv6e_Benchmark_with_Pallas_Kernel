@@ -999,7 +999,7 @@ Please review the following code changes.{follow_up_instruction}
         if not api_key:
             raise ValueError("GEMINI_API_KEY is not configured in the environment.")
         if genai is None:
-            raise ImportError("google-genai is not installed. Run 'pip install google-genai'.")
+            raise ImportError("google-genai is not installed. Run 'uv pip install --require-hashes -r .github/pr-reviewer/requirements.txt'.")
         
         client = genai.Client(api_key=api_key)
         print(f"Calling Gemini ({MODEL}) via direct API...")
@@ -1018,7 +1018,7 @@ Please review the following code changes.{follow_up_instruction}
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY is not configured in the environment.")
         if Anthropic is None:
-            raise ImportError("anthropic is not installed. Run 'pip install anthropic'.")
+            raise ImportError("anthropic is not installed. Run 'uv pip install --require-hashes -r .github/pr-reviewer/requirements.txt'.")
         
         client = Anthropic(api_key=api_key)
         print(f"Calling Claude ({MODEL}) via direct Anthropic API...")
@@ -1037,7 +1037,7 @@ Please review the following code changes.{follow_up_instruction}
         if not gcp_project_id:
             raise ValueError("GCP_PROJECT_ID is required for Vertex AI provider.")
         if AnthropicVertex is None:
-            raise ImportError("anthropic[vertex] is not installed. Run 'pip install anthropic[vertex]'.")
+            raise ImportError("anthropic[vertex] is not installed. Run 'uv pip install --require-hashes -r .github/pr-reviewer/requirements.txt'.")
         
         client = AnthropicVertex(project_id=gcp_project_id, region=gcp_region)
         print(f"Calling Claude ({MODEL}) via GCP Vertex AI...")

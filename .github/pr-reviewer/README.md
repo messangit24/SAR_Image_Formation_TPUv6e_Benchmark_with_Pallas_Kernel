@@ -102,7 +102,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r .github/pr-reviewer/requirements.txt
+          pip install --require-hashes -r .github/pr-reviewer/requirements.txt
 
       - name: Run AI Reviewer
         run: |

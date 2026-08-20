@@ -142,7 +142,7 @@ When starting any feature or spawning agent sessions:
   - `uv sync`: Automatically creates/updates `.venv` with dependencies and dev tools defined in [`pyproject.toml`](pyproject.toml) and locked in [`uv.lock`](uv.lock).
   - `source .venv/bin/activate`: Activate the virtual environment (optional if prefixing with `uv run`).
   - `uv add <package>` / `uv add --dev <package>`: Add new project or development dependencies.
-  - `uv pip install --upgrade "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html`: Install TPU acceleration on Cloud TPU VMs.
+  - `uv add "jax[tpu]"` / `uv sync`: Install TPU acceleration and synchronization with locked cryptographic hashes.
 - **Execution with `uv run`**:
   - Run linters: `uv run ruff check src tests scripts`
   - Run test suite: `uv run pytest -q`

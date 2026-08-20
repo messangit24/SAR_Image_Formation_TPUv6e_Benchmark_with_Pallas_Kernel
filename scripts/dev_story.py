@@ -250,7 +250,7 @@ def generate_isolated_env(worktree_path: Path, slug: str) -> None:
 
     target_env = worktree_path / ".env"
     target_env.write_text("\n".join(final_lines) + "\n", encoding="utf-8")
-    print(f"  ⚙️ Configured isolated `.env`:")
+    print("  ⚙️ Configured isolated `.env`:")
     print(f"    • PORT: {app_port} | SIDECAR_PORT: {sidecar_port}")
     print(f"    • DATABASE_URL: postgresql://localhost:5432/{db_name}")
 
