@@ -1,6 +1,6 @@
 ---
 name: create-epics-and-stories
-description: Unified Epic & Story creation engine. Automatically determines whether requirements represent a full greenfield decomposition, a brand-new Epic with multiple stories, or a single story addition. Decomposes architecture into vertical slice stories with deep module interfaces (where appropriate), depends_on, execution_mode (AFK vs HUMAN_MONITORED), waits for explicit human confirmation, and updates TaskFlow.
+description: Unified Epic & Story creation engine. Automatically determines whether requirements represent a full greenfield decomposition, a brand-new Epic with multiple stories, or a single story addition. Decomposes architecture into vertical slice stories with deep module interfaces (where appropriate), explicit testable conditions of proof, depends_on, execution_mode (AFK vs HUMAN_MONITORED), waits for explicit human confirmation, and updates TaskFlow.
 ---
 
 # Universal Epic & Story Creation Engine (`create-epics-and-stories`)
@@ -18,7 +18,7 @@ Upon activation, analyze user intent, brainstorm notes, and existing `docs/bmad/
 * **Actions**:
   1. Read `docs/bmad/planning/prd.md` and `docs/bmad/planning/architecture.md`.
   2. Structure `docs/bmad/planning/epics.md` with Epics 1..N.
-  3. Create **Story 1.1 as the Walking Skeleton / Tracer Bullet** (`depends_on: []`, `execution_mode: "AFK"`, minimal end-to-end runnable baseline with integration test).
+  3. Create **Story 1.1 as the Walking Skeleton / Tracer Bullet** (`depends_on: []`, `execution_mode: "AFK"`, minimal end-to-end runnable baseline establishing the master integration test).
   4. Shard all subsequent stories into `docs/bmad/stories/story-X.Y-*.md`.
 
 ### Mode 2: Major Subsystem / New Epic Addition (1 ➔ N)
@@ -35,6 +35,19 @@ Upon activation, analyze user intent, brainstorm notes, and existing `docs/bmad/
   1. Locate parent Epic in `epics.md` and assign next story number `X.Y`.
   2. Create `docs/bmad/stories/story-X.Y-<name>.md`.
   3. Declare upstream `depends_on` and `execution_mode`.
+
+---
+
+## 🧪 The Testable Condition of Proof Invariant (LLM Iteration Superpower)
+
+**Why Explicit Tests Supercharge LLM Agents**:
+LLMs are remarkably proficient at code generation and debugging **when given an unambiguous, executable test condition**. When anchored to a strict failing test, the LLM can use execution feedback, error traces, and reflection loops to iterate autonomously until all assertions pass. Vague prose criteria lead to hallucination and brittle code.
+
+**Mandatory Acceptance Criteria Rules**:
+1. **Verifiable Assertions**: Every acceptance criterion in a story must map directly to an assertion (`assert ...`) in an executable unit or integration test.
+2. **Failure Before, Success After**: The test condition must fail prior to implementation and pass 100% green once complete.
+3. **The Testable Invariant Rule**:
+   > 💡 *If you cannot formulate an executable test condition proving that a story works, the story is not ready for implementation.*
 
 ---
 
@@ -79,10 +92,10 @@ Input Data $\to$ Core Logic $\to$ Persistence/Output $\to$ E2E Integration Test.
 ## Architecture & Seams
 Mermaid diagram and technical contracts touched by this slice.
 
-## Acceptance Criteria
-- [ ] **AC 1 — Core Logic / Deliverable**: Implement functionality or configuration satisfying requirements.
-- [ ] **AC 2 — Contracts & Schema**: Type-checked input/output serialization (where applicable).
-- [ ] **AC 3 — Verification Test**: Author `tests/test_e2e_*.py` or verification script.
+## Acceptance Criteria (Testable Conditions of Proof)
+- [ ] **AC 1 — Verifiable Behavioral Assertion**: Executable assertion asserting core functionality against the public interface.
+- [ ] **AC 2 — Contracts & Schema Validation**: Type-checked input/output serialization and boundary error handling.
+- [ ] **AC 3 — End-to-End Integration Test**: Author `tests/test_e2e_*.py` asserting the entire slice.
 - [ ] **AC 4 — Verification Gate**: `uv run ruff check` and `uv run pytest -q` pass 100% green.
 ```
 
@@ -95,7 +108,7 @@ Mermaid diagram and technical contracts touched by this slice.
 Immediately after generating or updating in-repo planning files (`epics.md`, `stories/story-*.md`, `sprint-status.yaml`):
 
 1. **Present the Planning Summary to the User**:
-   - List all proposed Epics and child stories with their scope, dependencies (`depends_on`), and execution modes (`AFK` vs `HUMAN_MONITORED`).
+   - List all proposed Epics and child stories with their scope, testable proof conditions, dependencies (`depends_on`), and execution modes (`AFK` vs `HUMAN_MONITORED`).
 2. **Explicit User Review Prompt**:
    > 💡 **User Review & Confirmation Gate**: Please review the proposed Epics and Stories breakdown above. If you would like any adjustments, let me know. Once you confirm (**`Proceed`** or **`LGTM`**), I will run `update-taskflow` to mint parent Epics and child story tickets in Buganizer and TaskFlow.
 3. **Execute Sync ONLY Upon Explicit Confirmation**:
