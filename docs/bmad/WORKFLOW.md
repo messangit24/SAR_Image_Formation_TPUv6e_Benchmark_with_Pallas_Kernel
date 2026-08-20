@@ -89,7 +89,7 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
 
 ---
 
-## 🧰 The Curated 10-Skill AI-SDLC Suite
+## 🧰 The Curated 14-Skill AI-SDLC Suite
 
 | # | Skill Name | Primary Output File / Action | Purpose |
 | :- | :--- | :--- | :--- |
@@ -103,6 +103,11 @@ When adding functionality, refactoring an engine, or executing mid-project evolu
 | **8** | **`write-python`** | Python Source Files | Modern Python typing, lazy imports, hermetic testing, and security invariants. |
 | **9** | **`write-typescript`** | TypeScript / React Files | Strict TypeScript, Zod boundary validation, and React patterns. |
 | **10** | **`merge-sync`** | Main branch & Cloud Trackers | Auto-merges open PRs (human approval), pulls `main`, marks stories `- [x]`, transitions Buganizer/TaskFlow tickets to `FIXED`, and deletes merged worktrees. |
+| **11** | **`owl`** | Multi-Agent Orchestration | Deep reasoning multi-agent orchestrator for complex coding and investigation tasks (*Google-Internal / Confidential*). |
+| **12** | **`dev-epic-or-story-owl-afk`** | Autonomous Epic & Story | Autonomous Epic & Story orchestrator (Topological waves + `/grill-me` + CI/PR loop). |
+| **13** | **`grill-me`** | Interactive Interview | Socratic design interview engine (walks design trees, resolves decision dependencies). |
+| **14** | **`browser`** | Web & UI Verification | Automated browser testing, visual inspection, DOM hydration, and Playwright E2E verification. |
+
 
 
 ---
