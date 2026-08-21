@@ -25,7 +25,7 @@ Complete the task by delegating it to specialized subagents. This routine curren
 
 - Use **DeepCoder** (`invoke_subagent` with `TypeName='DeepCoder'`) for coding tasks.
 - Use **DeepInvestigator** (`invoke_subagent` with `TypeName='DeepInvestigator'`) for investigation tasks.
-*(Note: DeepCoder and DeepInvestigator are available to be invoked via `invoke_subagent`.)*
+*(Note: DeepCoder and DeepInvestigator are hidden from the subagents list but are fully available to be invoked via `invoke_subagent`.)*
 
 #### How to Execute a Delegation Routine
 

@@ -103,7 +103,7 @@ Call `invoke_subagent`:
 ```python
 invoke_subagent(
     Subagents=[{
-        "TypeName": "self",
+        "TypeName": "DeepCoder",
         "Role": "DeepCoder",
         "Workspace": "inherit",
         "Prompt": """Task: Implement Story docs/bmad/stories/story-X.Y.md based on the approved plan: LGTM
@@ -136,7 +136,7 @@ Call `invoke_subagent`:
 ```python
 invoke_subagent(
     Subagents=[{
-        "TypeName": "self",
+        "TypeName": "DeepInvestigator",
         "Role": "DeepInvestigator",
         "Workspace": "inherit",
         "Prompt": """Task: Conduct an adversarial red-team code review of the git diff for story-X.Y: code-review
@@ -216,7 +216,7 @@ After creating the Pull Request, the orchestrator inspects automated CI and AI r
         ```python
         invoke_subagent(
             Subagents=[{
-                "TypeName": "self",
+                "TypeName": "DeepCoder",
                 "Role": "DeepCoder",
                 "Workspace": "inherit",
                 "Prompt": """Task: Fix the following GitHub PR CI check failures and automated reviewer comments.
