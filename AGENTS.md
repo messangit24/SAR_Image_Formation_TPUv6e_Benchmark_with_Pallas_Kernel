@@ -105,11 +105,19 @@ Run verification commands and inspect real outputs:
 - **Strict Human Merge Gate**: Developer manually clicks Merge on the PR.
 
 ### Step 8: Post-Merge Hook & Local Synchronization (`merge-sync` skill)
-- Once merged, the developer triggers `merge-sync` or runs `git pull origin main`:
+- Once ready to merge the active story, the developer triggers `merge-sync` (which runs `python3 scripts/merge_sync.py`):
   ```bash
+  # Automatically merges and syncs the active worktree
   python3 scripts/merge_sync.py
+
+  # Or target a specific branch / story explicitly
+  python3 scripts/merge_sync.py --branch feat/story-1.1
+  python3 scripts/merge_sync.py --story 1.1
+
+  # Or merge all open PRs in batch mode
+  python3 scripts/merge_sync.py --all
   ```
-- Automatically marks story `- [x]`, updates TaskFlow ticket to `FIXED`, deletes the temporary worktree, and syncs frontmatter.
+- Automatically merges the target PR into `main`, pulls latest `origin/main`, marks the story `- [x]`, updates TaskFlow ticket to `FIXED`, deletes the temporary worktree, and syncs frontmatter.
 
 ---
 
