@@ -11,9 +11,9 @@ reconstruction reproduces Umbra's own image.
 from __future__ import annotations
 
 import numpy as np
-from sarpy.io.complex.sicd import SICDReader
-from scipy.ndimage import rotate, zoom
+from scipy.ndimage import zoom, rotate
 from skimage.feature import match_template
+from sarpy.io.complex.sicd import SICDReader
 from viz import sar_stretch
 
 

@@ -17,13 +17,12 @@ the reflective NIR (it emits, it doesn't reflect); sun-glint and bright surfaces
 import argparse
 import os
 import sys
-
 import numpy as np
 from pyhdf.SD import SD, SDC
 
 sys.path.insert(0, os.path.dirname(__file__))
 from modis_l0_decom import decommutate_1km_night, decommutate_ev_reflective
-from modis_l1b_recon import BAND_LAMBDA, calibrate, inv_planck
+from modis_l1b_recon import calibrate, BAND_LAMBDA, inv_planck
 
 
 def bt_from_l0(l0, l1b_sds, attrs, be, band):
@@ -70,7 +69,7 @@ def main():
     sat22 = hot & np.isfinite(BT22) & (BT22 > 329)            # band 22 at its ~331 K ceiling
 
     pk = np.unravel_index(np.nanargmax(BT21), BT21.shape)
-    print("=== MODIS MWIR (OPIR analog) from L0 ===")
+    print(f"=== MODIS MWIR (OPIR analog) from L0 ===")
     print(f"band 21 peak BT = {BT21[pk]:.0f} K at {lat[pk]:.3f} N, {lon[pk]:.3f} E "
           f"(Lake Bardawil, N. Sinai)")
     print(f"  band 31 (LWIR) there = {BT31[pk]:.0f} K  -> MWIR-LWIR excess {dBT[pk]:.0f} K")

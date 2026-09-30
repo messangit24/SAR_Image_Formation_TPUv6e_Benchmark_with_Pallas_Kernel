@@ -29,9 +29,7 @@ variant is not applicable to de-ramped spotlight data.  (This is why ω-k/RMA is
 the delivered frequency-domain method: see rma.py.)
 """
 from __future__ import annotations
-
 from dataclasses import dataclass
-
 import numpy as np
 
 C = 299_792_458.0

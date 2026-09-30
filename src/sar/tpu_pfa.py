@@ -8,15 +8,13 @@ Mathematically aligned with src/pfa.py.
 from __future__ import annotations
 
 import os
-
 os.environ["JAX_ENABLE_X64"] = "True"
 
 import jax
-
 jax.config.update("jax_enable_x64", True)
 
+from dataclasses import dataclass
 from functools import partial
-
 import jax.numpy as jnp
 import numpy as np
 
@@ -135,7 +133,7 @@ def jax_pfa_kernel(
     # K-space Zero-padding for oversampling
     Nx = int(round(nkx * oversample_r))
     Ny = int(round(nky * oversample_az))
-
+    
     if Nx > nkx or Ny > nky:
         y0 = (Ny - nky) // 2
         x0 = (Nx - nkx) // 2

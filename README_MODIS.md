@@ -141,34 +141,26 @@ brightness temperature → hot-source detection with false-alarm rejection.
 
 | file | role |
 |---|---|
-| `src/modis/modis_l0_decom.py` | **our MOD_PR01 unpack** — CCSDS parse + 12‑bit de‑interleave, L0 → counts (1 km + 250 m/500 m), bit‑exact vs MOD01 |
-| `src/modis/modis_l1b_recon.py` | onboard‑blackbody TEB calibration + RVS, counts → radiance, compare to L1B, figure |
-| `src/modis/l1b_validator.py` | **L1B Calibration Validator** — multi-band metric evaluator (RMSE, Rel. %, R², ΔTb residuals, L_BB spread) & JSON/Markdown report export |
-| `src/modis/mwir_detector.py` | Modular MWIR anomaly detector with glint filter & Dozier sub-pixel solver |
-| `src/modis/multi_granule_pipeline.py` | Multi-granule batch processing and 8-connected spatial cluster catalog |
-| `src/modis/modis_l0_truecolor.py` | true‑color RGB (bands 1/4/3) straight from L0 |
-| `src/modis/modis_opir_mwir.py` | MWIR bands 20–25 (OPIR analog): BT, hot‑source detection, solar‑vs‑thermal discrimination |
-| `src/modis/run_l0_to_l1b.py` | end‑to‑end driver: L0 → counts → radiance → compare |
+| `src/modis_l0_decom.py` | **our MOD_PR01 unpack** — CCSDS parse + 12‑bit de‑interleave, L0 → counts (1 km + 250 m/500 m), bit‑exact vs MOD01 |
+| `src/modis_l1b_recon.py` | onboard‑blackbody TEB calibration + RVS, counts → radiance, compare to L1B, figure |
+| `src/modis_l0_truecolor.py` | true‑color RGB (bands 1/4/3) straight from L0 |
+| `src/modis_opir_mwir.py` | MWIR bands 20–25 (OPIR analog): BT, hot‑source detection, solar‑vs‑thermal discrimination |
+| `src/run_l0_to_l1b.py` | end‑to‑end driver: L0 → counts → radiance → compare |
 | `tools/l1agen_src/*.c,*.h` | the open‑source SDST/OCSSW reference the interleave was ported from |
 
 ## Run
 
 ```bash
 # env with pyhdf (HDF4) — MODIS L1A/L1B are HDF-EOS2
-uv sync
+micromamba create -p .mamba/modis -c conda-forge python=3.11 pyhdf numpy scipy matplotlib h5py
 
 # fetch the granule dataset (needs an Earthdata token in ~/.edl_token or EARTHDATA_TOKEN)
 ./download_modis_data.sh ./data/modis   # or: bash data/modis/fetch.sh
 
-# Run Multi-Band L1B Calibration Validator (synthetic or with downloaded granules)
-uv run python -m src.modis.l1b_validator --synthetic --strict
-# Or against real HDF granules:
-uv run python -m src.modis.l1b_validator --l1a data/modis/MOD01.*.hdf --l1b data/modis/MOD021KM.*.hdf --bands 20 21 22 29 31 32
-
 # validate the unpack, then run L0 -> L1B
-PYTHONPATH=src/modis uv run python src/modis/modis_l0_decom.py \
+PYTHONPATH=src/modis micromamba run -p .mamba/modis python src/modis/modis_l0_decom.py \
     --l0 data/modis/MOD00F.*.001.NRT --l1a data/modis/MOD01.*.hdf --band 31
-PYTHONPATH=src/modis uv run python src/modis/run_l0_to_l1b.py \
+PYTHONPATH=src/modis micromamba run -p .mamba/modis python src/modis/run_l0_to_l1b.py \
     --l0 data/modis/MOD00F.*.001.NRT --l1b data/modis/MOD021KM.*.hdf \
     --l1a data/modis/MOD01.*.hdf --geo data/modis/MOD03.*.hdf --band 31
 ```

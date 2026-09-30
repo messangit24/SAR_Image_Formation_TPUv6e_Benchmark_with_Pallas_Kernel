@@ -1,16 +1,11 @@
 """Drive CSA-family (range-Doppler + keystone RCMC): read CPHD -> image + quicklook."""
 from __future__ import annotations
-
-import argparse
-import os
-import sys
-import time
-
+import argparse, os, sys, time
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(__file__))
-import csa as alg
 from cphd_reader import CPHDReader
+import csa as alg
 from viz import sar_stretch
 
 

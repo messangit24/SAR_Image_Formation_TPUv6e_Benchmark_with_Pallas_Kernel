@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: tpubench
-  labels:
-    app.kubernetes.io/name: tpubench
-    app.kubernetes.io/part-of: goldthread

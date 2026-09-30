@@ -1,29 +1,24 @@
-import os
-import sys
-import time
-
-import matplotlib.pyplot as plt
+import os, sys, time
 import numpy as np
+import matplotlib.pyplot as plt
 
 workspace_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, workspace_dir)
 sys.path.insert(0, os.path.join(workspace_dir, "src"))
 sys.path.insert(0, os.path.join(workspace_dir, "src", "sar"))
 
-from bpa import backproject as backproject_cpu
+import quality_evaluator
 from cphd_reader import CPHDReader
-from csa import form_image as form_image_csa
-from pfa import form_image as form_image_cpu
-from rma import form_image as form_image_rma
-from sarpy.io.complex.sicd import SICDReader
 from sicd_grid import read_sicd_grid
+from bpa import backproject as backproject_cpu
 from tpu_bpa import backproject_tpu
 from tpu_ffbp import backproject_ffbp
+from pfa import form_image as form_image_cpu
 from tpu_pfa import form_image_tpu
+from csa import form_image as form_image_csa
+from rma import form_image as form_image_rma
+from sarpy.io.complex.sicd import SICDReader
 from viz import sar_stretch
-
-import quality_evaluator
-
 
 def main():
     sicd_path = os.path.join(workspace_dir, "data/sar/bingham_20230925/2023-09-25-17-37-50_UMBRA-05_SICD.nitf")
@@ -144,7 +139,7 @@ def main():
     )
 
     panels_list = [
-        ("Ground Truth (SICD)", ref_crop, "1. Ground Truth (SICD Reference)\nReference NITF Product"),
+        ("Ground Truth (SICD)", ref_crop, f"1. Ground Truth (SICD Reference)\nReference NITF Product"),
         ("CPU BPA (src/bpa.py)", img_cpu_bpa, f"2. CPU BPA (src/bpa.py)\nCoherence: {coh_cpu_bpa:.4f} | Latency: {t_cpu_bpa:.1f}s"),
         ("TPU BPA (src/tpu_bpa.py)", img_tpu_bpa, f"3. TPU BPA (src/tpu_bpa.py)\nCoherence: {coh_tpu_bpa:.4f} | Latency: {t_tpu_bpa:.1f}s"),
         ("TPU Fast FFBP (src/tpu_ffbp.py)", img_tpu_ffbp, f"4. TPU Fast FFBP (src/tpu_ffbp.py)\nCoherence: {coh_tpu_ffbp:.4f} | Latency: {t_tpu_ffbp:.1f}s"),

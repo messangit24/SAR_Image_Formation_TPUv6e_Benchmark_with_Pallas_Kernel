@@ -22,7 +22,6 @@ smooth baseband envelope, not the fast-oscillating full signal, keeps it clean).
 from __future__ import annotations
 
 from dataclasses import dataclass
-
 import numpy as np
 
 C = 299_792_458.0

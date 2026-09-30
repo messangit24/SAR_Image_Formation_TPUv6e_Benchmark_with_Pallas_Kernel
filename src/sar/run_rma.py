@@ -1,16 +1,11 @@
 """Drive omega-k / RMA: read CPHD -> Stolt migration -> complex image + quicklook."""
 from __future__ import annotations
-
-import argparse
-import os
-import sys
-import time
-
+import argparse, os, sys, time
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(__file__))
-import rma
 from cphd_reader import CPHDReader
+import rma
 from viz import sar_stretch
 
 

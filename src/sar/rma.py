@@ -16,9 +16,7 @@ Output is the aperture (slant) plane, same as PFA -- so it validates the same
 way (coherence.py / register_sicd.py).
 """
 from __future__ import annotations
-
 from dataclasses import dataclass
-
 import numpy as np
 
 C = 299_792_458.0

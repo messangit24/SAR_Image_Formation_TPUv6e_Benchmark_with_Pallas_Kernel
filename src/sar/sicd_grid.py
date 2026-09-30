@@ -3,7 +3,6 @@ exact same slant-plane grid (axes, pixel spacing, scene-centre pixel)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
-
 import numpy as np
 from sarpy.io.complex.sicd import SICDReader
 

@@ -8,7 +8,7 @@ out/*.np*
 !out/modis_l0_to_l1b.png
 !out/modis_l0_truecolor.png
 !out/modis_opir_mwir.png
-.venv
+.venv/*
 .mamba/
 opir/data/
 opir/venv/
@@ -16,18 +16,6 @@ opir/venv/
 # python
 __pycache__/
 *.pyc
-*.egg-info/
-.pytest_cache/
-.ruff_cache/
 tpu_sar_data/
-
-# terraform
-.terraform/
-*.tfstate*
-
-# BMAD
-_bmad-output/
-_bmad/config.user.toml
-_bmad/custom/config.user.toml
-.bmad-loop/runs/
-.bmad-loop/cache/
+tpu_sar_data/*
+__pycache__/*

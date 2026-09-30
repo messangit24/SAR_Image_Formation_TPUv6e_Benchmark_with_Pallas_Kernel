@@ -8,8 +8,8 @@ Mathematically aligned with src/bpa.py:
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from functools import partial
-
 import jax
 import jax.numpy as jnp
 import numpy as np

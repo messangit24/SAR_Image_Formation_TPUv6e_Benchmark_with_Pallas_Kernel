@@ -1,17 +1,12 @@
 """Form a BPA image on the SICD grid over a chip and save complex + geom + quicklook."""
 from __future__ import annotations
-
-import argparse
-import os
-import sys
-import time
-
+import argparse, os, sys, time
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(__file__))
-from bpa import backproject
 from cphd_reader import CPHDReader
 from sicd_grid import read_sicd_grid
+from bpa import backproject
 from viz import sar_stretch
 
 
@@ -41,7 +36,7 @@ def main():
     RR, CC = np.meshgrid(rows, cols, indexing="ij")   # axis0=row(range), axis1=col(az)
     pix = grid.pixel_ecef(RR, CC)                      # (N,N,3)
 
-    print("reading signal + geometry ...")
+    print(f"reading signal + geometry ...")
     sig = r.read_signal(pulse_step=args.pulse_step)
     g = r.geometry(pulse_step=args.pulse_step)
     print(f"backprojecting {N}x{N} px over {sig.shape[0]} pulses (upsample {args.upsample}, sgn={sgn})...")
