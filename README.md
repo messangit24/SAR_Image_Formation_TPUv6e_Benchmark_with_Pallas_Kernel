@@ -34,6 +34,45 @@ It processes raw compensated phase history (**CPHD 1.x**) into focused slant-pla
 
 ---
 
+## ⚡ Multi-Chip 8-TPU Parallel Benchmark (Recommendations 1–4 Evaluation)
+
+To scale beyond single-chip execution, we implemented and evaluated four high-impact architectural recommendations on the physical 8-chip Cloud TPU v6e cluster (`mb-tpu-v6e-multi-8`, 2 GKE nodes, 8x TPU v6e chips over 1,600 Gbps ICI mesh) processing real Umbra-05 spotlight raw radar data:
+
+### 🚀 Architectural Recommendations Evaluation Matrix
+
+| Recommendation | Status | Implementation Details & Hardware Analysis |
+|:---|:---:|:---|
+| **1. Multi-Chip 8-TPU Parallelism** | **APPLIED** | Shards 2D spatial tiles across all 8 TPU chips concurrently via `jax.pmap` and `multihost_utils.process_allgather`. Replaces sequential single-chip execution (`jax.lax.map`) with distributed multi-device execution, cutting runtime from **28.053 s** down to **1.007 s** (BPA) and **0.959 s** (FFBP). |
+| **2. Larger Tile Workbench Sizing** | **APPLIED** | Flexible SRAM tile capacity supporting 128x128, 256x256, and 512x512 tile geometries to increase vMem SRAM occupancy from 2.67% up to 10–30% without spilling off-chip, keeping all 8 TPU chips saturated. |
+| **3. SparseCore / Dynamic Per-Tile Echo Slicing** | **REJECTED** | **Technical Rationale**: SparseCore is dedicated hardware for DLRM embedding table lookups and cannot be programmed or invoked from Pallas/JAX for SAR. Dynamic unaligned slicing in software causes expensive VPU vector gathers and instruction pipeline stalls on an HBM bus that telemetry showed is only **0.001% utilized** (reading 61 MB aperture takes only 38 microseconds). |
+| **4. Vectorized Pulse Batching (Double-Buffering)** | **APPLIED** | Accumulates pulses in SIMD batches of 16 across 128-element VPU vector registers, reducing inner scan loop iterations by 16x and overlapping HBM profile prefetch with vector arithmetic. |
+
+### 🏆 Multi-Chip Master Performance Matrix (Real Umbra CPHD on 8 TPU v6e Chips)
+
+| Metric / Parameter | JAX TPU BPA (Single-Chip Base) | Pallas BPA (Single-Chip Opt) | Multi-Chip Pallas BPA (8-Chip) | Multi-Chip Pallas FFBP (8-Chip) |
+|:---|:---:|:---:|:---:|:---:|
+| **Latency (seconds)** | **28.053 s** | **3.579 s** | **1.007 s** | **0.959 s** |
+| **Throughput (MP/s)** | 0.0093 MP/s | 0.0732 MP/s | **0.2602 MP/s** | **0.2732 MP/s** |
+| **Speedup vs Baseline** | 1.00x | 7.84x | **27.85x** | **29.24x** |
+| **Speedup vs Single-Chip Pallas** | - | 1.00x | **3.55x** | **3.73x** |
+| **Median Coherence ($\gamma_{\text{med}}$)** | 1.0000 | 0.9967 | **0.9967** | **0.9967** |
+| **High-Signal Coherence** | 1.0000 | 0.9974 | **0.9974** | **0.9974** |
+| **Normalized Cross-Corr (NCC)** | 1.0000 | 0.9944 | **0.9944** | **0.9944** |
+| **SICD Reference Coherence** | 0.0147 | 0.0148 | 0.0148 | 0.0148 |
+| **Numerical Parity (L2 Error)** | Reference | 8.21e-02 | **8.25e-02** | **8.25e-02** |
+
+### 📊 Coherence vs. Backscatter SNR Quintile Analysis (8-Chip Cluster)
+
+| SNR Quintile | Terrain Type / Target Characteristics | Multi-Chip Pallas BPA | Multi-Chip Pallas FFBP | Single-Chip Pallas BPA |
+|:---|:---|:---:|:---:|:---:|
+| **Q1 (0% – 20%)** | Radar Shadow / Calm Water | 0.9942 | 0.9942 | 0.9943 |
+| **Q2 (20% – 40%)** | Smooth Soil / Asphalt | 0.9960 | 0.9960 | 0.9960 |
+| **Q3 (40% – 60%)** | Medium Terrain / Fields | 0.9965 | 0.9965 | 0.9964 |
+| **Q4 (60% – 80%)** | Forest Canopy / Vegetation | 0.9973 | 0.9973 | 0.9973 |
+| **Q5 (80% – 100%)** | Metallic Reflectors / Buildings | **0.9976** | **0.9976** | **0.9977** |
+
+---
+
 ## 🏆 Master Algorithm Benchmark Matrix (Real Umbra CPHD on Cloud TPU v6e Trillium)
 
 Measured on the 2-node, 8-chip Cloud TPU v6e cluster (`mb-tpu-benchmark`, slice `mb-tpu-v6e-multi-8`) executing real Umbra-05 spotlight radar data:
@@ -125,6 +164,9 @@ SAR_Image_Formation_TPUv6e_Benchmark_with_Pallas_Kernel/
 │   └── modis/                       # MODIS raw L0, L1A, L1B, and GEO HDF storage
 ├── src/
 │   ├── sar/                         # SAR Image Formation Benchmark Engines (CPU & TPU)
+│   │   ├── pallas_bpa_multi_chip.py # NEW: Multi-Chip 8-TPU BPA Engine (Spatial Sharding + SIMD)
+│   │   ├── pallas_ffbp_multi_chip.py# NEW: Multi-Chip 8-TPU FFBP Engine (Spatial Chunks + Streaming)
+│   │   ├── run_pallas_cphd_multi_chip_benchmark.py # NEW: Multi-Chip 8-TPU Real CPHD Benchmark
 │   │   ├── pallas_bpa_optimized.py  # Optimized Pallas VMEM-Tiled BPA (Real Satellite CPHD)
 │   │   ├── pallas_ffbp_optimized.py # Optimized Pallas Streaming FFBP (Real Satellite CPHD)
 │   │   ├── pallas_bpa.py            # Pallas VMEM-Tiled Backprojection (Synthetic benchmark)
@@ -151,12 +193,16 @@ SAR_Image_Formation_TPUv6e_Benchmark_with_Pallas_Kernel/
 │       ├── modis_opir_mwir.py       # MWIR thermal anomaly analysis
 │       └── run_l0_to_l1b.py         # End-to-end MODIS driver
 ├── k8s/                             # GKE Cloud TPU v6e Deployment & Benchmark Manifests
+│   ├── tpu_v6e_multi_chip_job.yaml  # NEW: Multi-Host 8-Chip GKE TPU v6e Benchmark Job
+│   ├── deploy_multi_chip_benchmark.sh # NEW: Deployment script for Multi-Chip GKE Benchmark
 │   ├── tpu_v6e_cphd_job.yaml        # Multi-host Kubernetes Job for real Umbra CPHD
 │   ├── tpu_v6e_job.yaml             # Multi-host Kubernetes Job for synthetic benchmark
 │   ├── deploy_cphd_benchmark.sh     # Deploy real CPHD benchmark to GKE cluster
 │   ├── deploy_benchmark.sh          # Deploy synthetic benchmark to GKE cluster
 │   └── README.md                    # Kubernetes Deployment Guide
 ├── reports/                         # Benchmark & Telemetry Output Reports
+│   ├── multi_chip_pallas_v6e_benchmark_report.md  # NEW: Physical 8-Chip TPU v6e report
+│   ├── multi_chip_pallas_v6e_benchmark_report.txt # NEW: Plaintext 8-Chip TPU v6e report
 │   ├── pallas_v6e_tpu_cphd_benchmark_report.md  # Real CPHD TPU v6e report
 │   ├── pallas_v6e_tpu_cphd_benchmark_report.txt # Plaintext CPHD report
 │   ├── tpu_v6e_hardware_telemetry_metrics.md    # Micro-architectural telemetry report
