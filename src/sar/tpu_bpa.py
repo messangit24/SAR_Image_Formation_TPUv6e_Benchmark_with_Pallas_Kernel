@@ -14,9 +14,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-# Enable float64 for exact ECEF geometry calculations
-jax.config.update("jax_enable_x64", True)
-
 C = 299_792_458.0
 
 
@@ -39,7 +36,7 @@ def jax_bpa_kernel(
     half = pad_samples // 2
 
     Naz, Nrg, _ = pixel_pts.shape
-    bpa_init = jnp.zeros((Naz, Nrg), dtype=jnp.complex128)
+    bpa_init = jnp.zeros((Naz, Nrg), dtype=signal.dtype)
 
     kc0_all = 4.0 * jnp.pi * sc0 / C
 
@@ -83,12 +80,16 @@ def backproject_tpu(
     upsample: int = 8,
 ) -> np.ndarray:
     """Executes JAX Cloud TPU / GPU Backprojection kernel."""
-    sig_j = jnp.array(signal, dtype=jnp.complex128)
-    apc_j = jnp.array(apc, dtype=jnp.float64)
-    srp_j = jnp.array(srp, dtype=jnp.float64)
-    sc0_j = jnp.array(sc0, dtype=jnp.float64)
-    scss_j = jnp.array(scss, dtype=jnp.float64)
-    pts_j = jnp.array(pixel_pts, dtype=jnp.float64)
+    is_tpu = len(jax.devices()) > 0 and jax.devices()[0].platform == "tpu"
+    c_dtype = jnp.complex64 if is_tpu else jnp.complex128
+    f_dtype = jnp.float32 if is_tpu else jnp.float64
+
+    sig_j = jnp.array(signal, dtype=c_dtype)
+    apc_j = jnp.array(apc, dtype=f_dtype)
+    srp_j = jnp.array(srp, dtype=f_dtype)
+    sc0_j = jnp.array(sc0, dtype=f_dtype)
+    scss_j = jnp.array(scss, dtype=f_dtype)
+    pts_j = jnp.array(pixel_pts, dtype=f_dtype)
 
     if srp_j.ndim == 1:
         srp_j = jnp.broadcast_to(srp_j, apc_j.shape)

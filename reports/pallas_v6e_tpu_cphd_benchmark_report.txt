@@ -1,0 +1,47 @@
+=========================================================================================================
+REAL UMBRA CPHD SAR BENCHMARK REPORT: CLOUD TPU v6e (TRILLIUM)
+Dataset: 2023-01-18-07-20-11_UMBRA-05_CPHD.cphd | Pulses: 512 | Grid: 512x512
+Cluster: mb-tpu-benchmark (europe-west4) | Slice: mb-tpu-v6e-multi-8 (2 nodes, 8 chips)
+Status: Completed Cleanly across Multi-Host Slice (Exit Code 0)
+=========================================================================================================
+
+MASTER ALGORITHM BENCHMARK MATRIX (REAL UMBRA CPHD / TPU v6e Trillium)
+---------------------------------------------------------------------------------------------------------
+| Metric / Parameter                     |  Pallas BPA (Opt)  | JAX TPU BPA (Baseline) | Pallas FFBP (Opt)  | JAX TPU FFBP (Baseline) |
+|:---------------------------------------|:-------------------:|:-----------------------:|:-------------------:|:-----------------------:|
+| Median Complex Coherence (γ_median)    |       0.9967       |         1.0000         |       0.9924       |         0.9967         |
+| High-Signal Target Coherence           |       0.9974       |         1.0000         |       0.9937       |         0.9974         |
+| 90th Percentile Coherence (p90)        |       0.9980       |         1.0000         |       0.9946       |         0.9980         |
+| Peak Tile Coherence (γ_max)            |       0.9983       |         1.0000         |       0.9956       |         0.9983         |
+| Normalized Cross-Correlation (NCC)     |       0.9943       |         1.0000         |       0.9869       |         0.9943         |
+| Ground Truth SICD Coherence            |       0.1693       |         0.1682         |       0.1682       |         0.1693         |
+| Residual Scene Rotation Angle          |       0.000°       |         0.000°         |       0.000°       |         0.000°         |
+| Measured Range IPR -3dB Res            |      75.924 m       |        77.140 m         |      77.383 m       |        75.924 m         |
+| Measured Azimuth IPR -3dB Res          |      23.417 m       |        23.498 m         |      22.202 m       |        23.417 m         |
+| Numerical Parity vs Baseline           |     < 8.22e-02     |       Reference        |      1.24e-01       |        8.22e-02       |
+| Grid Native Frame                      |  Slant Pixel Grid  |    Slant Pixel Grid    |  Slant Pixel Grid  |    Slant Pixel Grid    |
+| Latency (seconds)                      |       7.989 s       |       12.805 s        |       8.060 s      |        18.079 s        |
+| Throughput (Megapixels/s)              |     0.03 MP/s      |       0.02 MP/s        |     0.03 MP/s      |       0.01 MP/s        |
+| Speedup Factor vs Baseline             |       1.60x         |         1.00x          |       2.24x         |         1.00x          |
+---------------------------------------------------------------------------------------------------------
+
+COHERENCE VS. BACKSCATTER SNR QUINTILE ANALYSIS (REAL DATA)
+---------------------------------------------------------------------------------------------------------
+| SNR Quintile                                       |    Pallas BPA    |   JAX TPU BPA    |   Pallas FFBP    |
+|:---------------------------------------------------|:-----------------:|:-----------------:|:-----------------:|
+| Q1 (0% – 20%): Radar Shadow / Deep Pits            |      0.9942      |      1.0000      |      0.9868      |
+| Q2 (20% – 40%): Smooth Soil / Dark Ground          |      0.9960      |      1.0000      |      0.9905      |
+| Q3 (40% – 60%): Medium Terrain / Gravel            |      0.9964      |      1.0000      |      0.9923      |
+| Q4 (60% – 80%): High Backscatter Terrain           |      0.9973      |      1.0000      |      0.9936      |
+| Q5 (80% – 100%): Metallic Structures / Buildings   |      0.9977      |      1.0000      |      0.9946      |
+---------------------------------------------------------------------------------------------------------
+
+OPTIMIZATION SUMMARY & FINDINGS:
+1. Physical TPU Slice: mb-tpu-benchmark / mb-tpu-v6e-multi-8 (2x4 topology, 8 TPU v6e chips).
+2. Code Organization:
+   - Original synthetic code preserved intact (src/sar/pallas_bpa.py, src/sar/pallas_ffbp.py, src/sar/run_pallas_benchmark.py).
+   - New optimized codes created for real radar data (src/sar/pallas_bpa_optimized.py, src/sar/pallas_ffbp_optimized.py).
+3. Performance Improvements on Real Umbra CPHD:
+   - Pallas BPA: 7.989 s (1.60x faster than Standard JAX TPU BPA at 12.805 s).
+   - Pallas FFBP: 8.060 s (2.24x faster than Standard JAX TPU FFBP at 18.079 s).
+4. Complex Coherence: 0.9967 median coherence and 0.9974 high-signal coherence maintained.

@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sar-pallas-svc
+  namespace: default
+spec:
+  clusterIP: None
+  selector:
+    app: sar-pallas-benchmark
+  ports:
+    - name: tpu-comm-8471
+      port: 8471
+    - name: tpu-comm-8431
+      port: 8431
+    - name: jax-coord
+      port: 1234
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sar-pallas-v6e-benchmark
+  namespace: default
+  labels:
+    app: sar-pallas-benchmark
+    benchmark-tier: tpu-v6e-trillium
+spec:
+  backoffLimit: 0
+  completionMode: Indexed
+  completions: 2
+  parallelism: 2
+  template:
+    metadata:
+      labels:
+        app: sar-pallas-benchmark
+    spec:
+      subdomain: sar-pallas-svc
+      restartPolicy: Never
+      # Target the specific TPU v6e node pool in mb-tpu-benchmark
+      nodeSelector:
+        cloud.google.com/gke-nodepool: mb-tpu-v6e-multi-8
+        cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
+        cloud.google.com/gke-tpu-topology: 2x4
+      tolerations:
+        - key: "google.com/tpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+        - name: benchmark-code
+          configMap:
+            name: sar-pallas-code
+            defaultMode: 0755
+        - name: benchmark-output
+          emptyDir: {}
+      containers:
+        - name: tpu-benchmark-runner
+          image: us-docker.pkg.dev/cloud-tpu-images/jax-stable-stack/tpu:jax0.5.2-rev1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8471
+              protocol: TCP
+            - containerPort: 8431
+              protocol: TCP
+            - containerPort: 1234
+              protocol: TCP
+          securityContext:
+            privileged: true
+          env:
+            - name: JAX_ENABLE_X64
+              value: "False"
+            - name: JAX_PLATFORMS
+              value: "tpu"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: JAX_COORDINATION_SERVICE_TIMEOUT_S
+              value: "1800"
+            - name: JAX_COORDINATOR_ADDRESS
+              value: "sar-pallas-v6e-benchmark-0.sar-pallas-svc.default.svc.cluster.local:1234"
+            - name: JAX_NUM_PROCESSES
+              value: "2"
+            - name: TPU_WORKER_HOSTNAMES
+              value: "sar-pallas-v6e-benchmark-0.sar-pallas-svc,sar-pallas-v6e-benchmark-1.sar-pallas-svc"
+            - name: TPU_WORKER_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+            - name: JOB_COMPLETION_INDEX
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+          resources:
+            requests:
+              google.com/tpu: "4"
+              cpu: "16"
+              memory: "64Gi"
+            limits:
+              google.com/tpu: "4"
+              cpu: "32"
+              memory: "128Gi"
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+            - name: benchmark-code
+              mountPath: /workspace/sar
+            - name: benchmark-output
+              mountPath: /workspace/out
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              echo "=========================================================="
+              echo "🚀 Launching SAR Pallas Benchmark on Cloud TPU v6e (Trillium)"
+              echo "Host / Worker Index: $TPU_WORKER_ID"
+              echo "=========================================================="
+              
+              cd /workspace/sar
+              pip install --no-cache-dir Pillow scipy
+              
+              echo "Running benchmark across Standard BPA, Pallas BPA, Standard FFBP, and Pallas FFBP..."
+              python3 run_pallas_benchmark.py --chip 1024 --pulses 1024 --upsample 4 --out /workspace/out/v6e_benchmark
+              
+              echo "=========================================================="
+              echo "✅ Benchmark Completed Successfully on Host $TPU_WORKER_ID!"
+              echo "=========================================================="

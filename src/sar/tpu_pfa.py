@@ -7,11 +7,7 @@ Mathematically aligned with src/pfa.py.
 """
 from __future__ import annotations
 
-import os
-os.environ["JAX_ENABLE_X64"] = "True"
-
 import jax
-jax.config.update("jax_enable_x64", True)
 
 from dataclasses import dataclass
 from functools import partial
@@ -81,7 +77,7 @@ def jax_pfa_kernel(
         f = frac_i - i0
         w_1, w0, w1, w2 = jax_cubic_weights(f)
 
-        out = jnp.zeros_like(frac_i, dtype=jnp.complex128)
+        out = jnp.zeros_like(frac_i, dtype=signal.dtype)
         weights = (w_1, w0, w1, w2)
         offsets = (-1, 0, 1, 2)
 
@@ -104,7 +100,7 @@ def jax_pfa_kernel(
     ky_min = kxc * t_ord[0]
     ky_max = kxc * t_ord[-1]
     ky = jnp.linspace(ky_min, ky_max, nky)
-    pulse_index = jnp.arange(npulse, dtype=jnp.float64)
+    pulse_index = jnp.arange(npulse, dtype=kx.dtype)
 
     q = ky[:, None] / kx[None, :]  # (nky, nkx)
     frac2 = jnp.interp(q.ravel(), t_ord, pulse_index, left=-1.0, right=npulse).reshape(q.shape)
@@ -116,7 +112,7 @@ def jax_pfa_kernel(
         f = frac_j - i0
         w_1, w0, w1, w2 = jax_cubic_weights(f)
 
-        out = jnp.zeros_like(frac_j, dtype=jnp.complex128)
+        out = jnp.zeros_like(frac_j, dtype=stage1.dtype)
         weights = (w_1, w0, w1, w2)
         offsets = (-1, 0, 1, 2)
 
@@ -137,7 +133,7 @@ def jax_pfa_kernel(
     if Nx > nkx or Ny > nky:
         y0 = (Ny - nky) // 2
         x0 = (Nx - nkx) // 2
-        pad_grid = jnp.zeros((Ny, Nx), dtype=jnp.complex128)
+        pad_grid = jnp.zeros((Ny, Nx), dtype=stage2.dtype)
         stage2 = pad_grid.at[y0 : y0 + nky, x0 : x0 + nkx].set(stage2)
 
     fft = jnp.fft.ifft2 if sgn == 1 else jnp.fft.fft2
@@ -159,13 +155,17 @@ def form_image_tpu(
     oversample: tuple = (1.3, 1.4),
 ) -> np.ndarray:
     """Executes JAX Cloud TPU / GPU Polar Format Algorithm (PFA) kernel."""
-    sig_j = jnp.array(signal, dtype=jnp.complex128)
-    apc_j = jnp.array(apc, dtype=jnp.float64)
-    srp_j = jnp.array(srp, dtype=jnp.float64)
-    sc0_j = jnp.array(sc0, dtype=jnp.float64)
-    scss_j = jnp.array(scss, dtype=jnp.float64)
-    r_j = jnp.array(r_hat, dtype=jnp.float64)
-    c_j = jnp.array(c_hat, dtype=jnp.float64)
+    is_tpu = len(jax.devices()) > 0 and jax.devices()[0].platform == "tpu"
+    c_dtype = jnp.complex64 if is_tpu else jnp.complex128
+    f_dtype = jnp.float32 if is_tpu else jnp.float64
+
+    sig_j = jnp.array(signal, dtype=c_dtype)
+    apc_j = jnp.array(apc, dtype=f_dtype)
+    srp_j = jnp.array(srp, dtype=f_dtype)
+    sc0_j = jnp.array(sc0, dtype=f_dtype)
+    scss_j = jnp.array(scss, dtype=f_dtype)
+    r_j = jnp.array(r_hat, dtype=f_dtype)
+    c_j = jnp.array(c_hat, dtype=f_dtype)
 
     if srp_j.ndim == 1:
         srp_j = jnp.broadcast_to(srp_j, apc_j.shape)

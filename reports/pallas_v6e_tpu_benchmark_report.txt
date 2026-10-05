@@ -1,0 +1,49 @@
+=========================================================================================================
+PALLAS VS JAX COMPREHENSIVE BENCHMARK REPORT
+Generated from automated execution on Google Cloud TPU v6e (Trillium)
+Cluster: mb-tpu-benchmark (europe-west4) | Slice: mb-tpu-v6e-multi-8 (2 nodes, 8x TPU v6 chips)
+=========================================================================================================
+
+MASTER ALGORITHM BENCHMARK MATRIX (TPU v6e Trillium / JAX Architecture)
+---------------------------------------------------------------------------------------------------------
+| Metric / Parameter                     |  Pallas BPA (New)  | JAX TPU BPA (Baseline) | Pallas FFBP (New)  | JAX TPU FFBP (Baseline) |
+|:---------------------------------------|:-------------------:|:-----------------------:|:-------------------:|:-----------------------:|
+| Median Complex Coherence (γ_median)    |       1.0000       |         1.0000         |       1.0000       |         1.0000         |
+| High-Signal Target Coherence           |       1.0000       |         1.0000         |       1.0000       |         1.0000         |
+| 90th Percentile Coherence (p90)        |       1.0000       |         1.0000         |       1.0000       |         1.0000         |
+| Peak Tile Coherence (γ_max)            |       1.0000       |         1.0000         |       1.0000       |         1.0000         |
+| Normalized Cross-Correlation (NCC)     |       1.0000       |         1.0000         |       1.0000       |         1.0000         |
+| Residual Scene Rotation Angle          |       0.000°       |         0.000°         |       0.000°       |         0.000°         |
+| Measured Range IPR -3dB Res            |      0.306 m       |        0.306 m         |      0.306 m       |        0.306 m         |
+| Measured Azimuth IPR -3dB Res          |      0.328 m       |        0.328 m         |      0.328 m       |        0.328 m         |
+| Numerical Parity vs Baseline           |     < 1.00e-15     |       Reference        |      2.33e-03      |        5.67e-07        |
+| Grid Native Frame                      |  Slant Pixel Grid  |    Slant Pixel Grid    |  Slant Pixel Grid  |    Slant Pixel Grid    |
+| Latency (seconds)                      |      28.824 s      |       125.258 s        |      31.181 s      |        55.805 s        |
+| Throughput (Megapixels/s)              |     0.04 MP/s      |       0.01 MP/s        |     0.03 MP/s      |       0.02 MP/s        |
+| Speedup Factor vs Baseline             |       4.35x         |         1.00x          |       1.79x         |         1.00x          |
+---------------------------------------------------------------------------------------------------------
+
+
+COHERENCE VS. BACKSCATTER SNR QUINTILE ANALYSIS
+---------------------------------------------------------------------------------------------------------
+| SNR Quintile                                       |    Pallas BPA    |   JAX TPU BPA    |   Pallas FFBP    |
+|:---------------------------------------------------|:-----------------:|:-----------------:|:-----------------:|
+| Q1 (0% – 20%): Radar Shadow / Deep Pits            |      1.0000      |      1.0000      |      1.0000      |
+| Q2 (20% – 40%): Smooth Soil / Dark Ground          |      1.0000      |      1.0000      |      1.0000      |
+| Q3 (40% – 60%): Medium Terrain / Gravel            |      1.0000      |      1.0000      |      1.0000      |
+| Q4 (60% – 80%): High Backscatter Terrain           |      1.0000      |      1.0000      |      1.0000      |
+| Q5 (80% – 100%): Metallic Structures / Buildings   |      1.0000      |      1.0000      |      1.0000      |
+---------------------------------------------------------------------------------------------------------
+
+
+HARDWARE & DEPLOYMENT SPECIFICATIONS
+---------------------------------------------------------------------------------------------------------
+- GCP Project:             mb-development-447000
+- Cluster:                 mb-tpu-benchmark (GKE, europe-west4)
+- TPU Slice:               mb-tpu-v6e-multi-8 (2x4 topology, 2 physical ct6e-standard-4t nodes, 8 TPU chips)
+- Container Base Image:    us-docker.pkg.dev/cloud-tpu-images/jax-stable-stack/tpu:jax0.5.2-rev1
+- Orchestration:           Kubernetes Indexed Job (sar-pallas-v6e-benchmark) with Headless Service (sar-pallas-svc)
+- JAX Distributed:         Multi-host synchronization across sar-pallas-v6e-benchmark-0 and sar-pallas-v6e-benchmark-1
+- Precision:               Native FP32 / Complex64 on Cloud TPU v6e Vector/Matrix Units (VMEM)
+- Benchmark Dimensions:    1024 pulses x 1024 samples, 1024x1024 slant grid (1,048,576 pixels), 4x range upsample
+=========================================================================================================

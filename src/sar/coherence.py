@@ -17,9 +17,21 @@ from __future__ import annotations
 
 import argparse
 import numpy as np
-from scipy.ndimage import zoom
-from skimage.feature import match_template
-from sarpy.io.complex.sicd import SICDReader
+
+try:
+    from scipy.ndimage import zoom
+except ImportError:
+    zoom = None
+
+try:
+    from skimage.feature import match_template
+except ImportError:
+    match_template = None
+
+try:
+    from sarpy.io.complex.sicd import SICDReader
+except ImportError:
+    SICDReader = None
 
 
 ORIENTS = {

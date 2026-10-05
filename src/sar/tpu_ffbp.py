@@ -7,10 +7,7 @@ accumulation to achieve O(N^2 log M) complexity.
 from __future__ import annotations
 
 import os
-os.environ["JAX_ENABLE_X64"] = "True"
-
 import jax
-jax.config.update("jax_enable_x64", True)
 
 from functools import partial
 import jax.numpy as jnp
@@ -75,7 +72,7 @@ def jax_ffbp_kernel(
             contrib = jnp.where(valid & valid_mask, val * phase, 0.0 + 0.0j)
             return acc + contrib, None
 
-        sub_acc, _ = jax.lax.scan(pulse_scan_body, jnp.zeros(npx, dtype=jnp.complex128), start_m + jnp.arange(sub_aperture_size))
+        sub_acc, _ = jax.lax.scan(pulse_scan_body, jnp.zeros(npx, dtype=signal.dtype), start_m + jnp.arange(sub_aperture_size))
         return sub_acc
 
     # Map across sub-apertures
@@ -98,12 +95,16 @@ def backproject_ffbp(
     upsample: int = 4,
 ) -> np.ndarray:
     """Executes JAX Cloud TPU Fast Factorized Back-Projection (FFBP) engine."""
-    sig_j = jnp.array(signal, dtype=jnp.complex128)
-    apc_j = jnp.array(apc, dtype=jnp.float64)
-    srp_j = jnp.array(srp, dtype=jnp.float64)
-    sc0_j = jnp.array(sc0, dtype=jnp.float64)
-    scss_j = jnp.array(scss, dtype=jnp.float64)
-    pts_j = jnp.array(pixel_pts_ecef, dtype=jnp.float64)
+    is_tpu = len(jax.devices()) > 0 and jax.devices()[0].platform == "tpu"
+    c_dtype = jnp.complex64 if is_tpu else jnp.complex128
+    f_dtype = jnp.float32 if is_tpu else jnp.float64
+
+    sig_j = jnp.array(signal, dtype=c_dtype)
+    apc_j = jnp.array(apc, dtype=f_dtype)
+    srp_j = jnp.array(srp, dtype=f_dtype)
+    sc0_j = jnp.array(sc0, dtype=f_dtype)
+    scss_j = jnp.array(scss, dtype=f_dtype)
+    pts_j = jnp.array(pixel_pts_ecef, dtype=f_dtype)
 
     if srp_j.ndim == 1:
         srp_j = jnp.broadcast_to(srp_j, apc_j.shape)
