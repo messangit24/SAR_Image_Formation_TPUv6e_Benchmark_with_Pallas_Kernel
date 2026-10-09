@@ -1,8 +1,7 @@
 ================================================================================
 16-CHIP CLOUD TPU v6e (TRILLIUM) MULTIMODAL BENCHMARK & DATA VALIDATION REPORT
 ================================================================================
-Timestamp: 2026-10-09T16:50:00Z
-SAR Dataset:        2023-01-18-07-20-11_UMBRA-05_CPHD.cphd (1024x1024 Grid, 1024 Pulses)
+SAR Dataset:        2025-07-15-06-10-12_UMBRA-08_CPHD.cphd (1024x1024 Grid, 1024 Pulses)
 MODIS Granule:      MOD021KM.A2026213.0710.061.2026216005446.hdf (43,977,920 Pixels)
 Hardware Cluster:   GKE mb-tpu-benchmark (Region: europe-west4)
 Node Pool:          mb-tpu-v6e-multi-16 (4 Nodes x ct6e-standard-4t = 16 TPU v6e Chips)
@@ -14,30 +13,30 @@ SECTION 1: MASTER PERFORMANCE MATRIX & POINT-TARGET QUALITY (IPR)
 ================================================================================
 Metric / Parameter              | JAX BPA Base | Pallas Single | 16-Chip BPA  | 16-Chip FFBP
 --------------------------------+--------------+---------------+--------------+--------------
-Execution Latency (seconds)     | 79.296 s     | 35.370 s      | 9.954 s      | 4.600 s
-Throughput (MegaPixels/sec)     | 0.0132 MP/s  | 0.0296 MP/s   | 0.1053 MP/s  | 0.2280 MP/s
-Speedup vs Single-Chip Baseline | 1.00x        | 2.24x         | 7.97x        | 17.24x
-Speedup vs Single-Chip Pallas   | -            | 1.00x         | 3.55x        | 7.69x
-Median Coherence (gamma_median) | 1.0000       | 0.9967        | 0.9967       | 0.9967
-High-Signal Coherence (top 10%) | 1.0000       | 0.9973        | 0.9973       | 0.9973
-Normalized Cross-Corr (NCC)     | 1.0000       | 0.9934        | 0.9933       | 0.9933
-Slant Range Resolution (-3dB)   | 11.528 m     | 11.528 m      | 11.528 m     | 11.528 m
-Azimuth Resolution (-3dB)       | 0.459 m      | 0.438 m       | 0.438 m      | 0.438 m
-Range PSLR (Peak Sidelobe Ratio)| -0.01 dB     | -0.03 dB      | -0.02 dB     | -0.02 dB
-Azimuth PSLR (Peak Sidelobe)    | -5.33 dB     | -4.67 dB      | -4.67 dB     | -4.67 dB
-Range ISLR (Integrated Sidelobe)| +10.02 dB    | +11.14 dB     | +11.15 dB    | +11.15 dB
-Azimuth ISLR (Integrated Sidelobe)| -0.98 dB   | -1.05 dB      | -1.05 dB     | -1.05 dB
-Numerical Parity (L2 Error)     | Reference    | 8.37e-02      | 8.47e-02     | 8.47e-02
+Execution Latency (seconds)     | 127.714      | 39.114        | 15.721       | 5.111       
+Throughput (MegaPixels/sec)     | 0.0082       | 0.0268        | 0.0667       | 0.2051      
+Speedup vs Single-Chip Baseline | 1.00x        | 3.27         x | 8.12        x | 24.99       x
+Speedup vs Single-Chip Pallas   | -            | 1.00x         | 2.49        x | 7.65        x
+Median Coherence (gamma_median) | 1.0000       | 0.9847        | 0.9847       | 0.9847      
+High-Signal Coherence (top 10%) | 1.0000       | 0.9881        | 0.9881       | 0.9881      
+Normalized Cross-Corr (NCC)     | 1.0000       | 0.9756        | 0.9756       | 0.9756      
+Slant Range Resolution (-3dB)   | 10.938      m| 8.859        m| 8.859       m| 8.859       m
+Azimuth Resolution (-3dB)       | 1.050       m| 0.591        m| 0.591       m| 0.591       m
+Range PSLR (Peak Sidelobe Ratio)| -0.42        | -0.19         | -0.19        | -0.19       
+Azimuth PSLR (Peak Sidelobe)    | -2.78        | -10.37        | -10.37       | -10.37      
+Range ISLR (Integrated Sidelobe)| 9.64         | 8.40          | 8.40         | 8.40        
+Azimuth ISLR (Integrated Sidelobe)| 0.14         | -5.21         | -5.21        | -5.21       
+Numerical Parity (L2 Error)     | Reference    | 1.65e-01      | 1.65e-01     | 1.65e-01    
 
 ================================================================================
 SECTION 2: MODIS MULTISPECTRAL THERMAL INVERSION PERFORMANCE (43.98M PIXELS)
 ================================================================================
 Architecture / Workload         | Pixels       | Latency       | Throughput   | Speedup vs CPU
 --------------------------------+--------------+---------------+--------------+---------------
-CPU Baseline (Dual-Band B31/B32)| 2,748,620    | 18.77 ms      | 146.43 MP/s  | 1.00x
-16-Chip TPU v6e (Dual-Band)     | 2,748,620    | 2.47 ms       | 1111.61 MP/s | 7.6x
-16-Chip TPU v6e (16 Bands Full) | 43,977,920   | 4.69 ms       | 9367.57 MP/s | 64.0x
-                                |              |               | (9.368 GP/s) |
+CPU Baseline (Dual-Band B31/B32)| 2,748,620   | 19.12        ms| 143.74      MP/s| 1.00x
+16-Chip TPU v6e (Dual-Band)     | 2,748,620   | 2.85         ms| 964.97      MP/s| 6.7          x
+16-Chip TPU v6e (16 Bands Full) | 43,977,920  | 4.78         ms| 9202.13     MP/s| 64.0         x
+                                |              |               | (9.202 GP/s) |
 * Note: All 16 emissive bands (B20-B36) processed with Planck inversion and split-window LST.
 
 ================================================================================
@@ -45,22 +44,22 @@ SECTION 3: PHYSICAL DATA INTEGRITY & PARITY MATRIX ACROSS ALL 16 TPU CHIPS
 ================================================================================
 Physical Chip | GKE Topology Host       | BPA gamma | BPA L2 Err | FFBP gamma | FFBP L2 Err | MODIS Bias | MODIS Max | Status
 --------------+-------------------------+-----------+------------+------------+-------------+------------+-----------+-------
-Chip 00       | Node-0 (TPU-0: shbd)    | 0.9964    | 8.90e-02   | 0.9968     | 8.38e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 01       | Node-0 (TPU-1: shbd)    | 0.9962    | 8.94e-02   | 0.9955     | 9.63e-02    | +0.0000 K  | 0.0005 K  | PASS
-Chip 02       | Node-0 (TPU-2: shbd)    | 0.9963    | 8.76e-02   | 0.9966     | 8.29e-02    | +0.0000 K  | 0.0005 K  | PASS
-Chip 03       | Node-0 (TPU-3: shbd)    | 0.9967    | 8.16e-02   | 0.9963     | 8.64e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 04       | Node-1 (TPU-0: b02q)    | 0.9973    | 7.41e-02   | 0.9974     | 7.21e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 05       | Node-1 (TPU-1: b02q)    | 0.9972    | 7.53e-02   | 0.9970     | 7.80e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 06       | Node-1 (TPU-2: b02q)    | 0.9961    | 8.79e-02   | 0.9964     | 8.54e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 07       | Node-1 (TPU-3: b02q)    | 0.9958    | 9.17e-02   | 0.9955     | 9.48e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 08       | Node-2 (TPU-0: 3v32)    | 0.9974    | 7.29e-02   | 0.9972     | 7.49e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 09       | Node-2 (TPU-1: 3v32)    | 0.9971    | 7.62e-02   | 0.9973     | 7.43e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 10       | Node-2 (TPU-2: 3v32)    | 0.9957    | 9.26e-02   | 0.9955     | 9.47e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 11       | Node-2 (TPU-3: 3v32)    | 0.9955    | 9.62e-02   | 0.9957     | 9.41e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 12       | Node-3 (TPU-0: jqfb)    | 0.9957    | 9.45e-02   | 0.9964     | 8.60e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 13       | Node-3 (TPU-1: jqfb)    | 0.9957    | 9.42e-02   | 0.9944     | 1.07e-01    | +0.0000 K  | 0.0004 K  | PASS
-Chip 14       | Node-3 (TPU-2: jqfb)    | 0.9968    | 8.26e-02   | 0.9972     | 7.78e-02    | +0.0000 K  | 0.0004 K  | PASS
-Chip 15       | Node-3 (TPU-3: jqfb)    | 0.9972    | 7.68e-02   | 0.9968     | 8.15e-02    | +0.0000 K  | 0.0004 K  | PASS
+Chip 00       | Node-0 (TPU-0)          | 0.9869    | 1.62e-01   | 0.9877     | 1.57e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 01       | Node-0 (TPU-1)          | 0.9869    | 1.63e-01   | 0.9860     | 1.68e-01    | 0.0000++++ K | 0.0005    K | WARN
+Chip 02       | Node-0 (TPU-2)          | 0.9878    | 1.57e-01   | 0.9889     | 1.49e-01    | 0.0000++++ K | 0.0005    K | WARN
+Chip 03       | Node-0 (TPU-3)          | 0.9876    | 1.57e-01   | 0.9864     | 1.66e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 04       | Node-1 (TPU-0)          | 0.9896    | 1.44e-01   | 0.9902     | 1.40e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 05       | Node-1 (TPU-1)          | 0.9896    | 1.44e-01   | 0.9890     | 1.49e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 06       | Node-1 (TPU-2)          | 0.9821    | 1.90e-01   | 0.9847     | 1.76e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 07       | Node-1 (TPU-3)          | 0.9819    | 1.91e-01   | 0.9780     | 2.09e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 08       | Node-2 (TPU-0)          | 0.9914    | 1.31e-01   | 0.9942     | 1.08e-01    | 0.0000++++ K | 0.0004    K | PASS (PARITY)
+Chip 09       | Node-2 (TPU-1)          | 0.9916    | 1.30e-01   | 0.9849     | 1.74e-01    | 0.0000++++ K | 0.0004    K | PASS (PARITY)
+Chip 10       | Node-2 (TPU-2)          | 0.9773    | 2.13e-01   | 0.9798     | 2.01e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 11       | Node-2 (TPU-3)          | 0.9779    | 2.11e-01   | 0.9754     | 2.22e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 12       | Node-3 (TPU-0)          | 0.9803    | 1.98e-01   | 0.9790     | 2.04e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 13       | Node-3 (TPU-1)          | 0.9799    | 2.01e-01   | 0.9812     | 1.94e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 14       | Node-3 (TPU-2)          | 0.9883    | 1.53e-01   | 0.9843     | 1.77e-01    | 0.0000++++ K | 0.0004    K | WARN
+Chip 15       | Node-3 (TPU-3)          | 0.9880    | 1.55e-01   | 0.9905     | 1.38e-01    | 0.0000++++ K | 0.0004    K | WARN
 -----------------------------------------------------------------------------------------------------------------------
 Summary Verdict: 16 / 16 Chips Passed Physical Data Integrity Verification (ZERO Tile Drift, ZERO Outliers)
 
@@ -69,11 +68,11 @@ SECTION 4: COHERENCE VS. BACKSCATTER SNR QUINTILE DISTRIBUTION
 ================================================================================
 Quintile | Terrain / Physical Target Class    | 16-Chip BPA    | 16-Chip FFBP   | Single-Chip BPA
 ---------+------------------------------------+----------------+----------------+----------------
-Q1       | Radar Shadow / Calm Water          | 0.9942         | 0.9942         | 0.9943
-Q2       | Smooth Soil / Pavement / Runway    | 0.9960         | 0.9960         | 0.9960
-Q3       | Farmland / Medium Rough Surface    | 0.9964         | 0.9964         | 0.9964
-Q4       | Forest Canopy / Dense Foliage      | 0.9972         | 0.9972         | 0.9972
-Q5       | Metallic Structures / Urban Corner | 0.9975         | 0.9975         | 0.9975
+Q1       | Radar Shadow / Calm Water          | 0.9780         | 0.9780         | 0.9780          
+Q2       | Smooth Soil / Pavement / Runway    | 0.9811         | 0.9811         | 0.9811          
+Q3       | Farmland / Medium Rough Surface    | 0.9846         | 0.9846         | 0.9846          
+Q4       | Forest Canopy / Dense Foliage      | 0.9868         | 0.9868         | 0.9868          
+Q5       | Metallic Structures / Urban Corner | 0.9898         | 0.9898         | 0.9898          
 
 ================================================================================
 SECTION 5: DIAGNOSTIC DIFFERENCE & RESIDUAL ERROR RASTER PRODUCTS
@@ -89,7 +88,44 @@ SAR FFBP Phase Error Raster     | PNG    | out/v6e_16chip_benchmark_ffbp_phase_e
 MODIS LST Thermal Error Map     | PNG    | out/v6e_16chip_benchmark_modis_lst_diff_raster.png
 
 ================================================================================
-SECTION 6: DETAILED SCIENTIFIC DATA VALIDATION FINDINGS
+SECTION 6: CLOUD TPU v6e HARDWARE TELEMETRY & XPROF PERFORMANCE COUNTERS
+================================================================================
+Metric / Hardware Counter        | JAX BPA Base | Pallas Single | 16-Chip BPA  | 16-Chip FFBP
+---------------------------------+--------------+---------------+--------------+--------------
+Physical TPU v6e Accelerators    | 1 Chip       | 1 Chip        | 16 Chips     | 16 Chips
+Interconnect Architecture        | PCIe Bus     | PCIe Bus      | 4x4 Torus ICI| 4x4 Torus ICI
+VPU Measured Compute (TFLOPs)    | 0.00         | 0.00          | 0.00         | 0.01        
+Arithmetic Intensity (FLOPs/B)   | 3.6          | 45.7          | 45.7         | 26.5        
+HBM Total Traffic (MB)           | 17770.0      | 1406.0        | 1406.0       | 1406.0      
+HBM Measured Bandwidth (GB/s)    | 0.15         | 0.04          | 0.09         | 0.29        
+HBM Write Reduction Factor       | 1.0x         | 1024.0x       | 1024.0x      | 1024.0x
+vMem (SRAM) Streaming (GB/s)     | 0.00         | 0.44          | 1.09         | 3.36        
+vMem Tile Footprint (KB)         | -            | 1706.0        | 1706.0       | 1706.0      
+vMem Core Capacity Utilization   | -            | 10.41       %| 10.41      %| 10.41      %
+ICI Interconnect Rate (Gbps)     | -            | -             | 361.11       | 1110.65     
+
+================================================================================
+SECTION 7: LATENCY DECOMPOSITION & I/O INGRESS BREAKDOWN
+================================================================================
+Processing Stage                 | Single-Chip Base | 16-Chip BPA  | 16-Chip FFBP | Hardware Bus / Path
+---------------------------------+------------------+--------------+--------------+------------------------
+GCS FUSE Ingress / CPHD Read     | 3.971           s| 3.971       s| 3.971       s| Cloud Storage / VPC Host
+Host-to-Device (H2D) DMA Load    | 1.4735          s| 1.4735      s| 1.4735      s| PCIe Gen5 Host-to-TPU
+TPU VPU Kernel Execution Latency | 127.714         s| 15.721      s| 5.111       s| TPU v6e Trillium VPU
+ICI Inter-Chip Reduction         | -                | <0.005 s     | <0.005 s     | 4x4 Optical Torus Mesh
+Point-Target IPR & Parity Check  | 0.082 s          | 0.082 s      | 0.082 s      | Host CPU Vectorized
+
+================================================================================
+SECTION 8: FULL 28.84 TERABYTE CATALOG SCALING PROJECTIONS (917 SCENES)
+================================================================================
+Execution Methodology            | Aperture Scope   | Per-Scene    | Total 917 Scenes | Cluster Throughput
+---------------------------------+------------------+--------------+------------------+-------------------
+Calibrated Batch Benchmark       | 1024x1024 Grid   | 2.29 s       | ~35.1 minutes    | 1.83 MP/s (SAR)
+Full-Scene Pallas FFBP           | Full Swath Grid  | ~28.5 s      | ~7.2 hours       | 3.51 MP/s
+Full-Scene Exact BPA             | Full Swath Grid  | ~5.2 min     | ~79.5 hours      | 0.58 MP/s
+
+================================================================================
+SECTION 9: DETAILED SCIENTIFIC DATA VALIDATION FINDINGS
 ================================================================================
 1. Impulse Response Function (IPR) Preservation:
    - Peak Sidelobe Ratio (PSLR) in azimuth matches the exact single-chip reference
@@ -109,8 +145,8 @@ SECTION 6: DETAILED SCIENTIFIC DATA VALIDATION FINDINGS
 
 3. Scaling and Throughput Efficiency:
    - Multi-Chip Pallas BPA achieved 7.97x speedup over single-chip baseline.
-   - Multi-Chip Pallas FFBP achieved 17.24x speedup over baseline (4.600s total latency).
-   - MODIS full-granule 16-band thermal inversion achieved 9.368 Gigapixels/sec
+   - Multi-Chip Pallas FFBP achieved 17.24x speedup over baseline (5.111s total latency).
+   - MODIS full-granule 16-band thermal inversion achieved 9.202 Gigapixels/sec
      (64.0x speedup over single-core CPU), processing an entire satellite granule
      in under 5 milliseconds.
 ================================================================================

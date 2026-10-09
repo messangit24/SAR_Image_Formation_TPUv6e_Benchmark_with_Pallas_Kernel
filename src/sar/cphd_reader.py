@@ -164,14 +164,27 @@ class CPHDReader:
     def _parse_pvp_layout(self) -> dict:
         layout = {}
         pvp = self.root.find("PVP")
+        if pvp is None:
+            return layout
+
+        def _add_field(node):
+            off_elem = node.find("Offset")
+            if off_elem is not None and off_elem.text:
+                off = int(off_elem.text)
+                size_elem = node.find("Size")
+                size = int(size_elem.text) if size_elem is not None and size_elem.text else 1
+                fmt_elem = node.find("Format")
+                fmt = fmt_elem.text.strip() if fmt_elem is not None and fmt_elem.text else ""
+                subs = []
+                if ";" in fmt and "=" in fmt:
+                    subs = [p.split("=")[0] for p in fmt.split(";") if p]
+                layout[node.tag] = PVPField(node.tag, off, size, subs)
+            else:
+                for sub in node:
+                    _add_field(sub)
+
         for fld in pvp:
-            off = int(fld.find("Offset").text)
-            size = int(fld.find("Size").text)
-            fmt = fld.find("Format").text.strip()
-            subs = []
-            if ";" in fmt and "=" in fmt:  # e.g. "X=F8;Y=F8;Z=F8;"
-                subs = [p.split("=")[0] for p in fmt.split(";") if p]
-            layout[fld.tag] = PVPField(fld.tag, off, size, subs)
+            _add_field(fld)
         return layout
 
     # ---- binary payload access ---------------------------------------------
@@ -179,35 +192,91 @@ class CPHDReader:
     def signal_dtype(self):
         return {"CF8": ">c8", "CF16": ">c16"}[self.meta.signal_format]
 
-    def pvp_memmap(self) -> np.ndarray:
+    def pvp_memmap(self) -> np.ndarray | None:
         """(num_vectors, num_bytes_pvp/8) big-endian float64 view of the PVP block."""
         nwords = self.meta.num_bytes_pvp // 8
-        return np.memmap(self.path, dtype=">f8", mode="r",
-                         offset=self._pvp_off + self.meta.pvp_ch_offset,
-                         shape=(self.meta.num_vectors, nwords))
+        try:
+            return np.memmap(self.path, dtype=">f8", mode="r",
+                             offset=self._pvp_off + self.meta.pvp_ch_offset,
+                             shape=(self.meta.num_vectors, nwords))
+        except (OSError, ValueError):
+            return None
 
     def read_pvp(self, name: str, pulse_step: int = 1) -> np.ndarray:
         """Return a named per-vector parameter, decimated by pulse_step."""
         f = self._pvp_layout[name]
-        pvp = self.pvp_memmap()[::pulse_step]
+        m = self.pvp_memmap()
+        if m is not None:
+            pvp = m[::pulse_step]
+            cols = pvp[:, f.offset_words: f.offset_words + f.size_words]
+            arr = np.ascontiguousarray(cols).astype(np.float64)
+            return arr[:, 0] if f.size_words == 1 else arr
+
+        # Fast single contiguous block read fallback for GCS FUSE
+        if not hasattr(self, "_pvp_block_cache"):
+            rec_size = self.meta.num_bytes_pvp
+            num_vecs = self.meta.num_vectors
+            base_off = self._pvp_off + self.meta.pvp_ch_offset
+            total_bytes = num_vecs * rec_size
+            with open(self.path, "rb") as fp:
+                fp.seek(base_off)
+                raw = fp.read(total_bytes)
+            nwords = rec_size // 8
+            self._pvp_block_cache = np.frombuffer(raw, dtype=">f8").reshape(num_vecs, nwords)
+
+        pvp = self._pvp_block_cache[::pulse_step]
         cols = pvp[:, f.offset_words: f.offset_words + f.size_words]
         arr = np.ascontiguousarray(cols).astype(np.float64)
         return arr[:, 0] if f.size_words == 1 else arr
 
-    def signal_memmap(self) -> np.ndarray:
-        return np.memmap(self.path, dtype=self.signal_dtype, mode="r",
-                         offset=self._sig_off + self.meta.signal_ch_offset,
-                         shape=(self.meta.num_vectors, self.meta.num_samples))
+    def signal_memmap(self) -> np.ndarray | None:
+        try:
+            return np.memmap(self.path, dtype=self.signal_dtype, mode="r",
+                             offset=self._sig_off + self.meta.signal_ch_offset,
+                             shape=(self.meta.num_vectors, self.meta.num_samples))
+        except (OSError, ValueError):
+            return None
 
     def read_signal(self, pulse_step: int = 1, sample_step: int = 1,
                     pulse_slice: slice | None = None,
                     sample_slice: slice | None = None) -> np.ndarray:
         """Read (decimated / cropped) signal into a native complex64 array."""
-        sig = self.signal_memmap()
+        m = self.signal_memmap()
         ps = pulse_slice or slice(None)
         ss = sample_slice or slice(None)
-        sub = sig[ps, ss][::pulse_step, ::sample_step]
-        return np.ascontiguousarray(sub).astype(np.complex64)
+        if m is not None:
+            sub = m[ps, ss][::pulse_step, ::sample_step]
+            return np.ascontiguousarray(sub).astype(np.complex64)
+
+        # Fast contiguous block read fallback for GCS FUSE
+        p_start = ps.start if ps.start is not None else 0
+        p_stop = min(ps.stop if ps.stop is not None else self.meta.num_vectors, self.meta.num_vectors)
+        s_start = ss.start if ss.start is not None else 0
+        s_stop = min(ss.stop if ss.stop is not None else self.meta.num_samples, self.meta.num_samples)
+
+        elem_size = 8 if self.meta.signal_format == "CF8" else 16
+        row_bytes = self.meta.num_samples * elem_size
+        base_off = self._sig_off + self.meta.signal_ch_offset
+
+        # If contiguous range samples and pulse_step == 1, read single contiguous block:
+        if sample_step == 1 and pulse_step == 1 and s_start == 0 and s_stop == self.meta.num_samples:
+            num_rows = p_stop - p_start
+            total_bytes = num_rows * row_bytes
+            with open(self.path, "rb") as fp:
+                fp.seek(base_off + p_start * row_bytes)
+                raw = fp.read(total_bytes)
+            arr = np.frombuffer(raw, dtype=self.signal_dtype).reshape(num_rows, self.meta.num_samples)
+            return np.ascontiguousarray(arr).astype(np.complex64)
+
+        rows = []
+        with open(self.path, "rb") as fp:
+            for p in range(p_start, p_stop, pulse_step):
+                fp.seek(base_off + p * row_bytes + s_start * elem_size)
+                n_samples_read = s_stop - s_start
+                raw = fp.read(n_samples_read * elem_size)
+                row_data = np.frombuffer(raw, dtype=self.signal_dtype)
+                rows.append(row_data[::sample_step])
+        return np.ascontiguousarray(np.stack(rows)).astype(np.complex64)
 
     # ---- convenience: everything PFA needs ---------------------------------
     def geometry(self, pulse_step: int = 1):

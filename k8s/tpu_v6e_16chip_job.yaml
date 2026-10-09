@@ -138,25 +138,27 @@ spec:
               cp /workspace/src/*.py /workspace/
               mkdir -p /workspace/reports /workspace/out /workspace/data/sar /workspace/gcs/reports /workspace/gcs/out
 
-              # 3. Resolve SAR & MODIS Datasets
-              CPHD_PATH="/workspace/gcs/test/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd"
-              SICD_PATH="/workspace/gcs/test/2023-01-18-07-20-11_UMBRA-05_SICD.nitf"
+              # 3. Resolve SAR & MODIS Datasets (Targeting Full 28.84 TB Catalog Heavy Scene: 11.26 GB Umbra-08)
+              CPHD_PATH="/workspace/gcs/sar-data/task-data/0007445c-5da7-4b33-bc0a-facbd249d603/2025-07-15-06-10-12_UMBRA-08/2025-07-15-06-10-12_UMBRA-08_CPHD.cphd"
+              SICD_PATH="/workspace/gcs/sar-data/task-data/0007445c-5da7-4b33-bc0a-facbd249d603/2025-07-15-06-10-12_UMBRA-08/2025-07-15-06-10-12_UMBRA-08_SICD.nitf"
               MODIS_PATH="/workspace/gcs/modis-data/MOD021KM.A2026213.0710.061.2026216005446.hdf"
 
               if [ ! -f "$CPHD_PATH" ]; then
-                echo "[*] CPHD not found in GCS FUSE mount, downloading via curl..."
-                BASE_URL="https://umbra-open-data-catalog.s3.amazonaws.com/sar-data/tasks/ship_detection_testdata/3fcc50e4-413f-4782-b75a-cf3a0b662c12/2023-01-18-07-20-11_UMBRA-05"
-                curl -fSL -C - -o /workspace/data/sar/sample_CPHD.cphd "$BASE_URL/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd"
-                curl -fSL -C - -o /workspace/data/sar/sample_SICD.nitf "$BASE_URL/2023-01-18-07-20-11_UMBRA-05_SICD.nitf"
+                echo "[!] Target Umbra-08 not found at $CPHD_PATH, checking local fallback..."
                 CPHD_PATH="/workspace/data/sar/sample_CPHD.cphd"
                 SICD_PATH="/workspace/data/sar/sample_SICD.nitf"
+                if [ ! -f "$CPHD_PATH" ]; then
+                  BASE_URL="https://umbra-open-data-catalog.s3.amazonaws.com/sar-data/tasks/ship_detection_testdata/3fcc50e4-413f-4782-b75a-cf3a0b662c12/2023-01-18-07-20-11_UMBRA-05"
+                  curl -fSL -C - -o /workspace/data/sar/sample_CPHD.cphd "$BASE_URL/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd"
+                  curl -fSL -C - -o /workspace/data/sar/sample_SICD.nitf "$BASE_URL/2023-01-18-07-20-11_UMBRA-05_SICD.nitf"
+                fi
               fi
 
               echo "Target CPHD: ${CPHD_PATH}"
               echo "Target SICD: ${SICD_PATH}"
               echo "Target MODIS: ${MODIS_PATH}"
 
-              # 4. Execute 16-Chip Multimodal Benchmark
+              # 4. Execute 16-Chip Multimodal Benchmark with Hardware Telemetry & XProf
               python3 run_16chip_multimodal_benchmark.py \
                 --cphd "${CPHD_PATH}" \
                 --sicd "${SICD_PATH}" \
@@ -168,11 +170,19 @@ spec:
                 --pulse-batch 16 \
                 --spatial-chunk 32768 \
                 --out /workspace/out/v6e_16chip_benchmark \
-                --report /workspace/reports/multi_chip_16tpu_v6e_benchmark_report.md
+                --report /workspace/reports/multi_chip_16tpu_v6e_benchmark_report.md \
+                --xprof \
+                --xprof-dir /workspace/out/xprof
 
               echo "=== 16-Chip Benchmark Run Completed Cleanly on Worker ${JOB_COMPLETION_INDEX} ==="
               if [ -f /workspace/reports/multi_chip_16tpu_v6e_benchmark_report.md ]; then
                 cat /workspace/reports/multi_chip_16tpu_v6e_benchmark_report.md
                 cp /workspace/reports/multi_chip_16tpu_v6e_benchmark_report.* /workspace/gcs/reports/ 2>/dev/null || true
                 cp /workspace/out/* /workspace/gcs/out/ 2>/dev/null || true
+              fi
+
+              if [ -d /workspace/out/xprof ]; then
+                echo "[*] Syncing XProf hardware trace files to GCS..."
+                mkdir -p /workspace/gcs/xprof/worker_${JOB_COMPLETION_INDEX}
+                cp -r /workspace/out/xprof/* /workspace/gcs/xprof/worker_${JOB_COMPLETION_INDEX}/ 2>/dev/null || true
               fi
