@@ -1,0 +1,178 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sar-pallas-16chip-svc
+spec:
+  clusterIP: None
+  selector:
+    app: sar-pallas-16chip-benchmark
+  ports:
+    - name: coordinator
+      port: 1234
+      targetPort: 1234
+    - name: tpu-agent
+      port: 8471
+      targetPort: 8471
+    - name: tpu-worker
+      port: 8431
+      targetPort: 8431
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sar-pallas-v6e-16chip-benchmark
+spec:
+  completions: 4
+  parallelism: 4
+  completionMode: Indexed
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: sar-pallas-16chip-benchmark
+        job-name: sar-pallas-v6e-16chip-benchmark
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-limit: "0"
+        gke-gcsfuse/memory-limit: "0"
+    spec:
+      serviceAccountName: tpu-gcs-sa
+      subdomain: sar-pallas-16chip-svc
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-nodepool: mb-tpu-v6e-multi-16
+        cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
+        cloud.google.com/gke-tpu-topology: 4x4
+      tolerations:
+        - key: "google.com/tpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+        - name: benchmark-code
+          configMap:
+            name: sar-pallas-16chip-code
+            defaultMode: 0755
+        - name: benchmark-output
+          emptyDir: {}
+        - name: benchmark-data
+          emptyDir: {}
+        - name: gcs-umbra-storage
+          csi:
+            driver: gcsfuse.csi.storage.gke.io
+            volumeAttributes:
+              bucketName: umbra-sar-dataset-75tb-mb-development-447000
+              mountOptions: "implicit-dirs"
+      containers:
+        - name: tpu-16chip-benchmark
+          image: us-docker.pkg.dev/cloud-tpu-images/jax-stable-stack/tpu:jax0.5.2-rev1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8471
+              protocol: TCP
+            - containerPort: 8431
+              protocol: TCP
+            - containerPort: 1234
+              protocol: TCP
+          securityContext:
+            privileged: true
+          env:
+            - name: JAX_ENABLE_X64
+              value: "False"
+            - name: JAX_PLATFORMS
+              value: "tpu"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: JAX_COORDINATION_SERVICE_TIMEOUT_S
+              value: "1800"
+            - name: JAX_COORDINATOR_ADDRESS
+              value: "sar-pallas-v6e-16chip-benchmark-0.sar-pallas-16chip-svc.default.svc.cluster.local:1234"
+            - name: JAX_NUM_PROCESSES
+              value: "4"
+            - name: TPU_WORKER_HOSTNAMES
+              value: "sar-pallas-v6e-16chip-benchmark-0.sar-pallas-16chip-svc,sar-pallas-v6e-16chip-benchmark-1.sar-pallas-16chip-svc,sar-pallas-v6e-16chip-benchmark-2.sar-pallas-16chip-svc,sar-pallas-v6e-16chip-benchmark-3.sar-pallas-16chip-svc"
+            - name: TPU_WORKER_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+            - name: JOB_COMPLETION_INDEX
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+          resources:
+            requests:
+              google.com/tpu: "4"
+            limits:
+              google.com/tpu: "4"
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+            - name: benchmark-code
+              mountPath: /workspace/src
+            - name: benchmark-output
+              mountPath: /workspace/out
+            - name: benchmark-data
+              mountPath: /workspace/data/sar
+            - name: gcs-umbra-storage
+              mountPath: /workspace/gcs
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -ex
+              echo "=== Starting 16-Chip Multimodal Benchmark on Cloud TPU v6e (Trillium) ==="
+              echo "Worker Index: ${JOB_COMPLETION_INDEX}"
+              echo "Coordinator: ${JAX_COORDINATOR_ADDRESS}"
+
+              cd /workspace
+
+              # 1. Install dependencies
+              pip install --no-cache-dir Pillow scipy "sarpy==1.3.64"
+              pip install --no-cache-dir pyhdf || true
+
+              # 2. Setup workspace code and directories
+              cp /workspace/src/*.py /workspace/
+              mkdir -p /workspace/reports /workspace/out /workspace/data/sar /workspace/gcs/reports /workspace/gcs/out
+
+              # 3. Resolve SAR & MODIS Datasets
+              CPHD_PATH="/workspace/gcs/test/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd"
+              SICD_PATH="/workspace/gcs/test/2023-01-18-07-20-11_UMBRA-05_SICD.nitf"
+              MODIS_PATH="/workspace/gcs/modis-data/MOD021KM.A2026213.0710.061.2026216005446.hdf"
+
+              if [ ! -f "$CPHD_PATH" ]; then
+                echo "[*] CPHD not found in GCS FUSE mount, downloading via curl..."
+                BASE_URL="https://umbra-open-data-catalog.s3.amazonaws.com/sar-data/tasks/ship_detection_testdata/3fcc50e4-413f-4782-b75a-cf3a0b662c12/2023-01-18-07-20-11_UMBRA-05"
+                curl -fSL -C - -o /workspace/data/sar/sample_CPHD.cphd "$BASE_URL/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd"
+                curl -fSL -C - -o /workspace/data/sar/sample_SICD.nitf "$BASE_URL/2023-01-18-07-20-11_UMBRA-05_SICD.nitf"
+                CPHD_PATH="/workspace/data/sar/sample_CPHD.cphd"
+                SICD_PATH="/workspace/data/sar/sample_SICD.nitf"
+              fi
+
+              echo "Target CPHD: ${CPHD_PATH}"
+              echo "Target SICD: ${SICD_PATH}"
+              echo "Target MODIS: ${MODIS_PATH}"
+
+              # 4. Execute 16-Chip Multimodal Benchmark
+              python3 run_16chip_multimodal_benchmark.py \
+                --cphd "${CPHD_PATH}" \
+                --sicd "${SICD_PATH}" \
+                --modis-l1b "${MODIS_PATH}" \
+                --chip 1024 \
+                --pulses 1024 \
+                --tile-size-az 128 \
+                --tile-size-rg 128 \
+                --pulse-batch 16 \
+                --spatial-chunk 32768 \
+                --out /workspace/out/v6e_16chip_benchmark \
+                --report /workspace/reports/multi_chip_16tpu_v6e_benchmark_report.md
+
+              echo "=== 16-Chip Benchmark Run Completed Cleanly on Worker ${JOB_COMPLETION_INDEX} ==="
+              if [ -f /workspace/reports/multi_chip_16tpu_v6e_benchmark_report.md ]; then
+                cat /workspace/reports/multi_chip_16tpu_v6e_benchmark_report.md
+                cp /workspace/reports/multi_chip_16tpu_v6e_benchmark_report.* /workspace/gcs/reports/ 2>/dev/null || true
+                cp /workspace/out/* /workspace/gcs/out/ 2>/dev/null || true
+              fi

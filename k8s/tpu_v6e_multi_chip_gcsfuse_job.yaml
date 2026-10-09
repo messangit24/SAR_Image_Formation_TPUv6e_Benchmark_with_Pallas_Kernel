@@ -1,0 +1,165 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sar-pallas-multi-chip-svc
+spec:
+  clusterIP: None
+  selector:
+    app: sar-pallas-multi-chip-benchmark
+  ports:
+    - name: coordinator
+      port: 1234
+      targetPort: 1234
+    - name: tpu-agent
+      port: 8471
+      targetPort: 8471
+    - name: tpu-worker
+      port: 8431
+      targetPort: 8431
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sar-pallas-v6e-multi-chip-benchmark
+spec:
+  completions: 2
+  parallelism: 2
+  completionMode: Indexed
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: sar-pallas-multi-chip-benchmark
+        job-name: sar-pallas-v6e-multi-chip-benchmark
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-limit: "0"
+        gke-gcsfuse/memory-limit: "0"
+    spec:
+      serviceAccountName: tpu-gcs-sa
+      subdomain: sar-pallas-multi-chip-svc
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-nodepool: mb-tpu-v6e-multi-8
+        cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
+        cloud.google.com/gke-tpu-topology: 2x4
+      tolerations:
+        - key: "google.com/tpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+        - name: benchmark-code
+          configMap:
+            name: sar-pallas-multi-chip-code
+            defaultMode: 0755
+        - name: gcs-umbra-storage
+          csi:
+            driver: gcsfuse.csi.storage.gke.io
+            volumeAttributes:
+              bucketName: umbra-sar-dataset-75tb-mb-development-447000
+              mountOptions: "implicit-dirs,file-cache:max-size-mb:200000"
+      containers:
+        - name: tpu-multi-chip-benchmark
+          image: us-docker.pkg.dev/cloud-tpu-images/jax-stable-stack/tpu:jax0.5.2-rev1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8471
+              protocol: TCP
+            - containerPort: 8431
+              protocol: TCP
+            - containerPort: 1234
+              protocol: TCP
+          securityContext:
+            privileged: true
+          env:
+            - name: JAX_ENABLE_X64
+              value: "False"
+            - name: JAX_PLATFORMS
+              value: "tpu"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: JAX_COORDINATION_SERVICE_TIMEOUT_S
+              value: "1800"
+            - name: JAX_COORDINATOR_ADDRESS
+              value: "sar-pallas-v6e-multi-chip-benchmark-0.sar-pallas-multi-chip-svc.default.svc.cluster.local:1234"
+            - name: JAX_NUM_PROCESSES
+              value: "2"
+            - name: TPU_WORKER_HOSTNAMES
+              value: "sar-pallas-v6e-multi-chip-benchmark-0.sar-pallas-multi-chip-svc,sar-pallas-v6e-multi-chip-benchmark-1.sar-pallas-multi-chip-svc"
+            - name: TPU_WORKER_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+            - name: JOB_COMPLETION_INDEX
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+          resources:
+            requests:
+              google.com/tpu: "4"
+            limits:
+              google.com/tpu: "4"
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+            - name: benchmark-code
+              mountPath: /workspace/src
+            - name: gcs-umbra-storage
+              mountPath: /workspace/gcs
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -ex
+              echo "=== Starting GCS FUSE Multi-Chip Umbra SAR Benchmark on Cloud TPU v6e ==="
+              echo "Worker Index: ${JOB_COMPLETION_INDEX}"
+              echo "Coordinator: ${JAX_COORDINATOR_ADDRESS}"
+
+              cd /workspace
+
+              # 1. Install dependencies
+              pip install --quiet sarpy scipy Pillow
+
+              # 2. Verify GCS FUSE mount
+              ls -lh /workspace/gcs
+
+              # 3. Copy source files into workspace
+              cp /workspace/src/*.py /workspace/
+              mkdir -p /workspace/gcs/reports /workspace/gcs/out
+
+              # 4. Identify CPHD file from GCS mount or fallback
+              CPHD_PATH=$(find /workspace/gcs -name "*_CPHD.cphd" | head -n 1)
+              SICD_PATH=$(find /workspace/gcs -name "*_SICD.nitf" | head -n 1)
+
+              if [ -z "$CPHD_PATH" ]; then
+                echo "[*] No CPHD found in GCS, downloading test collect..."
+                mkdir -p /workspace/data/sar
+                curl -fSL -C - -o /workspace/data/sar/sample_CPHD.cphd https://umbra-open-data-catalog.s3.amazonaws.com/sar-data/tasks/ship_detection_testdata/3fcc50e4-413f-4782-b75a-cf3a0b662c12/2023-01-18-07-20-11_UMBRA-05/2023-01-18-07-20-11_UMBRA-05_CPHD.cphd
+                curl -fSL -C - -o /workspace/data/sar/sample_SICD.nitf https://umbra-open-data-catalog.s3.amazonaws.com/sar-data/tasks/ship_detection_testdata/3fcc50e4-413f-4782-b75a-cf3a0b662c12/2023-01-18-07-20-11_UMBRA-05/2023-01-18-07-20-11_UMBRA-05_SICD.nitf
+                CPHD_PATH=/workspace/data/sar/sample_CPHD.cphd
+                SICD_PATH=/workspace/data/sar/sample_SICD.nitf
+              fi
+
+              echo "Target CPHD: ${CPHD_PATH}"
+              echo "Target SICD: ${SICD_PATH}"
+
+              # 5. Run Distributed Multi-Chip Benchmark
+              python3 run_pallas_cphd_multi_chip_benchmark.py \
+                --cphd "${CPHD_PATH}" \
+                --sicd "${SICD_PATH}" \
+                --chip 512 \
+                --pulses 512 \
+                --upsample 2 \
+                --tile-size-az 128 \
+                --tile-size-rg 128 \
+                --pulse-batch 16 \
+                --out /workspace/gcs/out/v6e_multi_chip_benchmark \
+                --report /workspace/gcs/reports/multi_chip_pallas_v6e_gcsfuse_report.md
+
+              echo "=== Benchmark Run Completed Cleanly on Worker ${JOB_COMPLETION_INDEX} ==="
+              cat /workspace/gcs/reports/multi_chip_pallas_v6e_gcsfuse_report.md

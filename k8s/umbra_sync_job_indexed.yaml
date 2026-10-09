@@ -1,0 +1,187 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: umbra-s3-to-gcs-sync-indexed
+  labels:
+    app: umbra-s3-to-gcs-sync-indexed
+spec:
+  completions: 8
+  parallelism: 8
+  completionMode: Indexed
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        app: umbra-s3-to-gcs-sync-indexed
+    spec:
+      serviceAccountName: tpu-gcs-sa
+      restartPolicy: OnFailure
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - umbra-s3-to-gcs-sync-indexed
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: sync-worker
+        image: google/cloud-sdk:slim
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: TOTAL_SHARDS
+          value: "8"
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1800m"
+            memory: "3000Mi"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -e
+          export PYTHONUNBUFFERED=1
+          SHARD_ID="${JOB_COMPLETION_INDEX:-0}"
+          echo "=== Initializing Umbra Datacenter Sync Worker [Shard ${SHARD_ID}/${TOTAL_SHARDS}] ==="
+          apt-get update -qq && apt-get install -y -qq python3 python3-pip curl >/dev/null 2>&1
+          pip3 install --break-system-packages --quiet --no-cache-dir google-cloud-storage requests
+
+          cat << 'EOF' > /tmp/run_sync.py
+          import concurrent.futures
+          import json
+          import os
+          import sys
+          import threading
+          import time
+          import urllib.parse
+          import urllib.request
+          from google.cloud import storage
+
+          if hasattr(sys.stdout, "reconfigure"):
+              sys.stdout.reconfigure(line_buffering=True)
+
+          BUCKET_NAME = "umbra-sar-dataset-75tb-mb-development-447000"
+          MANIFEST_BLOB = "manifests/umbra_catalog_manifest_30tb.json"
+          SHARD_ID = int(os.environ.get("JOB_COMPLETION_INDEX", "0"))
+          TOTAL_SHARDS = int(os.environ.get("TOTAL_SHARDS", "8"))
+          WORKERS = 10
+
+          _local = threading.local()
+
+          def get_client():
+              if not hasattr(_local, "client"):
+                  _local.client = storage.Client()
+              return _local.client
+
+          primary_client = storage.Client()
+          bucket = primary_client.bucket(BUCKET_NAME)
+
+          # 1. Load manifest
+          manifest_blob = bucket.blob(MANIFEST_BLOB)
+          if not manifest_blob.exists():
+              print(f"[!] Manifest gs://{BUCKET_NAME}/{MANIFEST_BLOB} not found!", flush=True)
+              sys.exit(1)
+
+          data = manifest_blob.download_as_text()
+          all_items = json.loads(data)
+          all_items.sort(key=lambda x: x["key"])
+
+          # 2. Extract Shard items
+          my_items = [it for idx, it in enumerate(all_items) if idx % TOTAL_SHARDS == SHARD_ID]
+          shard_total_bytes = sum(it["size_bytes"] for it in my_items)
+          print(f"[*] Shard {SHARD_ID}: Assigned {len(my_items)} files ({shard_total_bytes / 1e12:.3f} TB / {shard_total_bytes / (1024**4):.3f} TiB)", flush=True)
+
+          # 3. Check existing files in GCS
+          print(f"[*] Shard {SHARD_ID}: Indexing existing GCS objects...", flush=True)
+          existing = {}
+          for b in primary_client.list_blobs(bucket, prefix="sar-data/"):
+              existing[b.name] = b.size
+
+          my_pending = []
+          already_bytes = 0
+          for it in my_items:
+              k = it["key"]
+              sz = it["size_bytes"]
+              if k in existing and existing[k] == sz:
+                  already_bytes += sz
+              else:
+                  my_pending.append(it)
+
+          pending_bytes = sum(it["size_bytes"] for it in my_pending)
+          print("=" * 70, flush=True)
+          print(f"  Shard:            {SHARD_ID} / {TOTAL_SHARDS}", flush=True)
+          print(f"  Assigned Scope:   {len(my_items)} files ({shard_total_bytes / 1e12:.3f} TB)", flush=True)
+          print(f"  Already in GCS:   {len(my_items) - len(my_pending)} files ({already_bytes / 1e12:.3f} TB)", flush=True)
+          print(f"  Pending to Sync:  {len(my_pending)} files ({pending_bytes / 1e12:.3f} TB)", flush=True)
+          print("=" * 70, flush=True)
+
+          if not my_pending:
+              print(f"[✓] Shard {SHARD_ID}: All files already verified in GCS! Done.", flush=True)
+              sys.exit(0)
+
+          def transfer_file(item, max_retries=3):
+              key = item["key"]
+              url = item["url"]
+              size = item["size_bytes"]
+              cli = get_client()
+              b = cli.bucket(BUCKET_NAME)
+              blob = b.blob(key)
+
+              for attempt in range(1, max_retries + 1):
+                  t0 = time.time()
+                  try:
+                      req = urllib.request.Request(url, headers={"User-Agent": f"Umbra-GCS-Sync-Shard{SHARD_ID}/1.0"})
+                      with urllib.request.urlopen(req, timeout=180) as resp:
+                          with blob.open("wb", chunk_size=32 * 1024 * 1024) as f_out:
+                              while True:
+                                  chunk = resp.read(8 * 1024 * 1024)
+                                  if not chunk:
+                                      break
+                                  f_out.write(chunk)
+                      blob.reload()
+                      if blob.size != size:
+                          raise IOError(f"Truncated upload: expected {size}, got {blob.size}")
+                      elapsed = time.time() - t0
+                      mbps = (size / 1e6) / max(elapsed, 0.01)
+                      return True, key, size, elapsed, mbps
+                  except Exception as e:
+                      if attempt < max_retries:
+                          time.sleep(2 * attempt)
+                      else:
+                          print(f"[!] [Shard {SHARD_ID}] FAILED: {key} after {max_retries} attempts: {e}", flush=True)
+                          return False, key, size, 0, 0
+
+          print(f"[*] Shard {SHARD_ID}: Starting {WORKERS}-worker parallel streaming...", flush=True)
+          t_start = time.time()
+          done_count = 0
+          synced_bytes = 0
+
+          with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as pool:
+              futures = {pool.submit(transfer_file, item): item for item in my_pending}
+              for fut in concurrent.futures.as_completed(futures):
+                  ok, key, sz, el, mbps = fut.result()
+                  if ok:
+                      done_count += 1
+                      synced_bytes += sz
+                      total_done = len(my_items) - len(my_pending) + done_count
+                      pct = (total_done / len(my_items)) * 100
+                      total_el = time.time() - t_start
+                      avg_mbps = (synced_bytes / 1e6) / max(total_el, 0.1)
+                      rem_bytes = pending_bytes - synced_bytes
+                      eta_m = (rem_bytes / max(avg_mbps * 1e6, 1)) / 60
+                      fname = key.split("/")[-1]
+                      print(f"[Shard {SHARD_ID}: {total_done}/{len(my_items)}] ({pct:.1f}%) {fname} ({sz/1e6:.1f} MB) in {el:.1f}s ({mbps:.1f} MB/s) | Avg: {avg_mbps:.1f} MB/s | ETA: {eta_m:.1f}m", flush=True)
+
+          print(f"\n[✓] Shard {SHARD_ID} sync completed successfully.", flush=True)
+          EOF
+
+          python3 /tmp/run_sync.py

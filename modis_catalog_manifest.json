@@ -1,0 +1,54 @@
+[
+  {
+    "product": "MOD00F",
+    "role": "L0 Raw CCSDS Packets (Part 000 Header)",
+    "key": "modis-data/MOD00F.A2026213.0710.20262130706.000.PDS.xz",
+    "alt_keys": [
+      "modis-data/MOD00F.A2026213.0710.061.P.000.NRT"
+    ],
+    "size_bytes": 168,
+    "urls": [
+      "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/61/MOD00F/2026/213/MOD00F.A2026213.0710.20262130706.000.PDS.xz",
+      "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/61/MOD00F/2026/213/MOD00F.A2026213.0700.20262130706.000.PDS.xz"
+    ]
+  },
+  {
+    "product": "MOD00F",
+    "role": "L0 Raw CCSDS Packets (Part 001 Main Payload)",
+    "key": "modis-data/MOD00F.A2026213.0710.20262130706.001.PDS.xz",
+    "alt_keys": [
+      "modis-data/MOD00F.A2026213.0710.061.P.001.NRT"
+    ],
+    "size_bytes": 277429064,
+    "urls": [
+      "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/61/MOD00F/2026/213/MOD00F.A2026213.0710.20262130706.001.PDS.xz",
+      "https://nrt3.modaps.eosdis.nasa.gov/api/v2/content/archives/allData/61/MOD00F/2026/213/MOD00F.A2026213.0710.061.P.001.NRT"
+    ]
+  },
+  {
+    "product": "MOD021KM",
+    "role": "L1B Calibrated 1-km Radiances",
+    "key": "modis-data/MOD021KM.A2026213.0710.061.2026216005446.hdf",
+    "alt_keys": [
+      "modis-data/MOD021KM.A2026213.0710.061.2026213082055.NRT.hdf"
+    ],
+    "size_bytes": 156750816,
+    "urls": [
+      "https://data.laadsdaac.earthdatacloud.nasa.gov/prod-lads/MOD021KM/MOD021KM.A2026213.0710.061.2026216005446.hdf",
+      "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/61/MOD021KM/2026/213/MOD021KM.A2026213.0710.061.2026216005446.hdf"
+    ]
+  },
+  {
+    "product": "MOD03",
+    "role": "L1A Geolocation Fields (1-km)",
+    "key": "modis-data/MOD03.A2026213.0710.061.2026216003448.hdf",
+    "alt_keys": [
+      "modis-data/MOD03.A2026213.0710.061.2026213081852.NRT.hdf"
+    ],
+    "size_bytes": 34232558,
+    "urls": [
+      "https://data.laadsdaac.earthdatacloud.nasa.gov/prod-lads/MOD03/MOD03.A2026213.0710.061.2026216003448.hdf",
+      "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/61/MOD03/2026/213/MOD03.A2026213.0710.061.2026216003448.hdf"
+    ]
+  }
+]

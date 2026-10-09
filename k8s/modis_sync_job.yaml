@@ -1,0 +1,187 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: modis-s3-to-gcs-sync
+  labels:
+    app: modis-s3-to-gcs-sync
+spec:
+  completions: 5
+  parallelism: 5
+  completionMode: Indexed
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: modis-s3-to-gcs-sync
+    spec:
+      serviceAccountName: tpu-gcs-sa
+      restartPolicy: OnFailure
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - modis-s3-to-gcs-sync
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: sync-worker
+        image: google/cloud-sdk:slim
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: TOTAL_SHARDS
+          value: "5"
+        - name: BUCKET_NAME
+          value: "umbra-sar-dataset-75tb-mb-development-447000"
+        - name: DEST_PREFIX
+          value: "modis-data"
+        - name: EARTHDATA_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: earthdata-credentials
+              key: token
+              optional: true
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -e
+          export PYTHONUNBUFFERED=1
+          SHARD_ID="${JOB_COMPLETION_INDEX:-0}"
+          echo "=== Initializing MODIS Sync Worker [Shard ${SHARD_ID}/${TOTAL_SHARDS}] ==="
+          apt-get update -qq && apt-get install -y -qq python3 python3-pip curl >/dev/null 2>&1
+          pip3 install --break-system-packages --quiet --no-cache-dir google-cloud-storage requests
+
+          cat << 'EOF' > /tmp/run_modis_sync.py
+          import os
+          import sys
+          import time
+          import urllib.request
+          from google.cloud import storage
+
+          if hasattr(sys.stdout, "reconfigure"):
+              sys.stdout.reconfigure(line_buffering=True)
+
+          BUCKET_NAME = os.environ.get("BUCKET_NAME", "umbra-sar-dataset-75tb-mb-development-447000")
+          DEST_PREFIX = os.environ.get("DEST_PREFIX", "modis-data").strip("/")
+          SHARD_ID = int(os.environ.get("JOB_COMPLETION_INDEX", "0"))
+          TOKEN = os.environ.get("EARTHDATA_TOKEN", "").strip()
+
+          CATALOG = [
+              {
+                  "product": "MOD00F",
+                  "key": f"{DEST_PREFIX}/MOD00F.A2026213.0710.20262130706.000.PDS.xz",
+                  "urls": [
+                      "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/61/MOD00F/2026/213/MOD00F.A2026213.0710.20262130706.000.PDS.xz",
+                      "https://nrt3.modaps.eosdis.nasa.gov/api/v2/content/archives/allData/61/MOD00F/2026/213/MOD00F.A2026213.0710.061.P.000.NRT",
+                  ],
+                  "size": 168,
+              },
+              {
+                  "product": "MOD00F",
+                  "key": f"{DEST_PREFIX}/MOD00F.A2026213.0710.20262130706.001.PDS.xz",
+                  "urls": [
+                      "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/61/MOD00F/2026/213/MOD00F.A2026213.0710.20262130706.001.PDS.xz",
+                      "https://nrt3.modaps.eosdis.nasa.gov/api/v2/content/archives/allData/61/MOD00F/2026/213/MOD00F.A2026213.0710.061.P.001.NRT",
+                  ],
+                  "size": 277429064,
+              },
+              {
+                  "product": "MOD01",
+                  "key": f"{DEST_PREFIX}/MOD01.A2026213.0710.061.2026213081621.NRT.hdf",
+                  "urls": [
+                      "https://nrt3.modaps.eosdis.nasa.gov/api/v2/content/archives/allData/61/MOD01/2026/213/MOD01.A2026213.0710.061.2026213081621.NRT.hdf",
+                  ],
+                  "size": 240000000,
+              },
+              {
+                  "product": "MOD021KM",
+                  "key": f"{DEST_PREFIX}/MOD021KM.A2026213.0710.061.2026216005446.hdf",
+                  "urls": [
+                      "https://data.laadsdaac.earthdatacloud.nasa.gov/prod-lads/MOD021KM/MOD021KM.A2026213.0710.061.2026216005446.hdf",
+                      "https://nrt3.modaps.eosdis.nasa.gov/api/v2/content/archives/allData/61/MOD021KM/2026/213/MOD021KM.A2026213.0710.061.2026213082055.NRT.hdf",
+                  ],
+                  "size": 156750816,
+              },
+              {
+                  "product": "MOD03",
+                  "key": f"{DEST_PREFIX}/MOD03.A2026213.0710.061.2026216003448.hdf",
+                  "urls": [
+                      "https://data.laadsdaac.earthdatacloud.nasa.gov/prod-lads/MOD03/MOD03.A2026213.0710.061.2026216003448.hdf",
+                      "https://nrt3.modaps.eosdis.nasa.gov/api/v2/content/archives/allData/61/MOD03/2026/213/MOD03.A2026213.0710.061.2026213081852.NRT.hdf",
+                  ],
+                  "size": 34232558,
+              },
+          ]
+
+          if SHARD_ID >= len(CATALOG):
+              print(f"[Shard {SHARD_ID}] No item assigned (shard >= catalog size). Exiting cleanly.")
+              sys.exit(0)
+
+          target_item = CATALOG[SHARD_ID]
+          key = target_item["key"]
+          exp_size = target_item["size"]
+          print(f"[Shard {SHARD_ID}] Assigned target: {key} (~{exp_size/1e6:.1f} MB)")
+
+          client = storage.Client()
+          bucket = client.bucket(BUCKET_NAME)
+          blob = bucket.blob(key)
+
+          if blob.exists():
+              blob.reload()
+              if blob.size > 0:
+                  print(f"[Shard {SHARD_ID}] Already exists in gs://{BUCKET_NAME}/{key} ({blob.size} bytes). Skipping.")
+                  sys.exit(0)
+
+          headers = {"User-Agent": "MODIS-GCS-ClusterSync/1.0"}
+          if TOKEN:
+              headers["Authorization"] = f"Bearer {TOKEN}"
+
+          success = False
+          for url in target_item["urls"]:
+              print(f"[Shard {SHARD_ID}] Connecting to {url}...")
+              for attempt in range(1, 4):
+                  try:
+                      t0 = time.time()
+                      req = urllib.request.Request(url, headers=headers)
+                      with urllib.request.urlopen(req, timeout=180) as resp:
+                          final_url = resp.geturl()
+                          if "urs.earthdata.nasa.gov" in final_url and not TOKEN:
+                              raise PermissionError("NASA Earthdata token required for authentication.")
+                          with blob.open("wb", chunk_size=32 * 1024 * 1024) as f_out:
+                              while True:
+                                  chunk = resp.read(8 * 1024 * 1024)
+                                  if not chunk:
+                                      break
+                                  f_out.write(chunk)
+                      blob.reload()
+                      elapsed = time.time() - t0
+                      mbps = (blob.size / 1e6) / max(elapsed, 0.01)
+                      print(f"[Shard {SHARD_ID}] [✓] Uploaded {key}: {blob.size} bytes in {elapsed:.1f}s ({mbps:.2f} MB/s)")
+                      success = True
+                      break
+                  except Exception as e:
+                      print(f"[Shard {SHARD_ID}] Attempt {attempt} failed: {e}")
+                      time.sleep(3 * attempt)
+              if success:
+                  break
+
+          if not success:
+              print(f"[Shard {SHARD_ID}] [!] Failed to transfer {key}")
+              sys.exit(1)
+          EOF
+
+          python3 /tmp/run_modis_sync.py

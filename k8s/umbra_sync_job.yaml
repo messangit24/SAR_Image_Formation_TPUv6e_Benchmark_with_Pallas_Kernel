@@ -1,0 +1,186 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: umbra-s3-to-gcs-sync
+  labels:
+    app: umbra-s3-to-gcs-sync
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: umbra-s3-to-gcs-sync
+    spec:
+      serviceAccountName: tpu-gcs-sa
+      restartPolicy: OnFailure
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool
+      containers:
+      - name: sync-worker
+        image: google/cloud-sdk:slim
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1800m"
+            memory: "3000Mi"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -e
+          export PYTHONUNBUFFERED=1
+          echo "=== Initializing Umbra Datacenter Sync Worker ==="
+          apt-get update -qq && apt-get install -y -qq python3 python3-pip curl >/dev/null 2>&1
+          pip3 install --break-system-packages --quiet --no-cache-dir google-cloud-storage requests
+
+          cat << 'EOF' > /tmp/run_sync.py
+          import concurrent.futures
+          import json
+          import os
+          import sys
+          import threading
+          import time
+          import urllib.parse
+          import urllib.request
+          import xml.etree.ElementTree as ET
+          from google.cloud import storage
+
+          BUCKET_NAME = "umbra-sar-dataset-75tb-mb-development-447000"
+          MANIFEST_BLOB = "manifests/umbra_catalog_manifest_30tb.json"
+          S3_BASE = "https://umbra-open-data-catalog.s3.amazonaws.com"
+          S3_ENDPOINT = "https://umbra-open-data-catalog.s3.amazonaws.com/?list-type=2&prefix=sar-data/&max-keys=1000"
+          XML_NS = {"s3": "http://s3.amazonaws.com/doc/2006-03-01/"}
+          WORKERS = 12
+
+          _local = threading.local()
+
+          def get_client():
+              if not hasattr(_local, "client"):
+                  _local.client = storage.Client()
+              return _local.client
+
+          primary_client = storage.Client()
+          bucket = primary_client.bucket(BUCKET_NAME)
+
+          # 1. Load manifest
+          manifest_blob = bucket.blob(MANIFEST_BLOB)
+          items = []
+          if manifest_blob.exists():
+              print(f"[*] Downloading pre-computed manifest from gs://{BUCKET_NAME}/{MANIFEST_BLOB}...")
+              data = manifest_blob.download_as_text()
+              items = json.loads(data)
+              print(f"[✓] Loaded manifest with {len(items)} files.")
+          else:
+              print("[*] Manifest not found in GCS. Cataloging directly from S3...")
+              token = None
+              while True:
+                  url = S3_ENDPOINT
+                  if token:
+                      url += f"&continuation-token={urllib.parse.quote_plus(token)}"
+                  req = urllib.request.Request(url, headers={"User-Agent": "Umbra-GCS-Sync/1.0"})
+                  with urllib.request.urlopen(req, timeout=30) as resp:
+                      root = ET.fromstring(resp.read())
+                  for item in root.findall("s3:Contents", XML_NS):
+                      k = item.find("s3:Key", XML_NS).text
+                      sz = int(item.find("s3:Size", XML_NS).text)
+                      if k.endswith("_CPHD.cphd") or k.endswith("_SICD.nitf"):
+                          items.append({
+                              "key": k,
+                              "size_bytes": sz,
+                              "url": f"{S3_BASE}/{k}"
+                          })
+                  trunc = root.find("s3:IsTruncated", XML_NS)
+                  if trunc is not None and trunc.text == "true":
+                      token = root.find("s3:NextContinuationToken", XML_NS).text
+                  else:
+                      break
+
+          total_manifest_bytes = sum(i["size_bytes"] for i in items)
+          print(f"[*] Target manifest spans {len(items)} files ({total_manifest_bytes / 1e12:.3f} TB / {total_manifest_bytes / (1024**4):.3f} TiB)")
+
+          # 2. Check existing GCS objects
+          print("[*] Indexing existing objects in GCS bucket...")
+          existing = {}
+          for b in primary_client.list_blobs(bucket, prefix="sar-data/"):
+              existing[b.name] = b.size
+          print(f"[✓] Found {len(existing)} existing files in gs://{BUCKET_NAME}/sar-data/")
+
+          # 3. Filter pending
+          pending = []
+          already_bytes = 0
+          for item in items:
+              k = item["key"]
+              sz = item["size_bytes"]
+              if k in existing and existing[k] == sz:
+                  already_bytes += sz
+              else:
+                  pending.append(item)
+
+          pending_bytes = sum(i["size_bytes"] for i in pending)
+          print("=" * 70)
+          print(f"  Total Catalog:    {len(items)} files ({total_manifest_bytes / 1e12:.3f} TB)")
+          print(f"  Already in GCS:   {len(items) - len(pending)} files ({already_bytes / 1e12:.3f} TB)")
+          print(f"  Pending to Sync:  {len(pending)} files ({pending_bytes / 1e12:.3f} TB)")
+          print("=" * 70)
+
+          if not pending:
+              print("[✓] All files in catalog already copied to GCS! Nothing to do.")
+              sys.exit(0)
+
+          def transfer_file(item, max_retries=3):
+              key = item["key"]
+              url = item["url"]
+              size = item["size_bytes"]
+              cli = get_client()
+              b = cli.bucket(BUCKET_NAME)
+              blob = b.blob(key)
+
+              for attempt in range(1, max_retries + 1):
+                  t0 = time.time()
+                  try:
+                      req = urllib.request.Request(url, headers={"User-Agent": "Umbra-GCS-Sync/1.0"})
+                      with urllib.request.urlopen(req, timeout=180) as resp:
+                          with blob.open("wb", chunk_size=32 * 1024 * 1024) as f_out:
+                              while True:
+                                  chunk = resp.read(8 * 1024 * 1024)
+                                  if not chunk:
+                                      break
+                                  f_out.write(chunk)
+                      blob.reload()
+                      if blob.size != size:
+                          raise IOError(f"Truncated upload: expected {size}, got {blob.size}")
+                      elapsed = time.time() - t0
+                      mbps = (size / 1e6) / max(elapsed, 0.01)
+                      return True, key, size, elapsed, mbps
+                  except Exception as e:
+                      if attempt < max_retries:
+                          time.sleep(2 * attempt)
+                      else:
+                          print(f"[!] FAILED: {key} after {max_retries} attempts: {e}")
+                          return False, key, size, 0, 0
+
+          print(f"\n[*] Starting {WORKERS}-worker parallel streaming...")
+          t_start = time.time()
+          done_count = 0
+          synced_bytes = 0
+
+          with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as pool:
+              futures = {pool.submit(transfer_file, item): item for item in pending}
+              for fut in concurrent.futures.as_completed(futures):
+                  ok, key, sz, el, mbps = fut.result()
+                  if ok:
+                      done_count += 1
+                      synced_bytes += sz
+                      total_done = len(items) - len(pending) + done_count
+                      pct = (total_done / len(items)) * 100
+                      total_el = time.time() - t_start
+                      avg_mbps = (synced_bytes / 1e6) / max(total_el, 0.1)
+                      rem_bytes = pending_bytes - synced_bytes
+                      eta_m = (rem_bytes / max(avg_mbps * 1e6, 1)) / 60
+                      print(f"[{total_done}/{len(items)}] ({pct:.1f}%) {key.split('/')[-1]} ({sz/1e6:.1f} MB) in {el:.1f}s ({mbps:.1f} MB/s) | Avg: {avg_mbps:.1f} MB/s | ETA: {eta_m:.1f}m")
+
+          print("\n[✓] Umbra datacenter sync completed successfully.")
+          EOF
+
+          python3 /tmp/run_sync.py
