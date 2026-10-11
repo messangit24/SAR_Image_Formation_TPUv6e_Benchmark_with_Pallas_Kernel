@@ -276,6 +276,7 @@ SAR_Image_Formation_TPUv6e_Benchmark_with_Pallas_Kernel/
 │   ├── modis_sync_job.yaml          # MODIS data sync job
 │   └── tpu_v6e_multi_chip_job.yaml  # 8-Chip GKE TPU v6e Benchmark Job
 ├── reports/                         # Benchmark & Telemetry Output Reports
+│   ├── full_3tb_metrics_and_verification_report.txt # NEW: 3TB Metrics & Output Verification
 │   ├── full_3tb_dataset_benchmark_report.md  # NEW: 3TB Batch 16-Chip Execution Report
 │   ├── full_3tb_actual_batch_execution_report.txt # NEW: Plaintext 3TB Batch Execution Log
 │   ├── full_28tb_inference_benchmark_report.txt # Full 28.84 TB Inference Benchmark Report
@@ -379,6 +380,7 @@ kubectl logs job/sar-pallas-v6e-3tb-batch-benchmark -c tpu-3tb-batch-benchmark -
 ## 📜 Technical Reports & Documentation
 
 Full benchmark reports and hardware analysis are preserved under [`reports/`](reports/):
+- **[`reports/full_3tb_metrics_and_verification_report.txt`](reports/full_3tb_metrics_and_verification_report.txt)**: Comprehensive 3TB batch execution metrics and output product verification audit across all 16 TPU v6e chips.
 - **[`reports/full_3tb_dataset_benchmark_report.md`](reports/full_3tb_dataset_benchmark_report.md)**: Physical 3 Terabyte (120 scenes, 2.73 TB) batch execution report across 16 Cloud TPU v6e chips (1,401.46s wall-clock time, 100% success rate, 125.83M complex pixels formed).
 - **[`reports/full_3tb_actual_batch_execution_report.txt`](reports/full_3tb_actual_batch_execution_report.txt)**: Plaintext execution telemetry for the 3TB batch run.
 - **[`reports/full_28tb_inference_benchmark_report.txt`](reports/full_28tb_inference_benchmark_report.txt)**: Full 28.84 TB Umbra catalog scaling and pipeline latency analysis.
