@@ -7,24 +7,24 @@ Dataset: 2023-01-18-07-20-11_UMBRA-05_CPHD.cphd | Pulses: 512 | Grid: 512x512 (2
 -----------------------------------------------------------------------------------------------------------------------------
 | Architecture / Implementation               | HBM Coord Mem | Latency (s) | Throughput (MP/s) | Speedup vs Baseline | Speedup vs Current Pallas | Coherence (γ_med) | SICD Coh |
 |:-------------------------------------------|:-------------:|:-----------:|:-----------------:|:-------------------:|:-------------------------:|:-----------------:|:--------:|
-| JAX Cloud TPU BPA                          |      3.000 MB |     1.819 s |            0.14 MP/s |              1.00x |                    0.62x |            1.0000 |   0.2570 |
-| Current Pallas VMEM-Tiled BPA              |      3.000 MB |     4.531 s |            0.06 MP/s |              0.40x |                    1.00x |            1.0000 |   0.2570 |
-| New Fused-Coordinate Pallas BPA            |        0.2 KB |     3.446 s |            0.08 MP/s |              0.53x |                    1.31x |            1.0000 |   0.2570 |
-| JAX Cloud TPU FFBP                         |      3.000 MB |     2.036 s |            0.13 MP/s |              1.00x |                    0.45x |            1.0000 |   0.2570 |
-| Current Pallas Streaming FFBP              |      3.000 MB |     3.495 s |            0.08 MP/s |              0.58x |                    1.00x |            1.0000 |   0.2570 |
-| New Fused-Coordinate Pallas FFBP           |        0.2 KB |     3.132 s |            0.08 MP/s |              0.65x |                    1.12x |            1.0000 |   0.2570 |
+| JAX Cloud TPU BPA                          |      3.000 MB |     1.798 s |            0.15 MP/s |              1.00x |                    0.62x |            1.0000 |   0.2570 |
+| Current Pallas VMEM-Tiled BPA              |      3.000 MB |     4.464 s |            0.06 MP/s |              0.40x |                    1.00x |            1.0000 |   0.2570 |
+| New Fused-Coordinate Pallas BPA            |        0.2 KB |     3.053 s |            0.09 MP/s |              0.59x |                    1.46x |            1.0000 |   0.2570 |
+| JAX Cloud TPU FFBP                         |      3.000 MB |     1.761 s |            0.15 MP/s |              1.00x |                    0.45x |            1.0000 |   0.2570 |
+| Current Pallas Streaming FFBP              |      3.000 MB |     2.456 s |            0.11 MP/s |              0.72x |                    1.00x |            1.0000 |   0.2570 |
+| New Fused-Coordinate Pallas FFBP           |        0.2 KB |     2.704 s |            0.10 MP/s |              0.65x |                    0.91x |            1.0000 |   0.2570 |
 
 -----------------------------------------------------------------------------------------------------------------------------
 
 2. SPEEDUP & MEMORY FOOTPRINT HIGHLIGHTS:
 - BPA Speedup:
-  * New Fused Pallas vs Regular JAX:     0.53x faster
-  * New Fused Pallas vs Current Pallas:  1.31x faster
+  * New Fused Pallas vs Regular JAX:     0.59x faster
+  * New Fused Pallas vs Current Pallas:  1.46x faster
   * Current Pallas vs Regular JAX:       0.40x faster
 - FFBP Speedup:
   * New Fused FFBP vs Regular JAX:       0.65x faster
-  * New Fused FFBP vs Current Pallas:    1.12x faster
-  * Current Pallas vs Regular JAX:       0.58x faster
+  * New Fused FFBP vs Current Pallas:    0.91x faster
+  * Current Pallas vs Regular JAX:       0.72x faster
 - HBM Memory Allocation:
   * Regular JAX / Current Pallas Coordinate Memory: 3.00 MB
   * New Fused Coordinate Memory:                    0.2 KB

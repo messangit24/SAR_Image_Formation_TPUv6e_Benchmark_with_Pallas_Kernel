@@ -7,12 +7,12 @@ Dataset: Real Umbra-05 Spotlight CPHD collection (`2023-01-18-07-20-11_UMBRA-05_
 
 | Architecture / Implementation               | HBM Coord Mem | Latency (s) | Throughput (MP/s) | Speedup vs Baseline | Speedup vs Current Pallas | Coherence (γ_med) | SICD Coh |
 |:-------------------------------------------|:-------------:|:-----------:|:-----------------:|:-------------------:|:-------------------------:|:-----------------:|:--------:|
-| JAX Cloud TPU BPA                          |      3.000 MB |     1.819 s |            0.14 MP/s |              1.00x |                    0.62x |            1.0000 |   0.2570 |
-| Current Pallas VMEM-Tiled BPA              |      3.000 MB |     4.531 s |            0.06 MP/s |              0.40x |                    1.00x |            1.0000 |   0.2570 |
-| New Fused-Coordinate Pallas BPA            |        0.2 KB |     3.446 s |            0.08 MP/s |              0.53x |                    1.31x |            1.0000 |   0.2570 |
-| JAX Cloud TPU FFBP                         |      3.000 MB |     2.036 s |            0.13 MP/s |              1.00x |                    0.45x |            1.0000 |   0.2570 |
-| Current Pallas Streaming FFBP              |      3.000 MB |     3.495 s |            0.08 MP/s |              0.58x |                    1.00x |            1.0000 |   0.2570 |
-| New Fused-Coordinate Pallas FFBP           |        0.2 KB |     3.132 s |            0.08 MP/s |              0.65x |                    1.12x |            1.0000 |   0.2570 |
+| JAX Cloud TPU BPA                          |      3.000 MB |     1.798 s |            0.15 MP/s |              1.00x |                    0.62x |            1.0000 |   0.2570 |
+| Current Pallas VMEM-Tiled BPA              |      3.000 MB |     4.464 s |            0.06 MP/s |              0.40x |                    1.00x |            1.0000 |   0.2570 |
+| New Fused-Coordinate Pallas BPA            |        0.2 KB |     3.053 s |            0.09 MP/s |              0.59x |                    1.46x |            1.0000 |   0.2570 |
+| JAX Cloud TPU FFBP                         |      3.000 MB |     1.761 s |            0.15 MP/s |              1.00x |                    0.45x |            1.0000 |   0.2570 |
+| Current Pallas Streaming FFBP              |      3.000 MB |     2.456 s |            0.11 MP/s |              0.72x |                    1.00x |            1.0000 |   0.2570 |
+| New Fused-Coordinate Pallas FFBP           |        0.2 KB |     2.704 s |            0.10 MP/s |              0.65x |                    0.91x |            1.0000 |   0.2570 |
 
 
 ---
