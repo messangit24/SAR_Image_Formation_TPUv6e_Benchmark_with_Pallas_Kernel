@@ -415,6 +415,7 @@ kubectl logs job/sar-pallas-v6e-3tb-batch-benchmark -c tpu-3tb-batch-benchmark -
 ## 📜 Technical Reports & Documentation
 
 Full benchmark reports and hardware analysis are preserved under [`reports/`](reports/):
+- **[`reports/fused_pallas_customer_engineering_benchmark_report.txt`](reports/fused_pallas_customer_engineering_benchmark_report.txt)**: Comprehensive Customer Engineering benchmark report covering the end-to-end dataflow architecture (GCS -> Host RAM -> PCIe Gen5 DMA -> TPU HBM -> VMEM SRAM -> VPU / MXU / SparseCore -> Persistence), Fused Pallas micro-architectural optimizations, performance comparison across all engines, 10 DoD/NGA verification quality gates, and dataset volume/floating-point specifications.
 - **[`reports/fused_pallas_output_verification_report.txt`](reports/fused_pallas_output_verification_report.txt)**: Rigorous 10-point quality gate audit verifying output complex tensors (.npy), phase error maps, and IPR metrics (1.000000 complex coherence, 143.95 dB PSNR).
 - **[`reports/fused_pallas_architecture_benchmark_report.md`](reports/fused_pallas_architecture_benchmark_report.md)**: Master architectural benchmark report comparing New Fused-Coordinate SIMD-Batched Pallas vs Current Pallas vs Regular JAX across BPA and FFBP on real Umbra CPHD/SICD data.
 - **[`reports/fused_pallas_architecture_benchmark_report.txt`](reports/fused_pallas_architecture_benchmark_report.txt)**: Plaintext execution log and speedup matrix for the fused Pallas architecture benchmark.
