@@ -519,7 +519,20 @@ def run_benchmark():
     )
     results.append(entry_ffbp_fused)
 
-    # Save output quicklooks
+    # Save output numpy complex tensors
+    try:
+        np.save(f"{args.out}_bpa_baseline.npy", bpa_base)
+        np.save(f"{args.out}_bpa_pallas_current.npy", bpa_pallas_opt)
+        np.save(f"{args.out}_bpa_pallas_fused.npy", bpa_fused)
+        np.save(f"{args.out}_ffbp_pallas_current.npy", ffbp_pallas_opt)
+        np.save(f"{args.out}_ffbp_pallas_fused.npy", ffbp_fused)
+        if sicd_ref_chip is not None:
+            np.save(f"{args.out}_sicd_reference.npy", sicd_ref_chip)
+        print(f"\n[*] Persisted complex floating-point tensors to {args.out}_*.npy")
+    except Exception as e:
+        print(f"[!] Warning: Failed saving complex tensors: {e}")
+
+    # Save output quicklooks & diagnostic difference / phase error maps
     try:
         from PIL import Image
         Image.fromarray(to_uint8_db(bpa_base)).save(f"{args.out}_bpa_baseline.png")
@@ -529,9 +542,30 @@ def run_benchmark():
         Image.fromarray(to_uint8_db(ffbp_fused)).save(f"{args.out}_ffbp_pallas_fused.png")
         if sicd_ref_chip is not None:
             Image.fromarray(to_uint8_db(sicd_ref_chip)).save(f"{args.out}_sicd_reference.png")
-        print(f"\n[*] Quicklooks saved to {args.out}_*.png")
+
+        # Diagnostic Error Maps: Fused BPA vs Baseline
+        diff_bpa = np.abs(bpa_fused - bpa_base)
+        max_diff = np.percentile(diff_bpa, 99.5) if np.percentile(diff_bpa, 99.5) > 0 else 1.0
+        diff_u8 = np.clip(diff_bpa / max_diff * 255.0, 0, 255).astype(np.uint8)
+        Image.fromarray(diff_u8).save(f"{args.out}_bpa_diff_raster.png")
+
+        phase_err_bpa = np.angle(bpa_fused * np.conj(bpa_base))
+        phase_u8 = np.clip((phase_err_bpa + np.pi) / (2.0 * np.pi) * 255.0, 0, 255).astype(np.uint8)
+        Image.fromarray(phase_u8).save(f"{args.out}_bpa_phase_err.png")
+
+        # Diagnostic Error Maps: Fused FFBP vs Baseline
+        diff_ffbp = np.abs(ffbp_fused - bpa_base)
+        max_diff_f = np.percentile(diff_ffbp, 99.5) if np.percentile(diff_ffbp, 99.5) > 0 else 1.0
+        diff_f_u8 = np.clip(diff_ffbp / max_diff_f * 255.0, 0, 255).astype(np.uint8)
+        Image.fromarray(diff_f_u8).save(f"{args.out}_ffbp_diff_raster.png")
+
+        phase_err_ffbp = np.angle(ffbp_fused * np.conj(bpa_base))
+        phase_f_u8 = np.clip((phase_err_ffbp + np.pi) / (2.0 * np.pi) * 255.0, 0, 255).astype(np.uint8)
+        Image.fromarray(phase_f_u8).save(f"{args.out}_ffbp_phase_err.png")
+
+        print(f"[*] Quicklooks & Diagnostic rasters saved to {args.out}_*.png")
     except Exception as e:
-        print(f"[!] Warning: Quicklook export failed: {e}")
+        print(f"[!] Warning: Quicklook / diagnostic export failed: {e}")
 
     # Build Comparative Table
     table_header = (

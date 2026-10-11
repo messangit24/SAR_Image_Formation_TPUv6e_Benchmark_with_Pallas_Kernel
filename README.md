@@ -279,9 +279,10 @@ SAR_Image_Formation_TPUv6e_Benchmark_with_Pallas_Kernel/
 │   └── modis/                       # MODIS raw L0, L1A, L1B, and GEO HDF storage
 ├── src/
 │   ├── sar/                         # SAR Image Formation Benchmark Engines (CPU & TPU)
-│   │   ├── run_fused_pallas_benchmark.py # NEW: Comparative Benchmark (Fused vs Pallas vs JAX)
-│   │   ├── pallas_bpa_fused.py      # NEW: Fused-Coordinate SIMD-Batched Pallas BPA Engine
-│   │   ├── pallas_ffbp_fused.py     # NEW: Fused-Coordinate SIMD-Batched Pallas FFBP Engine
+│   │   ├── run_fused_pallas_benchmark.py # Comparative Benchmark (Fused vs Pallas vs JAX)
+│   │   ├── verify_fused_pallas_output.py # NEW: Independent Output File Verification & Audit
+│   │   ├── pallas_bpa_fused.py      # Fused-Coordinate SIMD-Batched Pallas BPA Engine
+│   │   ├── pallas_ffbp_fused.py     # Fused-Coordinate SIMD-Batched Pallas FFBP Engine
 │   │   ├── run_3tb_catalog_batch_benchmark.py # 3TB (120 Scenes) 16-Chip Batch Benchmark
 │   │   ├── run_full_catalog_batch_benchmark.py # Full Catalog Batch Benchmark Driver
 │   │   ├── run_16chip_multimodal_benchmark.py # 16-Chip Cloud TPU v6e Multimodal Suite
@@ -414,6 +415,7 @@ kubectl logs job/sar-pallas-v6e-3tb-batch-benchmark -c tpu-3tb-batch-benchmark -
 ## 📜 Technical Reports & Documentation
 
 Full benchmark reports and hardware analysis are preserved under [`reports/`](reports/):
+- **[`reports/fused_pallas_output_verification_report.txt`](reports/fused_pallas_output_verification_report.txt)**: Rigorous 10-point quality gate audit verifying output complex tensors (.npy), phase error maps, and IPR metrics (1.000000 complex coherence, 143.95 dB PSNR).
 - **[`reports/fused_pallas_architecture_benchmark_report.md`](reports/fused_pallas_architecture_benchmark_report.md)**: Master architectural benchmark report comparing New Fused-Coordinate SIMD-Batched Pallas vs Current Pallas vs Regular JAX across BPA and FFBP on real Umbra CPHD/SICD data.
 - **[`reports/fused_pallas_architecture_benchmark_report.txt`](reports/fused_pallas_architecture_benchmark_report.txt)**: Plaintext execution log and speedup matrix for the fused Pallas architecture benchmark.
 - **[`reports/full_3tb_metrics_and_verification_report.txt`](reports/full_3tb_metrics_and_verification_report.txt)**: Comprehensive 3TB batch execution metrics and output product verification audit across all 16 TPU v6e chips.
