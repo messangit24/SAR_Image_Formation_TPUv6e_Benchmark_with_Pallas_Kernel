@@ -248,7 +248,9 @@ SAR_Image_Formation_TPUv6e_Benchmark_with_Pallas_Kernel/
 │   └── modis/                       # MODIS raw L0, L1A, L1B, and GEO HDF storage
 ├── src/
 │   ├── sar/                         # SAR Image Formation Benchmark Engines (CPU & TPU)
-│   │   ├── run_16chip_multimodal_benchmark.py # NEW: 16-Chip Cloud TPU v6e Multimodal Suite
+│   │   ├── run_3tb_catalog_batch_benchmark.py # NEW: 3TB (120 Scenes) 16-Chip Batch Benchmark
+│   │   ├── run_full_catalog_batch_benchmark.py # Full Catalog Batch Benchmark Driver
+│   │   ├── run_16chip_multimodal_benchmark.py # 16-Chip Cloud TPU v6e Multimodal Suite
 │   │   ├── pallas_bpa_multi_chip.py # Multi-Chip Pallas BPA Engine (Spatial Sharding + SIMD)
 │   │   ├── pallas_ffbp_multi_chip.py# Multi-Chip Pallas FFBP Engine (Spatial Chunks + Streaming)
 │   │   ├── pallas_bpa_optimized.py  # Optimized Pallas VMEM-Tiled BPA (Real Satellite CPHD)
@@ -264,14 +266,22 @@ SAR_Image_Formation_TPUv6e_Benchmark_with_Pallas_Kernel/
 │       ├── modis_opir_mwir.py       # MWIR thermal anomaly analysis
 │       └── run_l0_to_l1b.py         # End-to-end MODIS driver
 ├── k8s/                             # GKE Cloud TPU v6e Deployment & Benchmark Manifests
-│   ├── tpu_v6e_16chip_job.yaml      # NEW: 16-Chip Multi-Host GKE TPU v6e Benchmark Job
-│   ├── deploy_16chip_benchmark.sh   # NEW: Automated 16-Chip GKE Deployment Script
+│   ├── tpu_v6e_3tb_batch_job.yaml   # NEW: 3TB Batch GKE TPU v6e Benchmark Job (16 Chips)
+│   ├── deploy_3tb_batch_benchmark.sh# NEW: Automated 3TB Batch GKE Deployment Script
+│   ├── tpu_v6e_full_batch_job.yaml  # Full 28.84 TB Batch GKE Job
+│   ├── deploy_full_batch_benchmark.sh # Automated Full Batch GKE Deployment Script
+│   ├── tpu_v6e_16chip_job.yaml      # 16-Chip Multi-Host GKE TPU v6e Benchmark Job
+│   ├── deploy_16chip_benchmark.sh   # Automated 16-Chip GKE Deployment Script
 │   ├── umbra_sync_job_indexed.yaml  # High-throughput parallel Umbra S3 -> GCS sync job
 │   ├── modis_sync_job.yaml          # MODIS data sync job
 │   └── tpu_v6e_multi_chip_job.yaml  # 8-Chip GKE TPU v6e Benchmark Job
 ├── reports/                         # Benchmark & Telemetry Output Reports
-│   ├── multi_chip_16tpu_v6e_benchmark_report.md  # NEW: 16-Chip TPU v6e multimodal report
-│   ├── multi_chip_16tpu_v6e_benchmark_report.txt # NEW: Plaintext 16-Chip multimodal report
+│   ├── full_3tb_dataset_benchmark_report.md  # NEW: 3TB Batch 16-Chip Execution Report
+│   ├── full_3tb_actual_batch_execution_report.txt # NEW: Plaintext 3TB Batch Execution Log
+│   ├── full_28tb_inference_benchmark_report.txt # Full 28.84 TB Inference Benchmark Report
+│   ├── full_29tb_dataset_benchmark_methodology_and_telemetry_notes.txt # Methodology & telemetry
+│   ├── multi_chip_16tpu_v6e_benchmark_report.md  # 16-Chip TPU v6e multimodal report
+│   ├── multi_chip_16tpu_v6e_benchmark_report.txt # Plaintext 16-Chip multimodal report
 │   ├── multi_chip_pallas_v6e_benchmark_report.md # 8-Chip TPU v6e benchmark report
 │   ├── tpu_v6e_hardware_telemetry_metrics.md    # Micro-architectural telemetry report
 │   └── pallas_v6e_tpu_cphd_benchmark_report.md  # Single-chip CPHD benchmark report
@@ -283,6 +293,9 @@ SAR_Image_Formation_TPUv6e_Benchmark_with_Pallas_Kernel/
 │   ├── v6e_16chip_benchmark_ffbp_diff_raster.png # FFBP residual difference raster
 │   ├── v6e_16chip_benchmark_ffbp_phase_err.png   # FFBP interferometric phase error map
 │   └── v6e_16chip_benchmark_modis_lst_diff_raster.png # MODIS LST absolute error map
+├── cphd_3tb_catalog_manifest.json   # 120-Scene (~3 TB) Calibrated CPHD Catalog Manifest
+├── cphd_full_catalog_manifest.json  # Full 28.84 TB Umbra Catalog Manifest (917 Scenes)
+├── run_3tb_catalog_batch_benchmark.py # NEW: Root entrypoint for 3TB batch benchmark
 ├── run_16chip_multimodal_benchmark.py # Root entrypoint for 16-chip multimodal benchmark
 ├── sync_umbra_catalog.py            # Umbra S3 to GCS streaming sync
 ├── sync_modis_catalog.py            # MODIS data streaming sync
@@ -346,11 +359,30 @@ python3 run_16chip_multimodal_benchmark.py \
   --report reports/multi_chip_16tpu_v6e_benchmark_report.md
 ```
 
+### 4. Run the 3TB Catalog Batch Benchmark on 16-Chip Cloud TPU v6e
+
+Deploy and monitor the 120-scene (~3 Terabyte) actual batch benchmark across all 16 TPU v6e chips on GKE:
+
+```bash
+# Dispatch the 3TB batch benchmark job (16 Cloud TPU v6e chips, 4 nodes)
+./k8s/deploy_3tb_batch_benchmark.sh
+
+# Monitor live execution across worker pods
+kubectl get pods -l job-name=sar-pallas-v6e-3tb-batch-benchmark -w
+
+# View execution logs from the coordinator
+kubectl logs job/sar-pallas-v6e-3tb-batch-benchmark -c tpu-3tb-batch-benchmark -f
+```
+
 ---
 
 ## 📜 Technical Reports & Documentation
 
 Full benchmark reports and hardware analysis are preserved under [`reports/`](reports/):
+- **[`reports/full_3tb_dataset_benchmark_report.md`](reports/full_3tb_dataset_benchmark_report.md)**: Physical 3 Terabyte (120 scenes, 2.73 TB) batch execution report across 16 Cloud TPU v6e chips (1,401.46s wall-clock time, 100% success rate, 125.83M complex pixels formed).
+- **[`reports/full_3tb_actual_batch_execution_report.txt`](reports/full_3tb_actual_batch_execution_report.txt)**: Plaintext execution telemetry for the 3TB batch run.
+- **[`reports/full_28tb_inference_benchmark_report.txt`](reports/full_28tb_inference_benchmark_report.txt)**: Full 28.84 TB Umbra catalog scaling and pipeline latency analysis.
+- **[`reports/full_29tb_dataset_benchmark_methodology_and_telemetry_notes.txt`](reports/full_29tb_dataset_benchmark_methodology_and_telemetry_notes.txt)**: Telemetry notes and batch execution methodology for multi-terabyte datasets.
 - **[`reports/multi_chip_16tpu_v6e_benchmark_report.md`](reports/multi_chip_16tpu_v6e_benchmark_report.md)**: Physical 16-Chip Cloud TPU v6e multimodal benchmark report.
 - **[`reports/multi_chip_16tpu_v6e_benchmark_report.txt`](reports/multi_chip_16tpu_v6e_benchmark_report.txt)**: Plaintext ASCII 16-chip report.
 - **[`reports/multi_chip_pallas_v6e_benchmark_report.md`](reports/multi_chip_pallas_v6e_benchmark_report.md)**: Physical 8-Chip TPU v6e report.

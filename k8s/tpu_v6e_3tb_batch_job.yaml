@@ -1,0 +1,160 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sar-pallas-3tb-batch-svc
+spec:
+  clusterIP: None
+  selector:
+    app: sar-pallas-3tb-batch-benchmark
+  ports:
+    - name: coordinator
+      port: 1234
+      targetPort: 1234
+    - name: tpu-agent
+      port: 8471
+      targetPort: 8471
+    - name: tpu-worker
+      port: 8431
+      targetPort: 8431
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sar-pallas-v6e-3tb-batch-benchmark
+spec:
+  completions: 4
+  parallelism: 4
+  completionMode: Indexed
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: sar-pallas-3tb-batch-benchmark
+        job-name: sar-pallas-v6e-3tb-batch-benchmark
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-limit: "0"
+        gke-gcsfuse/memory-limit: "0"
+    spec:
+      serviceAccountName: tpu-gcs-sa
+      subdomain: sar-pallas-3tb-batch-svc
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-nodepool: mb-tpu-v6e-multi-16
+        cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
+        cloud.google.com/gke-tpu-topology: 4x4
+      tolerations:
+        - key: "google.com/tpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+        - name: benchmark-code
+          configMap:
+            name: sar-pallas-3tb-batch-code
+            defaultMode: 0755
+        - name: benchmark-output
+          emptyDir: {}
+        - name: gcs-umbra-storage
+          csi:
+            driver: gcsfuse.csi.storage.gke.io
+            volumeAttributes:
+              bucketName: umbra-sar-dataset-75tb-mb-development-447000
+              mountOptions: "implicit-dirs"
+      containers:
+        - name: tpu-3tb-batch-benchmark
+          image: us-docker.pkg.dev/cloud-tpu-images/jax-stable-stack/tpu:jax0.5.2-rev1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8471
+              protocol: TCP
+            - containerPort: 8431
+              protocol: TCP
+            - containerPort: 1234
+              protocol: TCP
+          securityContext:
+            privileged: true
+          env:
+            - name: JAX_ENABLE_X64
+              value: "False"
+            - name: JAX_PLATFORMS
+              value: "tpu"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: JAX_COORDINATION_SERVICE_TIMEOUT_S
+              value: "7200"
+            - name: JAX_COORDINATOR_ADDRESS
+              value: "sar-pallas-v6e-3tb-batch-benchmark-0.sar-pallas-3tb-batch-svc.default.svc.cluster.local:1234"
+            - name: JAX_NUM_PROCESSES
+              value: "4"
+            - name: TPU_WORKER_HOSTNAMES
+              value: "sar-pallas-v6e-3tb-batch-benchmark-0.sar-pallas-3tb-batch-svc,sar-pallas-v6e-3tb-batch-benchmark-1.sar-pallas-3tb-batch-svc,sar-pallas-v6e-3tb-batch-benchmark-2.sar-pallas-3tb-batch-svc,sar-pallas-v6e-3tb-batch-benchmark-3.sar-pallas-3tb-batch-svc"
+            - name: TPU_WORKER_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+            - name: JOB_COMPLETION_INDEX
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+          resources:
+            requests:
+              google.com/tpu: "4"
+            limits:
+              google.com/tpu: "4"
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+            - name: benchmark-code
+              mountPath: /workspace/src
+            - name: benchmark-output
+              mountPath: /workspace/out
+            - name: gcs-umbra-storage
+              mountPath: /workspace/gcs
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              echo "=== Starting 3TB Catalog Batch Benchmark on 16 Cloud TPU v6e Chips ==="
+              echo "Worker Index: ${JOB_COMPLETION_INDEX}"
+              echo "Coordinator: ${JAX_COORDINATOR_ADDRESS}"
+
+              cd /workspace
+
+              # 1. Install dependencies
+              pip install --no-cache-dir Pillow scipy "sarpy==1.3.64"
+
+              # 2. Setup workspace code and directories
+              cp /workspace/src/*.py /workspace/
+              if [ -f /workspace/src/cphd_3tb_catalog_manifest.json ]; then
+                cp /workspace/src/cphd_3tb_catalog_manifest.json /workspace/
+              fi
+              mkdir -p /workspace/reports /workspace/out /workspace/gcs/reports
+
+              # 3. Execute 3TB Catalog Batch Inference
+              python3 run_3tb_catalog_batch_benchmark.py \
+                --catalog-dir /workspace/gcs/sar-data/task-data \
+                --manifest /workspace/cphd_3tb_catalog_manifest.json \
+                --chip-dim 1024 \
+                --pulses 1024 \
+                --samples 1024 \
+                --tile-az 128 \
+                --tile-rg 128 \
+                --spatial-chunk 32768 \
+                --subapertures 16 \
+                --report-txt /workspace/reports/full_3tb_actual_batch_execution_report.txt \
+                --report-md /workspace/reports/full_3tb_dataset_benchmark_report.md \
+                --gcs-report-dir /workspace/gcs/reports
+
+              echo "=== 3TB Batch Inference Completed on Worker ${JOB_COMPLETION_INDEX} ==="
+              if [ -f /workspace/reports/full_3tb_actual_batch_execution_report.txt ]; then
+                cp /workspace/reports/full_3tb_actual_batch_execution_report.txt /workspace/gcs/reports/ 2>/dev/null || true
+              fi
+              if [ -f /workspace/reports/full_3tb_dataset_benchmark_report.md ]; then
+                cp /workspace/reports/full_3tb_dataset_benchmark_report.md /workspace/gcs/reports/ 2>/dev/null || true
+              fi

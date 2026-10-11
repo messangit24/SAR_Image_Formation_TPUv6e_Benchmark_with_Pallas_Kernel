@@ -1,0 +1,602 @@
+[
+  {
+    "blob_name": "sar-data/task-data/0007445c-5da7-4b33-bc0a-facbd249d603/2025-07-15-06-10-12_UMBRA-08/2025-07-15-06-10-12_UMBRA-08_CPHD.cphd",
+    "size_bytes": 11267784960,
+    "updated": "2026-10-08 14:51:59.948000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0015903b-453a-4d06-a91f-554408a5f4b7/2025-06-16-14-58-06_UMBRA-08/2025-06-16-14-58-06_UMBRA-08_CPHD.cphd",
+    "size_bytes": 9888032768,
+    "updated": "2026-10-08 13:48:11.264000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00174818-00fe-4c89-bf45-cc6149253707/2023-04-15-01-17-56_UMBRA-05/2023-04-15-01-17-56_UMBRA-05_CPHD.cphd",
+    "size_bytes": 16001800368,
+    "updated": "2026-10-08 14:55:07.076000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/001bd4e8-c951-48cd-90de-b32daf456a18/2023-07-28-01-49-09_UMBRA-05/2023-07-28-01-49-09_UMBRA-05_CPHD.cphd",
+    "size_bytes": 1599228400,
+    "updated": "2026-10-08 13:31:13.032000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00213451-53d0-4ec9-8eb3-09284a08d93d/2026-02-03-03-18-53_UMBRA-10/2026-02-03-03-18-53_UMBRA-10_CPHD.cphd",
+    "size_bytes": 28434008992,
+    "updated": "2026-10-08 15:48:54.899000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0021e360-cd98-4dfa-8732-f1b34cc579bb/2024-01-13-02-51-03_UMBRA-06/2024-01-13-02-51-03_UMBRA-06_CPHD.cphd",
+    "size_bytes": 25788106640,
+    "updated": "2026-10-08 15:01:49.564000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0028c361-193c-49b7-ad59-808033d5dc74/2024-02-27-01-18-59_UMBRA-07/2024-02-27-01-18-59_UMBRA-07_CPHD.cphd",
+    "size_bytes": 29690979264,
+    "updated": "2026-10-08 15:16:37.042000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00360956-7040-470f-85b7-8d89f290ca0f/2025-10-31-14-44-06_UMBRA-10/2025-10-31-14-44-06_UMBRA-10_CPHD.cphd",
+    "size_bytes": 54719831032,
+    "updated": "2026-10-08 16:25:50.734000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0049156c-fc44-4084-87f7-39d910f6b7b5/2024-04-04-06-38-45_UMBRA-06/2024-04-04-06-38-45_UMBRA-06_CPHD.cphd",
+    "size_bytes": 18235993024,
+    "updated": "2026-10-08 15:13:41.857000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0049d051-c279-4b42-8cfe-58bf673683f0/2025-01-31-14-10-48_UMBRA-08/2025-01-31-14-10-48_UMBRA-08_CPHD.cphd",
+    "size_bytes": 25287368128,
+    "updated": "2026-10-08 15:36:43.846000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/004c3285-d9a7-46ba-85d8-255b4aea4891/2025-12-20-14-11-49_UMBRA-07/2025-12-20-14-11-49_UMBRA-07_CPHD.cphd",
+    "size_bytes": 34927740472,
+    "updated": "2026-10-08 15:50:03.159000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/004da100-a5fa-4050-9fce-080bdb0b53ac/2025-10-17-15-45-35_UMBRA-09/2025-10-17-15-45-35_UMBRA-09_CPHD.cphd",
+    "size_bytes": 26900724352,
+    "updated": "2026-10-08 15:05:28.252000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/004dabc4-c36b-4c35-b581-634652df9c00/2025-04-18-02-58-49_UMBRA-10/2025-04-18-02-58-49_UMBRA-10_CPHD.cphd",
+    "size_bytes": 3861991840,
+    "updated": "2026-10-08 14:16:12.746000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/004f5fd8-fecd-41dd-bafa-9b3036b41a5a/2024-07-18-15-57-56_UMBRA-04/2024-07-18-15-57-56_UMBRA-04_CPHD.cphd",
+    "size_bytes": 8663237344,
+    "updated": "2026-10-08 14:28:56.795000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00578df2-e1bd-467a-9ca6-f06c2f843e3f/2025-08-06-03-57-51_UMBRA-05/2025-08-06-03-57-51_UMBRA-05_CPHD.cphd",
+    "size_bytes": 21863920960,
+    "updated": "2026-10-08 15:35:43.892000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00583d22-06fe-48f6-abf1-0d3f1b22c9c6/2023-10-21-14-49-13_UMBRA-05/2023-10-21-14-49-13_UMBRA-05_CPHD.cphd",
+    "size_bytes": 782598528,
+    "updated": "2026-10-08 14:01:14.327000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00598f52-cd7d-44e6-8894-b335448c8e44/2023-04-16-02-14-39_UMBRA-04/2023-04-16-02-14-39_UMBRA-04_CPHD.cphd",
+    "size_bytes": 17044667616,
+    "updated": "2026-10-08 15:40:08.928000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/005db190-5116-4b43-8192-87ffbd1d076f/2025-06-05-00-37-56_UMBRA-05/2025-06-05-00-37-56_UMBRA-05_CPHD.cphd",
+    "size_bytes": 22844168640,
+    "updated": "2026-10-08 17:36:48.435000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0062a9fd-26b3-412f-a74b-a5d5cfc78ec5/2035-01-09-02-11-12_UMBRA-04/2035-01-09-02-11-12_UMBRA-04_CPHD.cphd",
+    "size_bytes": 7777964576,
+    "updated": "2026-10-08 14:12:24.603000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0068b6a8-ff0e-4fd0-aaa6-5d3d257ca623/2024-07-29-19-11-09_UMBRA-05/2024-07-29-19-11-09_UMBRA-05_CPHD.cphd",
+    "size_bytes": 15678170752,
+    "updated": "2026-10-08 14:41:56.436000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00727cd6-36a0-4d11-ade4-bdbcec3c5ca3/2024-10-15-10-49-10_UMBRA-08/2024-10-15-10-49-10_UMBRA-08_CPHD.cphd",
+    "size_bytes": 29155493504,
+    "updated": "2026-10-08 16:27:01.903000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/007ecee9-7d55-4195-bb1d-09b91446b06e/2025-04-13-04-39-59_UMBRA-10/2025-04-13-04-39-59_UMBRA-10_CPHD.cphd",
+    "size_bytes": 80944928222,
+    "updated": "2026-10-09 01:22:29.802000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00813b75-bf31-4833-bd5b-57ae76eb74d3/2025-10-14-06-43-23_UMBRA-09/2025-10-14-06-43-23_UMBRA-09_CPHD.cphd",
+    "size_bytes": 29671340736,
+    "updated": "2026-10-08 15:24:03.466000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00864c2c-0b0f-49ef-b283-997735b27878/2025-07-29-11-17-17_UMBRA-08/2025-07-29-11-17-17_UMBRA-08_CPHD.cphd",
+    "size_bytes": 37669956480,
+    "updated": "2026-10-08 15:36:00.197000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00881858-6166-4b94-8184-a5c0ec68e2c6/2025-03-09-17-15-43_UMBRA-08/2025-03-09-17-15-43_UMBRA-08_CPHD.cphd",
+    "size_bytes": 16293055744,
+    "updated": "2026-10-08 14:43:49.904000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/008ec450-1199-4e9f-902e-4ddb02c48e86/2023-06-01-19-21-36_UMBRA-05/2023-06-01-19-21-36_UMBRA-05_CPHD.cphd",
+    "size_bytes": 6422391104,
+    "updated": "2026-10-08 14:08:41.221000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00a33f2c-542a-4746-a8fd-651a57e5a1d3/2025-02-12-07-09-51_UMBRA-05/2025-02-12-07-09-51_UMBRA-05_CPHD.cphd",
+    "size_bytes": 16930623168,
+    "updated": "2026-10-08 14:48:35.301000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00ad4ef1-ca86-4dc8-81b0-cbf6cf0aa517/2024-06-21-03-32-07_UMBRA-04/2024-06-21-03-32-07_UMBRA-04_CPHD.cphd",
+    "size_bytes": 3118408160,
+    "updated": "2026-10-08 14:09:38.972000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00b47bbc-7bff-49ef-afd5-a3df3558530d/2024-07-15-01-34-38_UMBRA-06/2024-07-15-01-34-38_UMBRA-06_CPHD.cphd",
+    "size_bytes": 31440261184,
+    "updated": "2026-10-08 15:40:20.897000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00db8656-7fd7-4576-b5f6-f9ce43a75053/2025-10-25-16-56-01_UMBRA-10/2025-10-25-16-56-01_UMBRA-10_CPHD.cphd",
+    "size_bytes": 57782434880,
+    "updated": "2026-10-08 17:15:07.540000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00f2aeb0-b0fa-4e5a-aac1-6445e8831874/2026-02-18-02-20-00_UMBRA-07/2026-02-18-02-20-00_UMBRA-07_CPHD.cphd",
+    "size_bytes": 51658870976,
+    "updated": "2026-10-08 16:26:19.949000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/00f4cda6-115e-482b-9c5e-77b06946bf06/2024-04-26-14-28-33_UMBRA-05/2024-04-26-14-28-33_UMBRA-05_CPHD.cphd",
+    "size_bytes": 19439486272,
+    "updated": "2026-10-08 14:37:33.944000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0103841d-870e-4c80-b40d-d20bf6d97a99/2024-12-27-16-42-10_UMBRA-09/2024-12-27-16-42-10_UMBRA-09_CPHD.cphd",
+    "size_bytes": 100775217792,
+    "updated": "2026-10-08 16:18:18.953000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/010503b5-1a2b-41d2-a3a7-2a2a609e74ef/2024-05-31-09-43-19_UMBRA-07/2024-05-31-09-43-19_UMBRA-07_CPHD.cphd",
+    "size_bytes": 40264582368,
+    "updated": "2026-10-08 15:57:45.905000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/010c28c2-2622-4f26-bf22-9e48988846bd/2025-03-31-01-57-53_UMBRA-05/2025-03-31-01-57-53_UMBRA-05_CPHD.cphd",
+    "size_bytes": 25318373312,
+    "updated": "2026-10-08 14:45:13.733000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/010c2f35-ee05-4128-8ce1-da967f46ccc3/2025-03-14-10-06-27_UMBRA-10/2025-03-14-10-06-27_UMBRA-10_CPHD.cphd",
+    "size_bytes": 22815768512,
+    "updated": "2026-10-08 16:06:16.507000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0112124e-dd9c-4d15-a615-c32ec8409760/2024-11-18-18-04-40_UMBRA-08/2024-11-18-18-04-40_UMBRA-08_CPHD.cphd",
+    "size_bytes": 3223831040,
+    "updated": "2026-10-08 14:03:43.393000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/011411c7-e690-42c8-a21c-29636f117cc4/2024-12-03-08-27-52_UMBRA-08/2024-12-03-08-27-52_UMBRA-08_CPHD.cphd",
+    "size_bytes": 11610186944,
+    "updated": "2026-10-08 14:36:54.675000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0115d424-4c28-45ee-b94a-ff8d7f0f659e/2023-02-04-12-41-28_UMBRA-05/2023-02-04-12-41-28_UMBRA-05_CPHD.cphd",
+    "size_bytes": 7443838576,
+    "updated": "2026-10-08 14:23:13.627000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/011fae5b-a9ab-490c-ace5-2483afe42b8e/2024-09-06-15-49-44_UMBRA-05/2024-09-06-15-49-44_UMBRA-05_CPHD.cphd",
+    "size_bytes": 22229151872,
+    "updated": "2026-10-08 15:47:57.904000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0121e119-91e5-41b4-b428-b5b8825adae7/2023-08-10-13-17-19_UMBRA-05/2023-08-10-13-17-19_UMBRA-05_CPHD.cphd",
+    "size_bytes": 6190797888,
+    "updated": "2026-10-08 14:10:12.891000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0129faba-0054-4ba9-9ed8-9e7b3e843411/2024-01-09-04-11-53_UMBRA-04/2024-01-09-04-11-53_UMBRA-04_CPHD.cphd",
+    "size_bytes": 2223561088,
+    "updated": "2026-10-08 14:16:35.280000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/012fe132-d975-4d27-99f6-c70fd7fd6471/2023-10-25-10-31-51_UMBRA-05/2023-10-25-10-31-51_UMBRA-05_CPHD.cphd",
+    "size_bytes": 12287474304,
+    "updated": "2026-10-08 14:19:41.661000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0133180e-12cd-4fe1-b770-0f1b25f54f4d/2024-08-22-21-55-31_UMBRA-05/2024-08-22-21-55-31_UMBRA-05_CPHD.cphd",
+    "size_bytes": 3573832704,
+    "updated": "2026-10-08 14:50:05.478000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/014bf3b5-a764-499f-8fce-963feab88045/2024-03-31-03-00-56_UMBRA-06/2024-03-31-03-00-56_UMBRA-06_CPHD.cphd",
+    "size_bytes": 47058293056,
+    "updated": "2026-10-08 15:01:54.664000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/014d0395-33d6-4c0c-859b-da20e1e4bbda/2023-10-07-02-06-49_UMBRA-04/2023-10-07-02-06-49_UMBRA-04_CPHD.cphd",
+    "size_bytes": 18398788160,
+    "updated": "2026-10-08 14:33:27.284000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/014d2be8-712f-41ea-9737-c8268d0e152a/2024-09-06-11-12-19_UMBRA-05/2024-09-06-11-12-19_UMBRA-05_CPHD.cphd",
+    "size_bytes": 12917580928,
+    "updated": "2026-10-08 14:53:14.876000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/01572ae2-a982-43dd-b507-13e1cfa38e87/2024-09-15-16-39-33_UMBRA-07/2024-09-15-16-39-33_UMBRA-07_CPHD.cphd",
+    "size_bytes": 19698395904,
+    "updated": "2026-10-08 14:31:59.381000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/015e671e-1893-4847-a1e8-3b774964ce9f/2023-06-18-01-56-55_UMBRA-04/2023-06-18-01-56-55_UMBRA-04_CPHD.cphd",
+    "size_bytes": 6779172992,
+    "updated": "2026-10-08 14:14:51.406000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0165c039-52f8-4c5a-be10-bef764e36f92/2025-04-18-13-06-09_UMBRA-05/2025-04-18-13-06-09_UMBRA-05_CPHD.cphd",
+    "size_bytes": 30493454976,
+    "updated": "2026-10-08 15:10:07.869000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/016bc3e4-546a-47c3-abdf-af300aeece3f/2025-10-29-16-32-22_UMBRA-10/2025-10-29-16-32-22_UMBRA-10_CPHD.cphd",
+    "size_bytes": 13352839872,
+    "updated": "2026-10-08 15:08:42.293000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0172fab1-4bcc-4537-97bb-d7a105a21444/2024-09-09-00-32-02_UMBRA-07/2024-09-09-00-32-02_UMBRA-07_CPHD.cphd",
+    "size_bytes": 64951945088,
+    "updated": "2026-10-08 16:28:06.112000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/017b767c-d000-433e-9215-6dcb0bb1b15d/2024-02-17-03-25-47_UMBRA-04/2024-02-17-03-25-47_UMBRA-04_CPHD.cphd",
+    "size_bytes": 24791918784,
+    "updated": "2026-10-08 15:35:52.675000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/017fe954-7cdd-44ca-a6c4-ce3620f0de9f/2024-06-30-23-26-44_UMBRA-05/2024-06-30-23-26-44_UMBRA-05_CPHD.cphd",
+    "size_bytes": 52658275008,
+    "updated": "2026-10-08 16:07:42.691000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/01827abc-d199-4c67-87f4-769220bedc82/2025-10-18-05-59-36_UMBRA-05/2025-10-18-05-59-36_UMBRA-05_CPHD.cphd",
+    "size_bytes": 19880407360,
+    "updated": "2026-10-08 14:52:32.926000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0186dbbd-30e6-4fa0-b8f2-3f069a7b6197/2023-10-01-02-57-09_UMBRA-05/2023-10-01-02-57-09_UMBRA-05_CPHD.cphd",
+    "size_bytes": 2404209536,
+    "updated": "2026-10-08 14:04:11.910000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/018f9fad-fbe7-43dc-aaef-22af465d69ec/2024-09-07-04-15-36_UMBRA-08/2024-09-07-04-15-36_UMBRA-08_CPHD.cphd",
+    "size_bytes": 16645271488,
+    "updated": "2026-10-08 14:43:34.263000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/019a1ff1-108c-49c7-ac8c-81afc601f18f/2025-09-23-19-05-18_UMBRA-09/2025-09-23-19-05-18_UMBRA-09_CPHD.cphd",
+    "size_bytes": 33720820984,
+    "updated": "2026-10-08 15:32:27.283000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/01a305d9-67f1-4860-a296-58ce20a388cb/2025-03-04-16-02-30_UMBRA-05/2025-03-04-16-02-30_UMBRA-05_CPHD.cphd",
+    "size_bytes": 3409059136,
+    "updated": "2026-10-08 14:09:19.775000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/01bb9f05-051a-40ab-905b-eba2f3962dab/2024-09-10-02-46-30_UMBRA-07/2024-09-10-02-46-30_UMBRA-07_CPHD.cphd",
+    "size_bytes": 192741208384,
+    "updated": "2026-10-08 21:44:39.568000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/01bd6877-52c8-4f95-adfe-9aea23acaa75/2024-08-28-15-16-12_UMBRA-05/2024-08-28-15-16-12_UMBRA-05_CPHD.cphd",
+    "size_bytes": 6597750336,
+    "updated": "2026-10-08 14:21:03.709000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/01cb6019-0e43-4d27-9be8-5a1a9bb6eae1/2023-06-30-04-14-43_UMBRA-06/2023-06-30-04-14-43_UMBRA-06_CPHD.cphd",
+    "size_bytes": 14727651392,
+    "updated": "2026-10-08 14:52:54.970000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/01ced019-26c5-4342-b25f-08d816f714a3/2026-03-13-19-36-37_UMBRA-10/2026-03-13-19-36-37_UMBRA-10_CPHD.cphd",
+    "size_bytes": 13419362368,
+    "updated": "2026-10-08 15:00:30.691000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/01e48f3a-d9b4-4fe7-8d0c-77694dc3b411/2023-10-06-02-14-26_UMBRA-04/2023-10-06-02-14-26_UMBRA-04_CPHD.cphd",
+    "size_bytes": 23561917568,
+    "updated": "2026-10-08 14:58:35.699000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/01f796c8-d2ef-4710-bc06-432330544c86/2023-11-13-12-52-20_UMBRA-05/2023-11-13-12-52-20_UMBRA-05_CPHD.cphd",
+    "size_bytes": 18892479616,
+    "updated": "2026-10-08 14:53:29.263000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/01f8b05d-0e32-4f73-a688-b987880dd0dd/2024-07-14-03-18-11_UMBRA-04/2024-07-14-03-18-11_UMBRA-04_CPHD.cphd",
+    "size_bytes": 7834527552,
+    "updated": "2026-10-08 14:25:56.276000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0201dc6a-e879-4937-9445-c612df4271b3/2024-04-08-15-30-45_UMBRA-05/2024-04-08-15-30-45_UMBRA-05_CPHD.cphd",
+    "size_bytes": 20373115136,
+    "updated": "2026-10-08 15:30:23.061000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/020c56f0-f1a1-42e0-b11b-3049cf5e11e8/2025-06-25-03-43-24_UMBRA-09/2025-06-25-03-43-24_UMBRA-09_CPHD.cphd",
+    "size_bytes": 54790351424,
+    "updated": "2026-10-08 15:50:20.429000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/020dda0a-50b8-493e-b93b-4fbde6a6bd13/2023-11-09-05-12-02_UMBRA-05/2023-11-09-05-12-02_UMBRA-05_CPHD.cphd",
+    "size_bytes": 18462336576,
+    "updated": "2026-10-08 14:59:18.547000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/02195613-46e0-4e95-ab35-9abf83c273f6/2025-11-21-02-17-17_UMBRA-07/2025-11-21-02-17-17_UMBRA-07_CPHD.cphd",
+    "size_bytes": 44029278048,
+    "updated": "2026-10-08 15:51:07.523000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/022a61a4-f125-48de-9b56-c7ebcd9ffd2f/2023-01-27-13-02-58_UMBRA-04/2023-01-27-13-02-58_UMBRA-04_CPHD.cphd",
+    "size_bytes": 7915184264,
+    "updated": "2026-10-08 14:47:35.478000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/022dbe7d-8d52-45e0-9af7-fc3979a47dd8/2025-04-03-05-13-13_UMBRA-05/2025-04-03-05-13-13_UMBRA-05_CPHD.cphd",
+    "size_bytes": 13153621376,
+    "updated": "2026-10-08 14:33:01.162000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/023f58a9-c6d6-4996-aa64-be184f92c9a3/2023-08-03-05-22-24_UMBRA-05/2023-08-03-05-22-24_UMBRA-05_CPHD.cphd",
+    "size_bytes": 6504666240,
+    "updated": "2026-10-08 14:36:27.138000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0246ce3b-50f6-4688-9cf4-bfaabf33d6cd/2024-05-21-21-41-26_UMBRA-05/2024-05-21-21-41-26_UMBRA-05_CPHD.cphd",
+    "size_bytes": 3045543616,
+    "updated": "2026-10-08 14:37:55.703000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/024752c5-ec3f-4601-b015-9bf3044041ff/2025-08-17-19-07-00_UMBRA-08/2025-08-17-19-07-00_UMBRA-08_CPHD.cphd",
+    "size_bytes": 50035874464,
+    "updated": "2026-10-08 19:17:07.536000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0250bc36-403a-42a0-a752-125f1d4fcd89/2023-10-07-12-46-25_UMBRA-05/2023-10-07-12-46-25_UMBRA-05_CPHD.cphd",
+    "size_bytes": 32082687392,
+    "updated": "2026-10-08 15:30:27.978000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/025fb24a-eba3-42fa-84eb-b57467610929/2025-01-18-18-40-35_UMBRA-09/2025-01-18-18-40-35_UMBRA-09_CPHD.cphd",
+    "size_bytes": 11961643136,
+    "updated": "2026-10-08 15:12:57.924000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0264bdfa-d869-4228-a113-0d317d9c2a5c/2025-05-04-02-59-27_UMBRA-09/2025-05-04-02-59-27_UMBRA-09_CPHD.cphd",
+    "size_bytes": 12014090816,
+    "updated": "2026-10-08 14:56:37.854000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/02656850-2544-49c6-b794-3b82af3d06a0/2023-11-28-17-15-16_UMBRA-04/2023-11-28-17-15-16_UMBRA-04_CPHD.cphd",
+    "size_bytes": 17129763776,
+    "updated": "2026-10-08 16:08:44.597000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0266baec-d828-4d66-bd49-3918361714cd/2024-06-02-20-23-29_UMBRA-05/2024-06-02-20-23-29_UMBRA-05_CPHD.cphd",
+    "size_bytes": 2341328832,
+    "updated": "2026-10-08 14:38:13.525000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0267c4c6-89ee-4811-bf64-e4ea97818119/2025-02-07-15-12-20_UMBRA-05/2025-02-07-15-12-20_UMBRA-05_CPHD.cphd",
+    "size_bytes": 89099434560,
+    "updated": "2026-10-08 23:31:26.314000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0277ec04-74dc-49a5-b3c9-b05d796b66d7/2023-10-09-17-01-56_UMBRA-06/2023-10-09-17-01-56_UMBRA-06_CPHD.cphd",
+    "size_bytes": 5828548848,
+    "updated": "2026-10-08 14:46:04.953000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/02780bb2-45b9-445b-8103-6a7842234b12/2025-05-06-04-46-40_UMBRA-07/2025-05-06-04-46-40_UMBRA-07_CPHD.cphd",
+    "size_bytes": 3298625792,
+    "updated": "2026-10-08 15:49:28.739000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/02a51beb-627c-4252-8503-abeef1df2434/2025-10-17-15-05-22_UMBRA-10/2025-10-17-15-05-22_UMBRA-10_CPHD.cphd",
+    "size_bytes": 3352576200,
+    "updated": "2026-10-08 14:49:03.591000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/02a5fd1e-cb2e-4d4d-9c2a-cbdb337cd822/2023-12-06-15-26-02_UMBRA-06/2023-12-06-15-26-02_UMBRA-06_CPHD.cphd",
+    "size_bytes": 9431238672,
+    "updated": "2026-10-08 15:40:16.278000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/02d4ca0c-d4f2-414f-9f9e-eb211bc219f3/2023-10-30-12-00-41_UMBRA-04/2023-10-30-12-00-41_UMBRA-04_CPHD.cphd",
+    "size_bytes": 9219527040,
+    "updated": "2026-10-08 15:04:54.793000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/02d67e0a-7275-4839-bfdf-6840b1a637b2/2025-05-24-02-43-35_UMBRA-09/2025-05-24-02-43-35_UMBRA-09_CPHD.cphd",
+    "size_bytes": 54207829888,
+    "updated": "2026-10-09 04:33:13.638000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/02e486de-9efb-4c37-ae37-df1369a68c4b/2023-08-18-18-09-40_UMBRA-06/2023-08-18-18-09-40_UMBRA-06_CPHD.cphd",
+    "size_bytes": 10861202432,
+    "updated": "2026-10-08 15:08:51.112000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/02e7b750-568f-4151-abbd-7b30abcb6fc8/2024-05-31-22-23-02_UMBRA-04/2024-05-31-22-23-02_UMBRA-04_CPHD.cphd",
+    "size_bytes": 35956031584,
+    "updated": "2026-10-08 16:15:10.684000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/02eb1aa1-ea34-4b8f-adee-b0ba4e2648f9/2024-04-11-15-02-41_UMBRA-05/2024-04-11-15-02-41_UMBRA-05_CPHD.cphd",
+    "size_bytes": 42573823232,
+    "updated": "2026-10-08 16:43:39.668000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03149cc8-09ac-4fa6-bb21-bde93b07b9c1/2023-07-24-04-27-00_UMBRA-05/2023-07-24-04-27-00_UMBRA-05_CPHD.cphd",
+    "size_bytes": 11926764032,
+    "updated": "2026-10-08 16:30:07.724000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03172ec9-ab47-4800-96e9-232b8782e78e/2025-11-06-19-14-04_UMBRA-08/2025-11-06-19-14-04_UMBRA-08_CPHD.cphd",
+    "size_bytes": 38256520960,
+    "updated": "2026-10-08 16:20:16.980000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/031a1056-b0b1-49e8-963c-c7f2cab3ecf0/2023-05-31-13-50-54_UMBRA-05/2023-05-31-13-50-54_UMBRA-05_CPHD.cphd",
+    "size_bytes": 14922322496,
+    "updated": "2026-10-08 16:05:28.404000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03341396-27a3-4622-a93d-a31c303d34d8/2025-04-16-16-25-31_UMBRA-05/2025-04-16-16-25-31_UMBRA-05_CPHD.cphd",
+    "size_bytes": 97568336512,
+    "updated": "2026-10-08 18:09:48.053000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0334e065-0d92-4264-a507-9c7ac9b333be/2026-03-19-21-09-51_UMBRA-07/2026-03-19-21-09-51_UMBRA-07_CPHD.cphd",
+    "size_bytes": 33087930240,
+    "updated": "2026-10-08 17:32:29.393000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0353faa5-3d1f-404e-830e-541f0b807fb4/2024-03-14-02-56-17_UMBRA-06/2024-03-14-02-56-17_UMBRA-06_CPHD.cphd",
+    "size_bytes": 2107392448,
+    "updated": "2026-10-08 15:04:54.475000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/035fbbf8-9a8a-4a82-a04d-1ac9d1287dc1/2025-04-16-15-39-24_UMBRA-08/2025-04-16-15-39-24_UMBRA-08_CPHD.cphd",
+    "size_bytes": 18168754432,
+    "updated": "2026-10-08 16:05:35.645000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03681f7d-2bb2-40a9-a70d-3e091b33b5d9/2025-09-22-03-42-00_UMBRA-08/2025-09-22-03-42-00_UMBRA-08_CPHD.cphd",
+    "size_bytes": 44743474400,
+    "updated": "2026-10-08 16:33:03.326000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03836f7a-63eb-4907-a534-b9ea8aa44552/2026-02-19-14-19-57_UMBRA-10/2026-02-19-14-19-57_UMBRA-10_CPHD.cphd",
+    "size_bytes": 28419092416,
+    "updated": "2026-10-08 17:28:13.869000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0384c1ad-5592-4f40-92c7-570528b97ef8/2025-03-25-04-46-58_UMBRA-05/2025-03-25-04-46-58_UMBRA-05_CPHD.cphd",
+    "size_bytes": 15602046592,
+    "updated": "2026-10-08 15:55:43.502000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0385c851-2adb-4198-ae7d-82b199dad404/2025-04-02-05-38-05_UMBRA-08/2025-04-02-05-38-05_UMBRA-08_CPHD.cphd",
+    "size_bytes": 10660864448,
+    "updated": "2026-10-08 15:50:56.589000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/038d34da-0cec-46a4-acc0-9ceb75886c48/2023-06-13-14-16-19_UMBRA-05/2023-06-13-14-16-19_UMBRA-05_CPHD.cphd",
+    "size_bytes": 1781321664,
+    "updated": "2026-10-08 14:49:48.401000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03a21116-78ef-48f2-b87b-2def8e76a052/2024-02-01-14-42-33_UMBRA-05/2024-02-01-14-42-33_UMBRA-05_CPHD.cphd",
+    "size_bytes": 28684724064,
+    "updated": "2026-10-08 17:38:57.172000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03a302f2-9f1c-4057-a19c-04f7a75c363e/2024-06-06-10-27-42_UMBRA-04/2024-06-06-10-27-42_UMBRA-04_CPHD.cphd",
+    "size_bytes": 2548675776,
+    "updated": "2026-10-08 15:14:38.500000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03b33f52-fd72-4f97-9819-0faf508a73d1/2025-03-22-17-08-37_UMBRA-08/2025-03-22-17-08-37_UMBRA-08_CPHD.cphd",
+    "size_bytes": 17583655456,
+    "updated": "2026-10-08 17:18:05.286000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03be882c-0444-4dca-ae2b-e5fe69ab1013/2023-06-07-03-54-30_UMBRA-06/2023-06-07-03-54-30_UMBRA-06_CPHD.cphd",
+    "size_bytes": 6260022576,
+    "updated": "2026-10-08 15:05:21.977000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03c02fdc-16d3-4fb7-96d2-c9ed12ef2022/2024-02-11-11-34-37_UMBRA-07/2024-02-11-11-34-37_UMBRA-07_CPHD.cphd",
+    "size_bytes": 44719896000,
+    "updated": "2026-10-08 21:44:26.050000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03c7f2ae-3658-4242-b784-7dee21f64b7d/2025-08-13-05-25-10_UMBRA-08/2025-08-13-05-25-10_UMBRA-08_CPHD.cphd",
+    "size_bytes": 51158780864,
+    "updated": "2026-10-08 16:57:06.244000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03d3eee5-c3f0-4364-8c92-dd4bbd3b045e/2023-08-13-06-58-12_UMBRA-05/2023-08-13-06-58-12_UMBRA-05_CPHD.cphd",
+    "size_bytes": 12700769024,
+    "updated": "2026-10-08 16:07:40.714000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03de33ec-2a04-43ba-94cc-bbf2920f6d1c/2024-09-07-17-26-59_UMBRA-08/2024-09-07-17-26-59_UMBRA-08_CPHD.cphd",
+    "size_bytes": 8165508720,
+    "updated": "2026-10-08 15:11:22.366000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03e29e9e-333d-43aa-b4a2-5fbf5094d4e4/2024-06-14-12-51-43_UMBRA-06/2024-06-14-12-51-43_UMBRA-06_CPHD.cphd",
+    "size_bytes": 15548851840,
+    "updated": "2026-10-08 17:06:22.454000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03ec4917-48ff-4421-b14f-6eba4dbf51c3/2025-05-16-02-50-50_UMBRA-10/2025-05-16-02-50-50_UMBRA-10_CPHD.cphd",
+    "size_bytes": 36376500800,
+    "updated": "2026-10-08 16:21:54.134000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/03ee3fca-d748-4c60-9799-4caef5faba65/2025-03-04-13-42-44_UMBRA-08/2025-03-04-13-42-44_UMBRA-08_CPHD.cphd",
+    "size_bytes": 24688582272,
+    "updated": "2026-10-08 16:35:53.977000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/04000751-a59b-411d-905d-320d6cea9f0e/2025-05-13-03-57-31_UMBRA-10/2025-05-13-03-57-31_UMBRA-10_CPHD.cphd",
+    "size_bytes": 38071726976,
+    "updated": "2026-10-08 15:57:39.307000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0412b719-dea1-40de-8f5a-d49b76d89969/2025-10-30-06-18-26_UMBRA-08/2025-10-30-06-18-26_UMBRA-08_CPHD.cphd",
+    "size_bytes": 30044640352,
+    "updated": "2026-10-08 18:13:49.913000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0413b1cd-2a0a-465f-8078-9452cd05fda8/2025-12-26-02-59-30_UMBRA-09/2025-12-26-02-59-30_UMBRA-09_CPHD.cphd",
+    "size_bytes": 30095267584,
+    "updated": "2026-10-08 16:34:58.889000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/04184afd-c3a4-49c6-b9f3-30d4d3e3015f/2025-10-19-12-56-54_UMBRA-05/2025-10-19-12-56-54_UMBRA-05_CPHD.cphd",
+    "size_bytes": 39546765664,
+    "updated": "2026-10-08 18:45:48.379000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/041efb1a-566a-4a5c-8ed8-3ce575e73ed2/2025-09-06-03-20-41_UMBRA-08/2025-09-06-03-20-41_UMBRA-08_CPHD.cphd",
+    "size_bytes": 67285883776,
+    "updated": "2026-10-08 17:22:57.800000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/04244719-8c60-4fee-a20d-02705b2b455f/2024-02-09-15-04-36_UMBRA-06/2024-02-09-15-04-36_UMBRA-06_CPHD.cphd",
+    "size_bytes": 6736131392,
+    "updated": "2026-10-08 17:01:57.954000+00:00"
+  },
+  {
+    "blob_name": "sar-data/task-data/0432cbd2-729d-4dc2-8f72-fb1c0e187433/2023-07-06-02-43-05_UMBRA-04/2023-07-06-02-43-05_UMBRA-04_CPHD.cphd",
+    "size_bytes": 6275528640,
+    "updated": "2026-10-08 15:47:22.200000+00:00"
+  }
+]
